@@ -1275,24 +1275,67 @@
 }
 
 .authSubmit {
+  position: relative;
   margin-top: 4px;
   padding: 14px;
+  height: 50px;
   font-size: 15px;
   font-weight: 700;
   color: #fff;
   background: var(--accent);
   border-radius: 10px;
-  transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  transition: background 0.4s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s ease, width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: var(--accent-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 20px var(--accent-soft);
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(0);
   }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.authSubmitLabel {
+  display: inline-block;
+  transition: opacity 0.25s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .authSubmitLoading & {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.authSubmitSpinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s ease 0.05s, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.05s;
+  pointer-events: none;
+
+  svg {
+    animation: authSpin 0.85s linear infinite;
+  }
+
+  .authSubmitLoading & {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes authSpin {
+  to { transform: rotate(360deg); }
 }
 
 

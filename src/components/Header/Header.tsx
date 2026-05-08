@@ -27,6 +27,7 @@ export default function Header() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
   const protectedTabs = ["profile", "security", "notifications"];
   const tabRequiresAuth = protectedTabs.includes(settingsTab) && !auth.isAuthenticated;
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -37,15 +38,43 @@ export default function Header() {
     setAuthError(null);
   }, [authMode, authOpen]);
 
+  useEffect(() => {
+    const anyModalOpen = searchOpen || settingsOpen || authOpen;
+    if (!anyModalOpen) return;
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [searchOpen, settingsOpen, authOpen]);
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (authLoading) return;
+
     if (authMode === "login") {
       const loginValue = loginInputRef.current?.value ?? "";
       const passwordValue = passwordInputRef.current?.value ?? "";
       const result = auth.login(loginValue, passwordValue);
       if (result.ok) {
-        setAuthOpen(false);
-        router.push(`/profile/yumekoadmin`);
+        setAuthError(null);
+        setAuthLoading(true);
+        setTimeout(() => {
+          router.push(`/profile/yumekoadmin`);
+          setTimeout(() => {
+            setAuthOpen(false);
+            setAuthLoading(false);
+          }, 250);
+        }, 900);
       } else {
         setAuthError(result.error);
       }
@@ -669,8 +698,30 @@ export default function Header() {
 
               {authError && <div className={styles.authError}>{authError}</div>}
 
-              <button type="submit" className={styles.authSubmit}>
-                {authMode === "login" ? "Войти" : "Создать аккаунт"}
+              <button
+                type="submit"
+                className={`${styles.authSubmit} ${authLoading ? styles.authSubmitLoading : ""}`}
+                disabled={authLoading}
+                aria-busy={authLoading}
+              >
+                <span className={styles.authSubmitLabel}>
+                  {authMode === "login" ? "Войти" : "Создать аккаунт"}
+                </span>
+                <span className={styles.authSubmitSpinner} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="28" height="28">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="56.5"
+                      strokeDashoffset="36"
+                    />
+                  </svg>
+                </span>
               </button>
             </form>
           </div>
