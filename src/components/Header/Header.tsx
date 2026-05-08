@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff, Bookmark, ShieldCheck, Sparkles, Crown, Star } from "lucide-react";
 import { animeCatalog, getAccent } from "@/data/anime";
 import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
 import { useAuth } from "@/context/AuthContext";
@@ -28,6 +28,8 @@ export default function Header() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const protectedTabs = ["profile", "security", "notifications"];
   const tabRequiresAuth = protectedTabs.includes(settingsTab) && !auth.isAuthenticated;
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -99,11 +101,23 @@ export default function Header() {
         setSearchOpen(false);
         setSettingsOpen(false);
         setAuthOpen(false);
+        setProfileMenuOpen(false);
       }
     };
-    if (searchOpen || settingsOpen) document.addEventListener("keydown", handleEsc);
+    if (searchOpen || settingsOpen || profileMenuOpen) document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, [searchOpen, settingsOpen]);
+  }, [searchOpen, settingsOpen, profileMenuOpen]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [profileMenuOpen]);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -199,32 +213,151 @@ export default function Header() {
           </nav>
         </div>
 
+        {/* Center — Search */}
+        <button
+          className={`${styles.searchBar} ${searchOpen ? styles.searchBarHidden : ""}`}
+          onClick={() => setSearchOpen(true)}
+        >
+          <Search size={16} />
+          <span>Поиск</span>
+        </button>
+
         {/* Right */}
         <div className={styles.right}>
           <Link href="/support" className={styles.supportLink}>
             <Heart size={15} strokeWidth={2.5} />
             Поддержать
           </Link>
-          <div className={styles.divider} />
           <button className={styles.iconBtn} aria-label="Закладки">
             <BookMarked size={20} />
           </button>
-          <button className={styles.iconBtn} aria-label="Поиск" onClick={() => setSearchOpen(true)}>
-            <Search size={20} />
-          </button>
-          <button className={styles.iconBtn} aria-label="Настройки" onClick={() => setSettingsOpen(true)}>
-            <Settings size={20} />
-          </button>
           {auth.isAuthenticated && auth.user ? (
-            <Link href={`/profile/${auth.user.username}`} className={styles.avatarBtn} aria-label={auth.user.displayName}>
-              <div className={styles.avatarAuth}>
-                {auth.user.avatarUrl ? (
-                  <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
-                ) : (
-                  <span className={styles.avatarInitial}>{auth.user.displayName.charAt(0)}</span>
-                )}
-              </div>
-            </Link>
+            <div className={styles.profileMenuWrap} ref={profileMenuRef}>
+              <button
+                className={styles.avatarBtn}
+                aria-label={auth.user.displayName}
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen((v) => !v)}
+              >
+                <div className={styles.avatarAuth}>
+                  {auth.user.avatarUrl ? (
+                    <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
+                  ) : (
+                    <span className={styles.avatarInitial}>{auth.user.displayName.charAt(0)}</span>
+                  )}
+                </div>
+              </button>
+
+              {profileMenuOpen && (
+                <div className={styles.profileMenu} role="menu">
+                  <div className={styles.profileMenuBanner} />
+
+                  <div className={styles.profileMenuTop}>
+                    <div className={styles.profileMenuAvatar}>
+                      {auth.user.avatarUrl ? (
+                        <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
+                      ) : (
+                        <span>{auth.user.displayName.charAt(0)}</span>
+                      )}
+                    </div>
+
+                    <div className={styles.profileMenuIdentity}>
+                      <div className={styles.profileMenuNameRow}>
+                        <span className={styles.profileMenuName}>{auth.user.displayName}</span>
+                        <div className={styles.profileMenuBadges}>
+                          <span
+                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeAdmin}`}
+                            title="Администратор"
+                          >
+                            <Crown size={14} strokeWidth={2.4} />
+                          </span>
+                          <span
+                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeEarly}`}
+                            title="Ранний пользователь"
+                          >
+                            <Sparkles size={14} strokeWidth={2.4} />
+                          </span>
+                          <span
+                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeStar}`}
+                            title="Избранный"
+                          >
+                            <Star size={14} strokeWidth={2.4} />
+                          </span>
+                        </div>
+                      </div>
+                      <span className={styles.profileMenuHandle}>{auth.user.handle}</span>
+                    </div>
+
+                    <div className={styles.profileMenuBio}>
+                      <span className={styles.profileMenuBioLabel}>О себе</span>
+                      <p className={styles.profileMenuBioText}>
+                        Пока вы ничего о себе не рассказали.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.profileMenuDivider} />
+
+                  <div className={styles.profileMenuList}>
+                    <Link
+                      href={`/profile/${auth.user.username}`}
+                      className={styles.profileMenuItem}
+                      onClick={() => setProfileMenuOpen(false)}
+                      role="menuitem"
+                    >
+                      <User size={16} />
+                      <span>Мой профиль</span>
+                    </Link>
+                    <Link
+                      href="/bookmarks"
+                      className={styles.profileMenuItem}
+                      onClick={() => setProfileMenuOpen(false)}
+                      role="menuitem"
+                    >
+                      <Bookmark size={16} />
+                      <span>Мои закладки</span>
+                    </Link>
+                    {auth.user.username === "yumekoadmin" && (
+                      <Link
+                        href="/admin"
+                        className={styles.profileMenuItem}
+                        onClick={() => setProfileMenuOpen(false)}
+                        role="menuitem"
+                      >
+                        <ShieldCheck size={16} />
+                        <span>Админ панель</span>
+                      </Link>
+                    )}
+                    <button
+                      className={styles.profileMenuItem}
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setSettingsOpen(true);
+                      }}
+                      role="menuitem"
+                    >
+                      <Settings size={16} />
+                      <span>Настройки</span>
+                    </button>
+                  </div>
+
+                  <div className={styles.profileMenuDivider} />
+
+                  <button
+                    className={`${styles.profileMenuItem} ${styles.profileMenuItemDanger}`}
+                    onClick={() => {
+                      auth.logout();
+                      setProfileMenuOpen(false);
+                      router.push("/");
+                    }}
+                    role="menuitem"
+                  >
+                    <LogOut size={16} />
+                    <span>Выйти</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button className={styles.avatarBtn} aria-label="Войти" onClick={() => setAuthOpen(true)}>
               <div className={styles.avatarGuest}>
@@ -275,19 +408,6 @@ export default function Header() {
               <Settings size={18} /> Основные
             </button>
 
-            {auth.isAuthenticated && (
-              <button
-                className={`${styles.settingsItem} ${styles.settingsItemDanger}`}
-                style={{ marginTop: 'auto' }}
-                onClick={() => {
-                  auth.logout();
-                  setSettingsOpen(false);
-                  router.push("/");
-                }}
-              >
-                <LogOut size={18} /> Выйти
-              </button>
-            )}
           </div>
 
           <div className={styles.settingsContent}>
@@ -580,27 +700,33 @@ export default function Header() {
               <div className={styles.searchHint}>Ничего не найдено</div>
             )}
             {searchResults.length > 0 && !searchLoading && (
-              <div className={styles.searchResultsList}>
+              <div className={styles.searchResultsGrid}>
                 {searchResults.map((item) => (
                   <Link
                     key={item.id}
                     href={`/realeses/anime-page/${item.id}`}
-                    className={styles.searchResultItem}
+                    className={styles.searchCard}
                     onClick={() => setSearchOpen(false)}
                   >
-                    <div
-                      className={styles.searchResultPoster}
-                      style={{ borderColor: `${getAccent(item.rating)}33` }}
-                    >
-                      <span className={styles.searchResultPosterLabel}>{item.rating}</span>
+                    <div className={styles.searchCardPoster}>
+                      <img
+                        src={item.poster}
+                        alt={item.title}
+                        className={styles.searchCardImg}
+                      />
+                      <span
+                        className={styles.searchCardRating}
+                        style={{ background: getAccent(item.rating) }}
+                      >
+                        {item.rating}
+                      </span>
                     </div>
-                    <div className={styles.searchResultInfo}>
-                      <span className={styles.searchResultTitle}>{item.title}</span>
-                      <span className={styles.searchResultAlt}>{item.altTitle}</span>
-                      <span className={styles.searchResultMeta}>
+                    <div className={styles.searchCardInfo}>
+                      <span className={styles.searchCardTitle}>{item.title}</span>
+                      <span className={styles.searchCardMeta}>
                         {item.year} • {item.format} • {item.status}
                       </span>
-                      <span className={styles.searchResultGenres} style={{ color: getAccent(item.rating) }}>
+                      <span className={styles.searchCardGenres} style={{ color: getAccent(item.rating) }}>
                         {item.genres}
                       </span>
                     </div>

@@ -1,105 +1,211 @@
 // =============================================
-// PROFILE PAGE — unified card layout
+// PROFILE PAGE — POSTMODERN
+// Brutalist typography + asymmetric grid + mono
 // =============================================
 
 .profileWrap {
-  max-width: 1100px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 24px 24px 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  padding: 32px 32px 120px;
   animation: profilePageIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes profilePageIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-// ─── Profile Card (banner + identity + stats) ───
-.profileCard {
-  position: relative;
-  background: var(--bg-card);
+// ─── TOP META BAR ───
+.metaBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 22px;
+  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
-  border-radius: 18px;
-  overflow: hidden;
-  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  border-radius: 14px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
 
-// Banner
-.banner {
+.metaLeft,
+.metaRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.metaDivider {
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+}
+
+.metaStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.metaStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ee07a;
+  box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.65);
+  animation: pulseDot 2.4s ease-out infinite;
+}
+
+@keyframes pulseDot {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(46, 224, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0); }
+}
+
+// ─── HERO ───
+.hero {
   position: relative;
-  height: 200px;
-  overflow: hidden;
-}
-
-.bannerGradient {
-  position: absolute;
-  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 48px;
+  align-items: end;
+  padding: 48px 36px;
+  margin-top: 16px;
   background:
+    radial-gradient(ellipse 80% 90% at 12% 20%, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 70% at 95% 100%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 65%),
     linear-gradient(135deg,
-      color-mix(in srgb, var(--accent) 45%, #1a1a1f) 0%,
-      color-mix(in srgb, var(--accent) 18%, #14141a) 55%,
-      #14141a 100%);
+      color-mix(in srgb, var(--accent) 14%, var(--bg-card)) 0%,
+      color-mix(in srgb, var(--accent) 6%, var(--bg-card)) 50%,
+      var(--bg-card) 100%);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border-color));
+  border-radius: 22px;
+  overflow: hidden;
+  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 
   &::before {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(ellipse 50% 80% at 12% 0%, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 65%),
-      radial-gradient(ellipse 60% 70% at 88% 100%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
+    background-image:
+      repeating-linear-gradient(115deg, transparent 0 22px, rgba(255, 255, 255, 0.025) 22px 23px),
+      repeating-linear-gradient(35deg, transparent 0 18px, rgba(0, 0, 0, 0.05) 18px 19px);
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
 
-.bannerNoise {
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(115deg, transparent 0 22px, rgba(255, 255, 255, 0.025) 22px 23px),
-    repeating-linear-gradient(35deg, transparent 0 18px, rgba(0, 0, 0, 0.04) 18px 19px);
-  mix-blend-mode: overlay;
-  opacity: 0.6;
+.hero > * {
+  position: relative;
+  z-index: 1;
 }
 
-// Identity bar (inside profileCard, below banner)
-.identityBar {
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.heroIndex {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.displayName {
+  font-size: clamp(56px, 9.4vw, 132px);
+  font-weight: 700;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin: 0;
+
+  // Outline chunk for postmodern feel
+  & > span {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--text-primary);
+  }
+}
+
+.heroSubRow {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 0 28px 20px;
-  margin-top: -56px;
-  position: relative;
-  z-index: 2;
+  gap: 14px;
   flex-wrap: wrap;
+  margin-top: 10px;
 }
 
-.avatarWrap {
-  position: relative;
+.handle {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 14px;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.adminBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bg-primary, #0a0a0c);
+  background: var(--accent);
+  border-radius: 8px;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 0 var(--text-primary);
+  }
+}
+
+// Hero right: avatar + edit
+.heroRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 20px;
   flex-shrink: 0;
 }
 
-.avatar {
-  width: 124px;
-  height: 124px;
-  border-radius: 50%;
-  border: 5px solid var(--bg-card);
-  background: color-mix(in srgb, var(--accent) 22%, #1a1a1f);
+.avatarFrame {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 2px solid var(--text-primary);
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow:
-    0 14px 40px rgba(0, 0, 0, 0.5),
-    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 18px;
+    pointer-events: none;
+  }
 
   img {
     width: 100%;
@@ -108,362 +214,351 @@
   }
 
   &:hover {
-    transform: scale(1.03);
-    box-shadow:
-      0 18px 52px rgba(0, 0, 0, 0.6),
-      0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
-      0 0 32px color-mix(in srgb, var(--accent) 22%, transparent);
+    transform: translate(-4px, -4px);
+    box-shadow: 8px 8px 0 0 var(--accent);
   }
 }
 
 .avatarInitial {
-  font-size: 54px;
+  font-size: 96px;
   font-weight: 700;
   color: var(--accent);
-  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
   user-select: none;
-  letter-spacing: -0.02em;
-}
-
-.statusDot {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #2ee07a;
-  border: 4px solid var(--bg-card);
-  box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.7);
-  animation: pulseDot 2.4s ease-out infinite;
-}
-
-@keyframes pulseDot {
-  0%   { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.55); }
-  70%  { box-shadow: 0 0 0 10px rgba(46, 224, 122, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0); }
-}
-
-.identity {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-  align-self: flex-end;
-  padding-bottom: 4px;
-}
-
-.nameRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.displayName {
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
-}
-
-.adminBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 6px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 20%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  }
-}
-
-.handle {
-  font-size: 14px;
-  color: var(--text-muted);
-  font-weight: 500;
 }
 
 .editBtn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  align-self: flex-end;
-  padding: 9px 16px;
-  font-size: 13px;
+  gap: 8px;
+  padding: 12px 18px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9px;
-  margin-bottom: 4px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  border: 1.5px solid var(--text-primary);
+  border-radius: 12px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.05));
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    color: var(--accent);
-    transform: translateY(-1px);
+    background: var(--text-primary);
+    color: var(--bg-primary, #0a0a0c);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 0 var(--accent);
   }
 
   &:active {
-    transform: translateY(0);
+    transform: translate(0, 0);
+    box-shadow: 0 0 0 0 var(--accent);
   }
 }
 
-// Stats — inside profile card, below identity
-.statsRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 28px 18px;
-  border-top: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.015);
-  flex-wrap: wrap;
+// ─── STATS GRID — oversized numbers ───
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
 }
 
-.stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: background 0.25s ease;
-  cursor: default;
+.statCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 28px 24px;
+  background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  position: relative;
+  transition: background 0.4s ease, border-color 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: color-mix(in srgb, var(--bg-card) 80%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border-color));
+    transform: translateY(-2px);
+
+    .statValue {
+      color: var(--accent);
+      transform: translateX(4px);
+    }
   }
 }
 
-.statIcon {
+.statIndex {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
   color: var(--text-muted);
-  flex-shrink: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .statValue {
-  font-size: 15px;
+  font-size: clamp(40px, 5vw, 64px);
   font-weight: 700;
+  line-height: 1;
   color: var(--text-primary);
+  letter-spacing: -0.025em;
   font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .statLabel {
-  font-size: 13px;
-  color: var(--text-muted);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.statSep {
-  width: 1px;
-  height: 16px;
-  background: var(--border-color);
-  margin: 0 2px;
-}
-
-// ─── Two-column grid ───
-.grid {
+// ─── CONTENT GRID (asymmetric) ───
+.contentGrid {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 20px;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
-.mainCol,
-.sideCol {
+.colMain,
+.colSide {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
-.mainCol {
-  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
-}
-
-.sideCol {
-  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
-}
-
-// Panel
-.panel {
-  padding: 22px 24px;
-  background: var(--bg-card);
+.section {
+  padding: 32px 28px;
+  background: color-mix(in srgb, var(--bg-card) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
-  transition: border-color 0.3s ease;
+  border-radius: 18px;
+  position: relative;
+  transition: border-color 0.4s ease;
 
   &:hover {
     border-color: color-mix(in srgb, var(--accent) 25%, var(--border-color));
   }
 }
 
-.panelHeader {
+.sectionHeader {
   display: flex;
-  align-items: center;
-  margin-bottom: 14px;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
-.panelTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
+.sectionIndex {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.16em;
+}
+
+.sectionTitle {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+  margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+}
+
+.sectionLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.bodyText {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.7;
   color: var(--text-secondary);
   margin: 0;
+  max-width: 640px;
+}
 
-  svg {
+.emptyText {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  margin: 0;
+
+  &::before {
+    content: "// ";
     color: var(--accent);
   }
 }
 
-.emptyText {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.6;
-}
-
-// Side: info list
+// Info list — postmodern key/value
 .infoList {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .infoRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 6px;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--border-color);
   font-size: 13px;
-  border-radius: 8px;
-  transition: background 0.25s ease;
+  transition: color 0.3s ease, padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:last-child {
+    border-bottom: none;
+  }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.03);
-  }
-}
+    padding-left: 8px;
 
-.infoIcon {
-  color: var(--text-muted);
-  flex-shrink: 0;
+    .infoLabel {
+      color: var(--accent);
+    }
+  }
 }
 
 .infoLabel {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
   color: var(--text-muted);
-  flex: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
 }
 
 .infoValue {
-  color: var(--text-primary);
+  font-size: 14px;
   font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-// Side: badges
-.badgesRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+// ─── Inline Badges (after Role row) ───
+.profileBadges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.badge {
-  aspect-ratio: 1;
-  display: flex;
+.profileBadge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  border-radius: 12px;
-  color: var(--accent);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: default;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  svg {
+    fill: currentColor;
+    fill-opacity: 0.9;
+  }
 
   &:hover {
-    transform: translateY(-2px) scale(1.05);
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    border-color: var(--accent);
-    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+    transform: translateY(-1px);
   }
 }
 
-.badgeLocked {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.06);
-  color: transparent;
+.profileBadgeAdmin { color: #a78bfa; }
+.profileBadgeEarly { color: #2dd4bf; }
+.profileBadgeStar  { color: #f472b6; }
 
-  &:hover {
-    transform: none;
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: none;
-  }
+// ─── FOOTER MARK ───
+.footerMark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 22px;
+  margin-top: 14px;
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
 }
 
-// Loader
+// ─── Loader ───
 .loader {
   text-align: center;
   padding: 80px 0;
   color: var(--text-muted);
-  font-size: 14px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-// Animations
+// ─── Animations ───
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-// Responsive
-@media (max-width: 900px) {
-  .grid {
+// ─── Responsive ───
+@media (max-width: 960px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .heroRight {
+    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .avatarFrame {
+    width: 140px;
+    height: 140px;
+  }
+
+  .avatarInitial {
+    font-size: 72px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .contentGrid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 600px) {
-  .identityBar {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0 20px 20px;
+  .profileWrap {
+    padding: 20px 18px 80px;
   }
 
-  .identity {
-    align-items: center;
-    align-self: stretch;
+  .hero {
+    padding: 32px 22px;
   }
 
-  .editBtn {
-    align-self: center;
-    margin-bottom: 0;
+  .metaLeft,
+  .metaRight {
+    gap: 8px;
   }
 
-  .statsRow {
-    justify-content: space-around;
-    padding: 14px 16px;
+  .section {
+    padding: 28px 20px;
   }
 
-  .statSep {
-    display: none;
+  .statCell {
+    padding: 24px 18px;
   }
 }

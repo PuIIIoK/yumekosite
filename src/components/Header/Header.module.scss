@@ -12,12 +12,12 @@
 }
 
 .inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--container-padding);
+  width: 100%;
+  padding: 0 32px;
   height: 100%;
 }
 
@@ -26,6 +26,42 @@
   display: flex;
   align-items: center;
   gap: 28px;
+}
+
+// ─── Center Search Bar ───
+.searchBar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 500px;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: var(--text-secondary);
+  }
+}
+
+.searchBarHidden {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.94) translateY(-6px);
+  pointer-events: none;
 }
 
 // Logo pill
@@ -37,11 +73,17 @@
   height: 54px;
   border-radius: 14px;
   background: linear-gradient(135deg, #ec4899, #a855f7);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
   flex-shrink: 0;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 
   &:hover {
-    transform: scale(1.03);
+    transform: scale(1.05) translateZ(0);
   }
 }
 
@@ -51,6 +93,9 @@
   object-fit: cover;
   border-radius: inherit;
   pointer-events: none;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 // Nav links
@@ -203,13 +248,232 @@
   user-select: none;
 }
 
+// ─── Profile Dropdown Menu (Discord-style, expanded) ───
+.profileMenuWrap {
+  position: relative;
+}
+
+.profileMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  padding: 0 6px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  z-index: 1000;
+  animation: profileMenuIn 0.18s ease-out;
+}
+
+@keyframes profileMenuIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// Banner
+.profileMenuBanner {
+  position: relative;
+  height: 72px;
+  margin: 0 -6px;
+  background:
+    radial-gradient(ellipse 70% 80% at 15% 20%, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 70% at 90% 100%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 24%, var(--bg-card)) 0%,
+      var(--bg-card) 100%);
+}
+
+// Top section with avatar overlapping banner
+.profileMenuTop {
+  position: relative;
+  padding: 0 12px 12px;
+  margin-top: -28px;
+}
+
+.profileMenuAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid var(--bg-card);
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg-card));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  span {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+}
+
+.profileMenuIdentity {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.profileMenuName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileMenuHandle {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.3;
+  margin-top: 2px;
+}
+
+// Name row with inline badges
+.profileMenuNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+// Badges — shape-only colored icons (no bg)
+.profileMenuBadges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profileMenuBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  svg {
+    fill: currentColor;
+    fill-opacity: 0.9;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Badge variants — solid colored icons
+.profileMenuBadgeAdmin  { color: #a78bfa; }
+.profileMenuBadgeEarly  { color: #2dd4bf; }
+.profileMenuBadgeStar   { color: #f472b6; }
+
+// Mini bio block
+.profileMenuBio {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+}
+
+.profileMenuBioLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.profileMenuBioText {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+// Menu list
+.profileMenuList {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.profileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  background: transparent;
+  border-radius: 6px;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color 0.12s ease;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+
+    svg {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.profileMenuItemDanger {
+  color: #ef4444;
+
+  svg {
+    color: #ef4444;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+
+    svg {
+      color: #ef4444;
+    }
+  }
+}
+
+.profileMenuDivider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 0;
+}
+
 // ---------- Search Modal ----------
 .searchOverlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   z-index: 998;
-  animation: overlayIn 0.25s ease;
+  animation: overlayIn 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes overlayIn {
@@ -219,24 +483,27 @@
 
 .searchModal {
   position: fixed;
-  top: 60px;
+  top: 50px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 640px;
+  max-width: 780px;
   z-index: 999;
   padding: 0 20px;
-  animation: searchSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: searchSlideDown 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes searchSlideDown {
-  from {
+  0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateX(-50%) translateY(-60px) scale(0.97);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
@@ -245,7 +512,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-radius: 14px;
+  border-radius: 18px;
   background: rgba(22, 22, 28, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -339,18 +606,23 @@
   padding: 16px;
   background: rgba(22, 22, 28, 0.95);
   backdrop-filter: blur(20px);
-  border-radius: 14px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.searchResultsList {
-  margin-top: 10px;
+// ─── Search Results Card Grid ───
+.searchResultsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  justify-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
   background: rgba(22, 22, 28, 0.95);
   backdrop-filter: blur(20px);
-  border-radius: 14px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  overflow: hidden;
-  max-height: 400px;
+  max-height: 600px;
   overflow-y: auto;
 
   &::-webkit-scrollbar {
@@ -362,81 +634,76 @@
   }
 }
 
-.searchResultItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  cursor: pointer;
-  transition: background 0.15s ease;
-  text-decoration: none;
-  color: inherit;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.04);
-  }
-}
-
-.searchResultPoster {
-  width: 70px;
-  height: 96px;
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(236, 72, 153, 0.05) 100%),
-    #16161c;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 6px;
-  position: relative;
-}
-
-.searchResultPosterLabel {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-}
-
-.searchResultInfo {
+.searchCard {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+
+    .searchCardImg {
+      filter: brightness(1.1);
+    }
+  }
 }
 
-.searchResultTitle {
+.searchCardPoster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4.2;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #16161c;
+}
+
+.searchCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 0.2s ease;
+}
+
+.searchCardRating {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.searchCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 2px 0;
+}
+
+.searchCardTitle {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.searchResultAlt {
+.searchCardMeta {
   font-size: 12px;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.searchResultMeta {
+.searchCardGenres {
   font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.searchResultGenres {
-  font-size: 12px;
-  font-weight: 500;
-  margin-top: 2px;
+  font-weight: 600;
 }
 
 // ---------- Settings Modal ----------
