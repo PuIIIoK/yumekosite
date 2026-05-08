@@ -29,6 +29,9 @@ export default function Header() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [searchClosing, setSearchClosing] = useState(false);
+  const [settingsClosing, setSettingsClosing] = useState(false);
+  const [authClosing, setAuthClosing] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const protectedTabs = ["profile", "security", "notifications"];
   const tabRequiresAuth = protectedTabs.includes(settingsTab) && !auth.isAuthenticated;
@@ -85,6 +88,25 @@ export default function Header() {
     }
   };
 
+  const CLOSE_DURATION = 350;
+
+  const closeSearch = () => {
+    setSearchClosing(true);
+    setTimeout(() => { setSearchOpen(false); setSearchClosing(false); }, CLOSE_DURATION);
+  };
+
+  const closeSettings = () => {
+    setSettingsClosing(true);
+    setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, CLOSE_DURATION);
+  };
+
+  const closeAuth = () => {
+    setAuthClosing(true);
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+    setTimeout(() => { setAuthOpen(false); setAuthClosing(false); }, CLOSE_DURATION);
+  };
+
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -98,9 +120,9 @@ export default function Header() {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setSearchOpen(false);
-        setSettingsOpen(false);
-        setAuthOpen(false);
+        if (searchOpen && !searchClosing) closeSearch();
+        if (settingsOpen && !settingsClosing) closeSettings();
+        if (authOpen && !authClosing) closeAuth();
         setProfileMenuOpen(false);
       }
     };
@@ -372,7 +394,7 @@ export default function Header() {
       {/* Search Modal */}
       {/* Settings Modal */}
       {settingsOpen && (
-        <div className={styles.settingsModal}>
+        <div className={`${styles.settingsModal} ${settingsClosing ? styles.settingsModalClosing : ""}`}>
           <div className={styles.settingsSidebar}>
             <span className={styles.settingsSidebarTitle}>Аккаунт</span>
             <button
@@ -430,7 +452,7 @@ export default function Header() {
                   <h2 className={styles.settingsTitle}>{tabTitles[settingsTab]}</h2>
                 )}
               </div>
-              <button className={styles.searchClose} onClick={() => { setSettingsOpen(false); setSettingsTab("profile"); setSettingsSubTab(null); }}>
+              <button className={styles.searchClose} onClick={() => { closeSettings(); setTimeout(() => { setSettingsTab("profile"); setSettingsSubTab(null); }, CLOSE_DURATION); }}>
                 <X size={20} />
               </button>
             </div>
@@ -451,8 +473,8 @@ export default function Header() {
                     <button
                       className={styles.authRequiredBtn}
                       onClick={() => {
-                        setSettingsOpen(false);
-                        setAuthOpen(true);
+                        closeSettings();
+                        setTimeout(() => setAuthOpen(true), CLOSE_DURATION);
                       }}
                     >
                       Войти в аккаунт
@@ -671,8 +693,8 @@ export default function Header() {
 
       {searchOpen && (
         <>
-          <div className={styles.searchOverlay} onClick={() => setSearchOpen(false)} />
-          <div className={styles.searchModal}>
+          <div className={`${styles.searchOverlay} ${searchClosing ? styles.overlayClosing : ""}`} onClick={closeSearch} />
+          <div className={`${styles.searchModal} ${searchClosing ? styles.searchModalClosing : ""}`}>
             <div className={styles.searchInputWrap}>
               <Search size={20} className={styles.searchInputIcon} />
               <input
@@ -688,7 +710,7 @@ export default function Header() {
                   <X size={14} />
                 </button>
               )}
-              <button className={styles.searchClose} onClick={() => setSearchOpen(false)}>
+              <button className={styles.searchClose} onClick={closeSearch}>
                 <X size={18} />
               </button>
             </div>
@@ -706,7 +728,7 @@ export default function Header() {
                     key={item.id}
                     href={`/realeses/anime-page/${item.id}`}
                     className={styles.searchCard}
-                    onClick={() => setSearchOpen(false)}
+                    onClick={closeSearch}
                   >
                     <div className={styles.searchCardPoster}>
                       <img
@@ -739,9 +761,9 @@ export default function Header() {
       )}
       {authOpen && (
         <>
-          <div className={styles.authOverlay} onClick={() => setAuthOpen(false)} />
-          <div className={styles.authModal}>
-            <button className={styles.authClose} onClick={() => setAuthOpen(false)}>
+          <div className={`${styles.authOverlay} ${authClosing ? styles.overlayClosingFast : ""}`} onClick={closeAuth} />
+          <div className={`${styles.authModal} ${authClosing ? styles.authModalClosing : ""}`}>
+            <button className={styles.authClose} onClick={closeAuth}>
               <X size={20} />
             </button>
 

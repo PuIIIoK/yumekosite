@@ -481,6 +481,24 @@
   to { opacity: 1; }
 }
 
+.overlayClosing {
+  animation: overlayOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes overlayOut {
+  from { opacity: 1; backdrop-filter: blur(4px); }
+  to { opacity: 0; backdrop-filter: blur(0px); }
+}
+
+.overlayClosingFast {
+  animation: overlayOutFast 0.025s linear forwards;
+}
+
+@keyframes overlayOutFast {
+  from { opacity: 1; backdrop-filter: blur(4px); }
+  to { opacity: 0; backdrop-filter: blur(0px); }
+}
+
 .searchModal {
   position: fixed;
   top: 50px;
@@ -504,6 +522,21 @@
   100% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+.searchModalClosing {
+  animation: searchSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes searchSlideUp {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-40px) scale(0.97);
   }
 }
 
@@ -725,6 +758,21 @@
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
   overflow: hidden;
   animation: settingsFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settingsModalClosing {
+  animation: settingsFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes settingsFadeOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -49%);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -49%) scale(0.97) translateY(10px);
+  }
 }
 
 @keyframes settingsFadeIn {
@@ -1344,6 +1392,21 @@
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+  }
+}
+
+.authModalClosing {
+  animation: authModalOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes authModalOut {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
   }
 }
 
