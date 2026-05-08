@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft } from "lucide-react";
+import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { animeCatalog, getAccent } from "@/data/anime";
 import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
 import styles from "./Header.module.scss";
@@ -20,6 +20,9 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState(animeCatalog.slice(0, 0));
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [showPassword, setShowPassword] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,6 +40,7 @@ export default function Header() {
       if (e.key === "Escape") {
         setSearchOpen(false);
         setSettingsOpen(false);
+        setAuthOpen(false);
       }
     };
     if (searchOpen || settingsOpen) document.addEventListener("keydown", handleEsc);
@@ -153,7 +157,11 @@ export default function Header() {
           <button className={styles.iconBtn} aria-label="Настройки" onClick={() => setSettingsOpen(true)}>
             <Settings size={20} />
           </button>
-          <div className={styles.avatar} />
+          <button className={styles.avatarBtn} aria-label="Профиль" onClick={() => setAuthOpen(true)}>
+            <div className={styles.avatarGuest}>
+              <User size={18} strokeWidth={2} />
+            </div>
+          </button>
         </div>
 
       </div>
@@ -498,6 +506,108 @@ export default function Header() {
                 ))}
               </div>
             )}
+          </div>
+        </>
+      )}
+      {authOpen && (
+        <>
+          <div className={styles.authOverlay} onClick={() => setAuthOpen(false)} />
+          <div className={styles.authModal}>
+            <button className={styles.authClose} onClick={() => setAuthOpen(false)}>
+              <X size={20} />
+            </button>
+
+            <div className={styles.authHeader}>
+              <h2 className={styles.authTitle}>
+                {authMode === "login" ? "Вход в аккаунт" : "Регистрация"}
+              </h2>
+              <p className={styles.authSubtitle}>
+                {authMode === "login"
+                  ? "Войдите, чтобы получить доступ ко всем функциям"
+                  : "Создайте аккаунт, чтобы начать"}
+              </p>
+            </div>
+
+            <div className={styles.authTabs}>
+              <div className={`${styles.authTabSlider} ${authMode === "register" ? styles.authTabSliderRight : ""}`} />
+              <button
+                className={`${styles.authTab} ${authMode === "login" ? styles.authTabActive : ""}`}
+                onClick={() => setAuthMode("login")}
+              >
+                Вход
+              </button>
+              <button
+                className={`${styles.authTab} ${authMode === "register" ? styles.authTabActive : ""}`}
+                onClick={() => setAuthMode("register")}
+              >
+                Регистрация
+              </button>
+            </div>
+
+            <form className={styles.authForm} key={authMode} onSubmit={(e) => e.preventDefault()}>
+              {authMode === "register" && (
+                <div className={styles.authFieldAnimated}>
+                  <label className={styles.authLabel}>Имя пользователя</label>
+                  <div className={styles.authInputWrap}>
+                    <User size={16} className={styles.authInputIcon} />
+                    <input
+                      type="text"
+                      className={styles.authInput}
+                      placeholder="Введите имя"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.authFieldAnimated}>
+                <label className={styles.authLabel}>Email</label>
+                <div className={styles.authInputWrap}>
+                  <Mail size={16} className={styles.authInputIcon} />
+                  <input
+                    type="email"
+                    className={styles.authInput}
+                    placeholder="your@email.com"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.authFieldAnimated}>
+                <label className={styles.authLabel}>Пароль</label>
+                <div className={styles.authInputWrap}>
+                  <Lock size={16} className={styles.authInputIcon} />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className={styles.authInput}
+                    placeholder="Введите пароль"
+                  />
+                  <button
+                    type="button"
+                    className={styles.authPasswordToggle}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {authMode === "register" && (
+                <div className={styles.authFieldAnimated}>
+                  <label className={styles.authLabel}>Подтвердите пароль</label>
+                  <div className={styles.authInputWrap}>
+                    <Lock size={16} className={styles.authInputIcon} />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className={styles.authInput}
+                      placeholder="Повторите пароль"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button type="submit" className={styles.authSubmit}>
+                {authMode === "login" ? "Войти" : "Создать аккаунт"}
+              </button>
+            </form>
           </div>
         </>
       )}
