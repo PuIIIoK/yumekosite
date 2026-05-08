@@ -1,0 +1,457 @@
+// =============================================
+// PROFILE PAGE — unified card layout
+// =============================================
+
+.profileWrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ─── Profile Card (banner + identity + stats) ───
+.profileCard {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  overflow: hidden;
+  animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+// Banner
+.banner {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.bannerGradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--accent) 45%, #1a1a1f) 0%,
+      color-mix(in srgb, var(--accent) 18%, #14141a) 55%,
+      #14141a 100%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 50% 80% at 12% 0%, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 70% at 88% 100%, color-mix(in srgb, var(--accent) 22%, transparent) 0%, transparent 70%);
+  }
+}
+
+.bannerNoise {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(115deg, transparent 0 22px, rgba(255, 255, 255, 0.025) 22px 23px),
+    repeating-linear-gradient(35deg, transparent 0 18px, rgba(0, 0, 0, 0.04) 18px 19px);
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+
+// Identity bar (inside profileCard, below banner)
+.identityBar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 28px 20px;
+  margin-top: -56px;
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 5px solid var(--bg-card);
+  background: color-mix(in srgb, var(--accent) 22%, #1a1a1f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover {
+    transform: scale(1.03);
+    box-shadow:
+      0 18px 52px rgba(0, 0, 0, 0.6),
+      0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
+      0 0 32px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+}
+
+.avatarInitial {
+  font-size: 54px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  user-select: none;
+  letter-spacing: -0.02em;
+}
+
+.statusDot {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2ee07a;
+  border: 4px solid var(--bg-card);
+  box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.7);
+  animation: pulseDot 2.4s ease-out infinite;
+}
+
+@keyframes pulseDot {
+  0%   { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(46, 224, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 224, 122, 0); }
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  align-self: flex-end;
+  padding-bottom: 4px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.displayName {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.adminBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+}
+
+.handle {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.editBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-end;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  margin-bottom: 4px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.05));
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Stats — inside profile card, below identity
+.statsRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 28px 18px;
+  border-top: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.015);
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background 0.25s ease;
+  cursor: default;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.statIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.statSep {
+  width: 1px;
+  height: 16px;
+  background: var(--border-color);
+  margin: 0 2px;
+}
+
+// ─── Two-column grid ───
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+
+.mainCol,
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mainCol {
+  animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.sideCol {
+  animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+// Panel
+.panel {
+  padding: 22px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  transition: border-color 0.3s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 25%, var(--border-color));
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.panelTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  margin: 0;
+
+  svg {
+    color: var(--accent);
+  }
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+// Side: info list
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  font-size: 13px;
+  border-radius: 8px;
+  transition: background 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.infoIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.infoLabel {
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.infoValue {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+// Side: badges
+.badgesRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.badge {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 12px;
+  color: var(--accent);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: var(--accent);
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+}
+
+.badgeLocked {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: transparent;
+
+  &:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+}
+
+// Loader
+.loader {
+  text-align: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+// Animations
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .identityBar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 20px 20px;
+  }
+
+  .identity {
+    align-items: center;
+    align-self: stretch;
+  }
+
+  .editBtn {
+    align-self: center;
+    margin-bottom: 0;
+  }
+
+  .statsRow {
+    justify-content: space-around;
+    padding: 14px 16px;
+  }
+
+  .statSep {
+    display: none;
+  }
+}

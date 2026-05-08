@@ -2,16 +2,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { animeCatalog, getAccent } from "@/data/anime";
 import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./Header.module.scss";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const isReleasesActive = pathname.startsWith("/realeses") || pathname.startsWith("/releases");
   const appearance = useAppearance();
+  const auth = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState("profile");
@@ -23,7 +26,33 @@ export default function Header() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const protectedTabs = ["profile", "security", "notifications"];
+  const tabRequiresAuth = protectedTabs.includes(settingsTab) && !auth.isAuthenticated;
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const loginInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAuthError(null);
+  }, [authMode, authOpen]);
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMode === "login") {
+      const loginValue = loginInputRef.current?.value ?? "";
+      const passwordValue = passwordInputRef.current?.value ?? "";
+      const result = auth.login(loginValue, passwordValue);
+      if (result.ok) {
+        setAuthOpen(false);
+        router.push(`/profile/yumekoadmin`);
+      } else {
+        setAuthError(result.error);
+      }
+    } else {
+      setAuthError("Регистрация пока недоступна");
+    }
+  };
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -157,11 +186,23 @@ export default function Header() {
           <button className={styles.iconBtn} aria-label="Настройки" onClick={() => setSettingsOpen(true)}>
             <Settings size={20} />
           </button>
-          <button className={styles.avatarBtn} aria-label="Профиль" onClick={() => setAuthOpen(true)}>
-            <div className={styles.avatarGuest}>
-              <User size={18} strokeWidth={2} />
-            </div>
-          </button>
+          {auth.isAuthenticated && auth.user ? (
+            <Link href={`/profile/${auth.user.username}`} className={styles.avatarBtn} aria-label={auth.user.displayName}>
+              <div className={styles.avatarAuth}>
+                {auth.user.avatarUrl ? (
+                  <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
+                ) : (
+                  <span className={styles.avatarInitial}>{auth.user.displayName.charAt(0)}</span>
+                )}
+              </div>
+            </Link>
+          ) : (
+            <button className={styles.avatarBtn} aria-label="Войти" onClick={() => setAuthOpen(true)}>
+              <div className={styles.avatarGuest}>
+                <User size={18} strokeWidth={2} />
+              </div>
+            </button>
+          )}
         </div>
 
       </div>
@@ -205,9 +246,19 @@ export default function Header() {
               <Settings size={18} /> Основные
             </button>
 
-            <button className={`${styles.settingsItem} ${styles.settingsItemDanger}`} style={{ marginTop: 'auto' }}>
-              <LogOut size={18} /> Выйти
-            </button>
+            {auth.isAuthenticated && (
+              <button
+                className={`${styles.settingsItem} ${styles.settingsItemDanger}`}
+                style={{ marginTop: 'auto' }}
+                onClick={() => {
+                  auth.logout();
+                  setSettingsOpen(false);
+                  router.push("/");
+                }}
+              >
+                <LogOut size={18} /> Выйти
+              </button>
+            )}
           </div>
 
           <div className={styles.settingsContent}>
@@ -238,6 +289,28 @@ export default function Header() {
               className={`${styles.settingsBody} ${settingsAnimating ? styles.settingsBodyOut : styles.settingsBodyIn}`}
               key={`${settingsTab}-${settingsSubTab}`}
             >
+              {tabRequiresAuth && (
+                <div className={styles.authRequiredOverlay}>
+                  <div className={styles.authRequiredCard}>
+                    <div className={styles.authRequiredIcon}>
+                      <Lock size={24} strokeWidth={1.75} />
+                    </div>
+                    <h3 className={styles.authRequiredTitle}>Требуется авторизация</h3>
+                    <p className={styles.authRequiredDesc}>
+                      Чтобы использовать эти настройки, вам нужно войти в аккаунт или зарегистрироваться.
+                    </p>
+                    <button
+                      className={styles.authRequiredBtn}
+                      onClick={() => {
+                        setSettingsOpen(false);
+                        setAuthOpen(true);
+                      }}
+                    >
+                      Войти в аккаунт
+                    </button>
+                  </div>
+                </div>
+              )}
               {!settingsSubTab && settingsTab === "profile" && (
                 <>
                   <div className={styles.settingsCard} onClick={() => openSubTab("username")}>
@@ -544,29 +617,17 @@ export default function Header() {
               </button>
             </div>
 
-            <form className={styles.authForm} key={authMode} onSubmit={(e) => e.preventDefault()}>
-              {authMode === "register" && (
-                <div className={styles.authFieldAnimated}>
-                  <label className={styles.authLabel}>Имя пользователя</label>
-                  <div className={styles.authInputWrap}>
-                    <User size={16} className={styles.authInputIcon} />
-                    <input
-                      type="text"
-                      className={styles.authInput}
-                      placeholder="Введите имя"
-                    />
-                  </div>
-                </div>
-              )}
-
+            <form className={styles.authForm} key={authMode} onSubmit={handleAuthSubmit}>
               <div className={styles.authFieldAnimated}>
-                <label className={styles.authLabel}>Email</label>
+                <label className={styles.authLabel}>Логин</label>
                 <div className={styles.authInputWrap}>
-                  <Mail size={16} className={styles.authInputIcon} />
+                  <User size={16} className={styles.authInputIcon} />
                   <input
-                    type="email"
+                    ref={loginInputRef}
+                    type="text"
                     className={styles.authInput}
-                    placeholder="your@email.com"
+                    placeholder="Введите логин"
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -576,9 +637,11 @@ export default function Header() {
                 <div className={styles.authInputWrap}>
                   <Lock size={16} className={styles.authInputIcon} />
                   <input
+                    ref={passwordInputRef}
                     type={showPassword ? "text" : "password"}
                     className={styles.authInput}
                     placeholder="Введите пароль"
+                    autoComplete={authMode === "login" ? "current-password" : "new-password"}
                   />
                   <button
                     type="button"
@@ -603,6 +666,8 @@ export default function Header() {
                   </div>
                 </div>
               )}
+
+              {authError && <div className={styles.authError}>{authError}</div>}
 
               <button type="submit" className={styles.authSubmit}>
                 {authMode === "login" ? "Войти" : "Создать аккаунт"}
