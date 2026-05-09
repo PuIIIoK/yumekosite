@@ -33,7 +33,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const user = data.user || data;
     const displayName = user.displayName && user.displayName !== user.username ? user.displayName : null;
     const bio = user.bio || "";
-    const avatarUrl = user.hasAvatar ? `${API_URL}/api/media/${username}/avatar` : undefined;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://yumeko.ru";
+    const avatarUrl = user.hasAvatar ? `${siteUrl}/api/media/${username}/avatar` : undefined;
+    const bannerUrl = user.hasBanner ? `${siteUrl}/api/media/${username}/banner` : undefined;
+    const ogImage = bannerUrl || avatarUrl;
     const titleName = displayName || `@${username}`;
 
     return {
@@ -42,14 +45,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: `${titleName} | YumekoStudio`,
         description: bio || `Профиль ${titleName} на YumekoStudio`,
-        images: avatarUrl ? [{ url: avatarUrl, width: 256, height: 256, alt: titleName }] : [],
+        images: ogImage ? [{ url: ogImage, alt: titleName }] : [],
         type: "profile",
       },
       twitter: {
-        card: "summary",
+        card: bannerUrl ? "summary_large_image" : "summary",
         title: `${titleName} | YumekoStudio`,
         description: bio || `Профиль ${titleName} на YumekoStudio`,
-        images: avatarUrl ? [avatarUrl] : [],
+        images: ogImage ? [ogImage] : [],
       },
     };
   } catch (e) {
