@@ -128,6 +128,77 @@ export default function Header() {
     if (friendsOpen) { setFriendsTab("friends"); fetchFriendsData(); }
   }, [friendsOpen]);
 
+  // ─── Friend request notifications (polling) ───
+  const [friendNotifs, setFriendNotifs] = useState<any[]>([]);
+  const seenRequestIds = useRef<Set<number>>(new Set());
+  const notifTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const dismissNotif = (id: number) => {
+    setFriendNotifs(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleNotifAccept = async (f: any) => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/friends/accept/${f.username}?from=${auth.user.username}`, { method: "POST" });
+      const d = parseHex(await res.text());
+      if (d.ok) dismissNotif(f.id);
+    } catch {}
+  };
+
+  const handleNotifReject = async (f: any) => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/friends/${f.username}?from=${auth.user.username}`, { method: "DELETE" });
+      const d = parseHex(await res.text());
+      if (d.ok) dismissNotif(f.id);
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!auth.user) return;
+
+    const pollPending = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/friends/pending/${auth.user!.username}`);
+        const data = parseHex(await res.text());
+        if (data.ok && data.pending) {
+          const newOnes = data.pending.filter((p: any) => !seenRequestIds.current.has(p.id));
+          for (const n of newOnes) {
+            seenRequestIds.current.add(n.id);
+          }
+          if (newOnes.length > 0) {
+            setFriendNotifs(prev => [...prev, ...newOnes]);
+          }
+        }
+      } catch {}
+    };
+
+    pollPending();
+    notifTimerRef.current = setInterval(pollPending, 10000);
+
+    return () => {
+      if (notifTimerRef.current) clearInterval(notifTimerRef.current);
+    };
+  }, [auth.user?.username]);
+
+  const FRIEND_ROLE_COLORS: Record<string, { c1: string; c2: string }> = {
+    ADMIN: { c1: "#a78bfa", c2: "#f472b6" },
+    PRE_ADMIN: { c1: "#c084fc", c2: "#a78bfa" },
+    ST_MODERATOR: { c1: "#34d399", c2: "#2dd4bf" },
+    MODERATOR: { c1: "#38bdf8", c2: "#60a5fa" },
+  };
+
+  const getFriendCardStyle = (f: any): React.CSSProperties => {
+    const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+    if (!hasEffect) return {};
+    const rc = f.accentColor
+      ? { c1: f.accentColor, c2: f.accentColor }
+      : FRIEND_ROLE_COLORS[f.role?.name] || null;
+    if (!rc) return {};
+    return { "--fc-c1": rc.c1, "--fc-c2": rc.c2 } as React.CSSProperties;
+  };
+
   const handleBannerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -485,7 +556,7 @@ export default function Header() {
                 aria-expanded={profileMenuOpen}
                 onClick={() => setProfileMenuOpen((v) => !v)}
               >
-                <div className={styles.avatarAuth}>
+                <div className={styles.avatarAuth} style={{ "--header-avatar-accent": auth.user.effects?.accentColor || "var(--accent)" } as React.CSSProperties}>
                   {auth.user.hasAvatar ? (
                     <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/avatar?v=${auth.user.imageVersion}`} alt={auth.user.displayName} className={styles.avatarAuthImg} />
                   ) : (
@@ -1344,26 +1415,40 @@ export default function Header() {
                   </div>
                 ) : (
                   <div className={styles.friendsGrid}>
-                    {friendsList.map((f: any) => (
-                      <div key={f.id} className={styles.friendCard}>
-                        <Link href={`/profile/${f.username}`} className={styles.friendCardLink} onClick={closeFriends}>
-                          <div className={styles.friendAvatar}>
-                            {f.hasAvatar ? (
-                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                    {friendsList.map((f: any) => {
+                      const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+                      return (
+                        <Link key={f.id} href={`/profile/${f.username}`} onClick={closeFriends} className={`${styles.friendCard}${hasEffect ? ` ${styles.friendCardPrivileged}` : ""}`} style={getFriendCardStyle(f)}>
+                          <div className={styles.friendCardBanner}>
+                            {f.hasBanner ? (
+                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/banner`} alt="" className={styles.friendCardBannerImg} />
                             ) : (
-                              <span>{f.displayName.charAt(0)}</span>
+                              <div className={styles.friendCardBannerFallback} />
                             )}
+                            <div className={styles.friendCardBannerOverlay} />
+                            {f.effectShimmer && <div className={styles.friendCardShimmer} />}
+                            {f.effectBorderGlow && <div className={styles.friendCardGlow} />}
                           </div>
-                          <div className={styles.friendInfo}>
-                            <span className={styles.friendName}>{f.displayName}</span>
-                            <span className={styles.friendHandle}>@{f.username}</span>
+                          <div className={styles.friendCardBody}>
+                            <div className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}>
+                              {f.hasAvatar ? (
+                                <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                              ) : (
+                                <span>{f.displayName.charAt(0)}</span>
+                              )}
+                            </div>
+                            <div className={styles.friendInfo}>
+                              <span className={styles.friendName}>{f.displayName}</span>
+                              <span className={styles.friendHandle}>@{f.username}</span>
+                              <span className={styles.friendRoleBadge} style={{ color: f.role?.color, borderColor: f.role?.color }}>{f.role?.displayName}</span>
+                            </div>
                           </div>
+                          <button className={styles.friendRemoveBtn} onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRejectFriend(f.username); }} title="Удалить">
+                            <X size={14} />
+                          </button>
                         </Link>
-                        <button className={styles.friendRemoveBtn} onClick={() => handleRejectFriend(f.username)} title="Удалить">
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )
               ) : (
@@ -1374,35 +1459,77 @@ export default function Header() {
                   </div>
                 ) : (
                   <div className={styles.friendsGrid}>
-                    {pendingList.map((f: any) => (
-                      <div key={f.id} className={styles.friendCard}>
-                        <Link href={`/profile/${f.username}`} className={styles.friendCardLink} onClick={closeFriends}>
-                          <div className={styles.friendAvatar}>
-                            {f.hasAvatar ? (
-                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                    {pendingList.map((f: any) => {
+                      const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+                      return (
+                        <div key={f.id} className={`${styles.friendCard}${hasEffect ? ` ${styles.friendCardPrivileged}` : ""}`} style={getFriendCardStyle(f)}>
+                          <div className={styles.friendCardBanner}>
+                            {f.hasBanner ? (
+                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/banner`} alt="" className={styles.friendCardBannerImg} />
                             ) : (
-                              <span>{f.displayName.charAt(0)}</span>
+                              <div className={styles.friendCardBannerFallback} />
                             )}
+                            <div className={styles.friendCardBannerOverlay} />
+                            {f.effectShimmer && <div className={styles.friendCardShimmer} />}
+                            {f.effectBorderGlow && <div className={styles.friendCardGlow} />}
                           </div>
-                          <div className={styles.friendInfo}>
-                            <span className={styles.friendName}>{f.displayName}</span>
-                            <span className={styles.friendHandle}>@{f.username}</span>
+                          <div className={styles.friendCardBody}>
+                            <div className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}>
+                              {f.hasAvatar ? (
+                                <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                              ) : (
+                                <span>{f.displayName.charAt(0)}</span>
+                              )}
+                            </div>
+                            <div className={styles.friendInfo}>
+                              <span className={styles.friendName}>{f.displayName}</span>
+                              <span className={styles.friendHandle}>@{f.username}</span>
+                            </div>
+                            <div className={styles.friendPendingActions}>
+                              <button className={styles.friendAcceptBtn} onClick={() => handleAcceptFriend(f.username)} title="Принять">Принять</button>
+                              <button className={styles.friendRejectBtn} onClick={() => handleRejectFriend(f.username)} title="Отклонить">Отклонить</button>
+                            </div>
                           </div>
-                        </Link>
-                        <div className={styles.friendActions}>
-                          <button className={styles.friendAcceptBtn} onClick={() => handleAcceptFriend(f.username)} title="Принять">✓</button>
-                          <button className={styles.friendRemoveBtn} onClick={() => handleRejectFriend(f.username)} title="Отклонить">
-                            <X size={16} />
-                          </button>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )
               )}
             </div>
           </div>
         </>
+      )}
+
+      {/* Friend request notifications */}
+      {friendNotifs.length > 0 && (
+        <div className={styles.notifContainer}>
+          {friendNotifs.map((f: any) => (
+            <div key={f.id} className={styles.notifToast}>
+              <div className={styles.notifBody}>
+                <div className={styles.notifAvatar}>
+                  {f.hasAvatar ? (
+                    <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.notifAvatarImg} />
+                  ) : (
+                    <span>{f.displayName.charAt(0)}</span>
+                  )}
+                </div>
+                <div className={styles.notifText}>
+                  <span className={styles.notifName}>{f.displayName}</span>
+                  <span className={styles.notifHandle}>@{f.username}</span>
+                  <span className={styles.notifMsg}>хочет добавить вас в друзья!</span>
+                </div>
+                <button className={styles.notifClose} onClick={() => dismissNotif(f.id)}>
+                  <X size={14} />
+                </button>
+              </div>
+              <div className={styles.notifActions}>
+                <button className={styles.notifAccept} onClick={() => handleNotifAccept(f)}>Принять</button>
+                <button className={styles.notifReject} onClick={() => handleNotifReject(f)}>Отклонить</button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </header>
   );

@@ -257,7 +257,7 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
             <div
               key={ep.num}
               className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-              style={ep.current ? { ["--ep-accent" as string]: accent } : undefined}
+              style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
             >
               <span className={styles.epNumber}>{ep.num}</span>
               <div className={styles.epRowInfo}>
@@ -266,14 +266,14 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
               </div>
               <div className={styles.epRowRight}>
                 {ep.watched && <span className={styles.epRowWatched}>Просмотрено</span>}
-                {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: accent }}>Текущий</span>}
+                {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
                 <Play size={16} className={styles.epRowPlay} />
               </div>
               {ep.progress > 0 && (
                 <div className={styles.epRowProgress}>
                   <div
                     className={styles.epRowProgressBar}
-                    style={{ width: `${ep.progress}%`, background: ep.watched ? 'var(--text-muted)' : accent }}
+                    style={{ width: `${ep.progress}%`, background: ep.watched ? 'var(--text-muted)' : 'var(--accent)' }}
                   />
                 </div>
               )}
@@ -288,7 +288,7 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
             <div
               key={ep.num}
               className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-              style={ep.current ? { ["--ep-accent" as string]: accent } : undefined}
+              style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
             >
               <div className={styles.epCardThumb}>
                 {ep.preview && (
@@ -300,10 +300,10 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
                   />
                 )}
                 {ep.current && (
-                  <span className={styles.epCardDot} style={{ background: accent }} />
+                  <span className={styles.epCardDot} style={{ background: 'var(--accent)' }} />
                 )}
                 {ep.watched && <span className={styles.epCardWatched}>Просмотрено</span>}
-                {ep.current && <span className={styles.epCardCurrentLabel} style={{ color: accent }}>Текущий</span>}
+                {ep.current && <span className={styles.epCardCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
                 <div className={styles.epCardInfo}>
                   {ep.name && <span className={styles.epCardTitle}>{ep.name}</span>}
                   <span className={styles.epCardNum}>{ep.num} эпизод</span>
@@ -313,7 +313,7 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
                   <div className={styles.epCardProgress}>
                     <div
                       className={styles.epCardProgressBar}
-                      style={{ width: `${ep.progress}%`, background: ep.watched ? 'rgba(255,255,255,0.3)' : accent }}
+                      style={{ width: `${ep.progress}%`, background: ep.watched ? 'rgba(255,255,255,0.3)' : 'var(--accent)' }}
                     />
                   </div>
                 )}

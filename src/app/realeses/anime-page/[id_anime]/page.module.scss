@@ -333,17 +333,17 @@
   }
 
   &:hover {
-    background: rgba(168, 85, 247, 0.12);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
     color: var(--text-primary);
 
     svg {
       opacity: 1;
-      color: rgb(168, 85, 247);
+      color: var(--accent);
     }
   }
 
   &:active {
-    background: rgba(168, 85, 247, 0.2);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
   }
 }
 

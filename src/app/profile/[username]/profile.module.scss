@@ -437,7 +437,7 @@
   position: relative;
   width: 180px;
   height: 180px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  background: color-mix(in srgb, var(--profile-accent, var(--accent)) 14%, transparent);
   border: 2px solid var(--text-primary);
   border-radius: 24px;
   display: flex;
@@ -450,7 +450,7 @@
     content: "";
     position: absolute;
     inset: 8px;
-    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border: 1px solid color-mix(in srgb, var(--profile-accent, var(--accent)) 40%, transparent);
     border-radius: 18px;
     pointer-events: none;
   }
@@ -465,30 +465,15 @@
 
   &:hover {
     transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0 0 var(--accent);
+    box-shadow: 8px 8px 0 0 var(--profile-accent, var(--accent));
   }
 }
 
 // ─── ANIMATED AVATAR FRAME (privileged) ───
 .avatarFramePrivileged {
-  border: none;
+  border: 3px solid var(--avatar-c1, var(--accent));
   background: none;
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: -3px;
-    border-radius: 26px;
-    background: conic-gradient(
-      from var(--avatar-glow-angle, 0deg),
-      var(--role-color-1, #a78bfa),
-      var(--role-color-2, #f472b6),
-      var(--role-color-3, #818cf8),
-      var(--role-color-1, #a78bfa)
-    );
-    z-index: -1;
-    animation: avatarGlowSpin 3.6s linear infinite;
-  }
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--avatar-c1, var(--accent)) 50%, transparent);
 
   &::before {
     border-color: rgba(255, 255, 255, 0.15);
@@ -496,8 +481,8 @@
 
   &:hover {
     box-shadow:
-      8px 8px 0 0 var(--role-color-1, var(--accent)),
-      0 0 32px color-mix(in srgb, var(--role-color-1, var(--accent)) 40%, transparent);
+      8px 8px 0 0 var(--avatar-c1, var(--accent)),
+      0 0 32px color-mix(in srgb, var(--avatar-c1, var(--accent)) 40%, transparent);
   }
 }
 

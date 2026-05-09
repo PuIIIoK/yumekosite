@@ -231,7 +231,7 @@ export default function ProfilePage() {
           </div>
 
           <div className={styles.heroRight}>
-            <div className={`${styles.avatarFrame}${fx.effectAvatarGlow ? ` ${styles.avatarFramePrivileged}` : ""}`}>
+            <div className={`${styles.avatarFrame}${fx.effectAvatarGlow ? ` ${styles.avatarFramePrivileged}` : ""}`} style={{ "--profile-accent": fx.accentColor || "var(--accent)", "--avatar-c1": fx.accentColor || "var(--accent)", "--avatar-c2": fx.accentColor || "var(--accent)", "--avatar-c3": fx.accentColor || "var(--accent)" } as React.CSSProperties}>
               {profileUser.hasAvatar ? (
                 <ProtectedImage src={`${API_URL}/api/media/${profileUser.username}/avatar?v=${profileUser.imageVersion}`} alt={profileUser.displayName} className={styles.avatarImg} />
               ) : (
