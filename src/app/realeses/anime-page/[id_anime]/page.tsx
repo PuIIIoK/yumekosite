@@ -118,9 +118,7 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
   const { id_anime } = await params;
   const anime = getAnimeById(id_anime);
   if (!anime) return { title: "Релиз не найден" };
-  const ogImage = anime.poster
-    ? `/api/og-image?url=${encodeURIComponent(anime.poster)}`
-    : undefined;
+  const ogImage = `/og/${anime.id}.jpg`;
   return {
     title: anime.title,
     description: anime.description || anime.synopsis || `${anime.title} — смотрите онлайн в озвучке YumekoStudio`,
@@ -129,7 +127,7 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
       description: anime.description || anime.synopsis,
       url: `/realeses/anime-page/${id_anime}`,
       siteName: "YumekoStudio",
-      images: ogImage ? [{ url: ogImage, width: 600, height: 900, alt: anime.title, type: "image/jpeg" }] : [],
+      images: [{ url: ogImage, width: 600, height: 900, alt: anime.title, type: "image/jpeg" }],
       type: "video.movie",
       locale: "ru_RU",
     },
@@ -137,7 +135,7 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
       card: "summary_large_image",
       title: `${anime.title} | YumekoStudio`,
       description: anime.description || anime.synopsis,
-      images: ogImage ? [ogImage] : [],
+      images: [ogImage],
     },
   };
 }
