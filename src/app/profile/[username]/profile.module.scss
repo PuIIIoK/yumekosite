@@ -72,6 +72,160 @@
 }
 
 // ─── HERO ───
+// Role color presets applied via inline style --role-color-*
+.heroPrivileged {
+  border-color: color-mix(in srgb, var(--role-color-1, var(--accent)) 50%, var(--border-color));
+  background:
+    radial-gradient(ellipse 80% 90% at 12% 20%, color-mix(in srgb, var(--role-color-1) 45%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 70% at 95% 100%, color-mix(in srgb, var(--role-color-2) 35%, transparent) 0%, transparent 65%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--role-color-1) 25%, var(--bg-card)) 0%,
+      color-mix(in srgb, var(--role-color-2) 14%, var(--bg-card)) 50%,
+      var(--bg-card) 100%);
+  box-shadow:
+    0 0 60px -10px color-mix(in srgb, var(--role-color-1) 35%, transparent),
+    0 0 120px -20px color-mix(in srgb, var(--role-color-2) 20%, transparent),
+    inset 0 0 60px -20px color-mix(in srgb, var(--role-color-1) 15%, transparent);
+  animation: fadeUp 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both, heroGlowPulse 4s ease-in-out infinite;
+}
+
+@keyframes heroGlowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 60px -10px color-mix(in srgb, var(--role-color-1) 35%, transparent),
+      0 0 120px -20px color-mix(in srgb, var(--role-color-2) 20%, transparent),
+      inset 0 0 60px -20px color-mix(in srgb, var(--role-color-1) 15%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 80px -5px color-mix(in srgb, var(--role-color-1) 50%, transparent),
+      0 0 160px -15px color-mix(in srgb, var(--role-color-2) 30%, transparent),
+      inset 0 0 80px -15px color-mix(in srgb, var(--role-color-1) 22%, transparent);
+  }
+}
+
+// ─── SHIMMER OVERLAY (privileged) ───
+.heroShimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      transparent 0deg,
+      color-mix(in srgb, var(--role-color-1, #a78bfa) 12%, transparent) 60deg,
+      transparent 120deg,
+      color-mix(in srgb, var(--role-color-2, #f472b6) 8%, transparent) 200deg,
+      transparent 280deg
+    );
+    animation: shimmerRotate 12s linear infinite;
+    mix-blend-mode: screen;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.04) 45%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 55%,
+      transparent 60%
+    );
+    animation: shimmerSweep 5s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmerRotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmerSweep {
+  0%, 100% { transform: translateX(-30%) translateY(-10%) rotate(15deg); }
+  50%      { transform: translateX(180%) translateY(10%) rotate(15deg); }
+}
+
+// ─── ANIMATED HERO BORDER ───
+.heroBorderGlow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1.5px solid transparent;
+    background:
+      linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+      conic-gradient(
+        from var(--hero-border-angle, 0deg),
+        var(--role-color-1, #a78bfa),
+        var(--role-color-2, #f472b6),
+        var(--role-color-3, #818cf8),
+        var(--role-color-1, #a78bfa)
+      ) border-box;
+    animation: heroBorderSpin 6s linear infinite;
+  }
+}
+
+@property --hero-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes heroBorderSpin {
+  to { --hero-border-angle: 360deg; }
+}
+
+// ─── VERIFIED BADGE ───
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--role-color-1, var(--accent));
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+
+  svg {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// ─── FOOTER PRIVILEGED ───
+.footerMarkPrivileged {
+  border-color: color-mix(in srgb, var(--role-color-1, var(--accent)) 20%, var(--border-color));
+
+  span:first-child {
+    color: var(--role-color-1, var(--text-muted));
+  }
+}
+
 .hero {
   position: relative;
   display: grid;
@@ -105,7 +259,16 @@
   }
 }
 
-.hero > * {
+.heroBannerImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+.hero > *:not(.heroBannerImg):not(.heroShimmer):not(.heroBorderGlow) {
   position: relative;
   z-index: 1;
 }
@@ -148,6 +311,65 @@
   margin-top: 10px;
 }
 
+.addFriendBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 9px 20px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px -6px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.addFriendBtnActive {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+    box-shadow: 0 0 20px -6px rgba(239, 68, 68, 0.3);
+  }
+}
+
+.addFriendBtnPending {
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+    box-shadow: 0 0 20px -6px rgba(239, 68, 68, 0.3);
+  }
+}
+
 .handle {
   font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 14px;
@@ -174,6 +396,31 @@
     transform: translate(-2px, -2px);
     box-shadow: 4px 4px 0 0 var(--text-primary);
   }
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translate(-2px, -2px);
+  }
+}
+
+.roleBadgeGlow {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--role-color-1, currentColor) 35%, transparent);
+  background: color-mix(in srgb, var(--role-color-1, currentColor) 12%, transparent);
 }
 
 // Hero right: avatar + edit
@@ -208,6 +455,8 @@
   }
 
   img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -217,6 +466,56 @@
     transform: translate(-4px, -4px);
     box-shadow: 8px 8px 0 0 var(--accent);
   }
+}
+
+// ─── ANIMATED AVATAR FRAME (privileged) ───
+.avatarFramePrivileged {
+  border: none;
+  background: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 26px;
+    background: conic-gradient(
+      from var(--avatar-glow-angle, 0deg),
+      var(--role-color-1, #a78bfa),
+      var(--role-color-2, #f472b6),
+      var(--role-color-3, #818cf8),
+      var(--role-color-1, #a78bfa)
+    );
+    z-index: -1;
+    animation: avatarGlowSpin 3.6s linear infinite;
+  }
+
+  &::before {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &:hover {
+    box-shadow:
+      8px 8px 0 0 var(--role-color-1, var(--accent)),
+      0 0 32px color-mix(in srgb, var(--role-color-1, var(--accent)) 40%, transparent);
+  }
+}
+
+@property --avatar-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes avatarGlowSpin {
+  to { --avatar-glow-angle: 360deg; }
+}
+
+.avatarImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
 }
 
 .avatarInitial {
@@ -460,6 +759,7 @@
   svg {
     fill: currentColor;
     fill-opacity: 0.9;
+    stroke: currentColor;
   }
 
   &:hover {

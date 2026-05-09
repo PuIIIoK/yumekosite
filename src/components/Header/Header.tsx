@@ -3,11 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BookMarked, Search, Settings, Heart, X, User, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff, Bookmark, ShieldCheck, Sparkles, Crown, Star } from "lucide-react";
+import { BookMarked, Search, Settings, Heart, X, User, Users, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff, Bookmark, ShieldCheck, Sparkles, Crown, Star } from "lucide-react";
 import { animeCatalog, getAccent } from "@/data/anime";
 import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
 import { useAuth } from "@/context/AuthContext";
+import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
+import CropModal from "@/components/CropModal/CropModal";
 import styles from "./Header.module.scss";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
 
 export default function Header() {
   const pathname = usePathname();
@@ -38,6 +42,219 @@ export default function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loginInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState("");
+  const [profileBio, setProfileBio] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+  const [profileSaveFading, setProfileSaveFading] = useState(false);
+  const [profileDirty, setProfileDirty] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [imageUploadSuccess, setImageUploadSuccess] = useState(false);
+  const [imageUploadFading, setImageUploadFading] = useState(false);
+  const [bannerCropSrc, setBannerCropSrc] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [custShimmer, setCustShimmer] = useState(false);
+  const [custBorderGlow, setCustBorderGlow] = useState(false);
+  const [custAvatarGlow, setCustAvatarGlow] = useState(false);
+  const [custVerified, setCustVerified] = useState(false);
+  const [custAccent, setCustAccent] = useState("");
+  const [custSaving, setCustSaving] = useState(false);
+  const [custSaveSuccess, setCustSaveSuccess] = useState(false);
+  const [custSaveFading, setCustSaveFading] = useState(false);
+  const [custSaveError, setCustSaveError] = useState<string | null>(null);
+  const [custDirty, setCustDirty] = useState(false);
+  const canCustomize = (auth.user?.role.priority ?? 0) >= 70;
+  const [friendsOpen, setFriendsOpen] = useState(false);
+  const [friendsClosing, setFriendsClosing] = useState(false);
+  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [pendingList, setPendingList] = useState<any[]>([]);
+  const [friendsTab, setFriendsTab] = useState<"friends" | "pending">("friends");
+  const [friendsLoading, setFriendsLoading] = useState(false);
+
+  function parseHex(hex: string): any {
+    const bytes: number[] = [];
+    for (const line of hex.split("\n")) {
+      if (!line.trim()) continue;
+      const p = line.substring(10, 58).trim();
+      for (const h of p.split(/\s+/)) { if (h.length === 2) bytes.push(parseInt(h, 16)); }
+    }
+    return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)));
+  }
+
+  const fetchFriendsData = async () => {
+    if (!auth.user) return;
+    setFriendsLoading(true);
+    try {
+      const [fRes, pRes] = await Promise.all([
+        fetch(`${API_URL}/api/friends/list/${auth.user.username}`),
+        fetch(`${API_URL}/api/friends/pending/${auth.user.username}`),
+      ]);
+      const fData = parseHex(await fRes.text());
+      const pData = parseHex(await pRes.text());
+      if (fData.ok) setFriendsList(fData.friends);
+      if (pData.ok) setPendingList(pData.pending);
+    } catch {}
+    setFriendsLoading(false);
+  };
+
+  const handleAcceptFriend = async (username: string) => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/friends/accept/${username}?from=${auth.user.username}`, { method: "POST" });
+      const d = parseHex(await res.text());
+      if (d.ok) fetchFriendsData();
+    } catch {}
+  };
+
+  const handleRejectFriend = async (username: string) => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/friends/${username}?from=${auth.user.username}`, { method: "DELETE" });
+      const d = parseHex(await res.text());
+      if (d.ok) fetchFriendsData();
+    } catch {}
+  };
+
+  const closeFriends = () => {
+    if (friendsClosing) return;
+    setFriendsClosing(true);
+    setTimeout(() => { setFriendsOpen(false); setFriendsClosing(false); }, 350);
+  };
+
+  useEffect(() => {
+    if (friendsOpen) { setFriendsTab("friends"); fetchFriendsData(); }
+  }, [friendsOpen]);
+
+  const handleBannerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setBannerCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleBannerCropApply = (croppedFile: File) => {
+    setBannerCropSrc(null);
+    handleImageUpload("banner", croppedFile);
+  };
+
+  const handleImageUpload = async (type: "avatar" | "banner", file: File) => {
+    setImageUploading(true);
+    setImageUploadError(null);
+    setImageUploadSuccess(false);
+    setImageUploadFading(false);
+
+    const start = Date.now();
+    const result = await auth.uploadImage(type, file);
+    const elapsed = Date.now() - start;
+    await new Promise((r) => setTimeout(r, Math.max(0, 500 - elapsed)));
+
+    if (result.ok) {
+      setImageUploadSuccess(true);
+      setTimeout(() => {
+        setImageUploadFading(true);
+        setTimeout(() => { setImageUploadSuccess(false); setImageUploadFading(false); }, 500);
+      }, 1500);
+    } else {
+      setImageUploadError(result.error);
+    }
+    setImageUploading(false);
+  };
+
+  useEffect(() => {
+    if (settingsOpen && auth.user) {
+      setProfileDisplayName(auth.user.displayName || "");
+      setProfileBio(auth.user.bio || "");
+      setProfileSaveError(null);
+      setProfileSaveSuccess(false);
+      setProfileSaveFading(false);
+      setProfileDirty(false);
+      const fx = auth.user.effects;
+      setCustShimmer(fx?.effectShimmer ?? false);
+      setCustBorderGlow(fx?.effectBorderGlow ?? false);
+      setCustAvatarGlow(fx?.effectAvatarGlow ?? false);
+      setCustVerified(fx?.effectVerifiedBadge ?? false);
+      setCustAccent(fx?.accentColor || "");
+      setCustSaveError(null);
+      setCustSaveSuccess(false);
+      setCustSaveFading(false);
+      setCustDirty(false);
+    }
+  }, [settingsOpen, auth.user]);
+
+  const handleProfileSave = async (field: "displayName" | "bio") => {
+    setProfileSaving(true);
+    setProfileSaveError(null);
+    setProfileSaveSuccess(false);
+    setProfileSaveFading(false);
+
+    const data = field === "displayName"
+      ? { displayName: profileDisplayName }
+      : { bio: profileBio };
+
+    const start = Date.now();
+    const result = await auth.updateProfile(data);
+    const elapsed = Date.now() - start;
+    const remaining = Math.max(0, 500 - elapsed);
+
+    await new Promise((r) => setTimeout(r, remaining));
+
+    if (result.ok) {
+      setProfileSaveSuccess(true);
+      setProfileDirty(false);
+      setTimeout(() => {
+        setProfileSaveFading(true);
+        setTimeout(() => { setProfileSaveSuccess(false); setProfileSaveFading(false); }, 500);
+      }, 1500);
+    } else {
+      setProfileSaveError(result.error);
+    }
+    setProfileSaving(false);
+  };
+
+  const handleCustSave = async () => {
+    setCustSaving(true);
+    setCustSaveError(null);
+    setCustSaveSuccess(false);
+    setCustSaveFading(false);
+    const start = Date.now();
+    const result = await auth.updateProfile({
+      effectShimmer: custShimmer,
+      effectBorderGlow: custBorderGlow,
+      effectAvatarGlow: custAvatarGlow,
+      effectVerifiedBadge: custVerified,
+      accentColor: custAccent || "",
+    });
+    const elapsed = Date.now() - start;
+    await new Promise((r) => setTimeout(r, Math.max(0, 500 - elapsed)));
+    if (result.ok) {
+      setCustSaveSuccess(true);
+      setCustDirty(false);
+      setTimeout(() => {
+        setCustSaveFading(true);
+        setTimeout(() => { setCustSaveSuccess(false); setCustSaveFading(false); }, 500);
+      }, 1500);
+    } else {
+      setCustSaveError(result.error);
+    }
+    setCustSaving(false);
+  };
+
+  const handleProfileCancel = () => {
+    if (auth.user) {
+      setProfileDisplayName(auth.user.displayName || "");
+      setProfileBio(auth.user.bio || "");
+    }
+    setProfileSaveError(null);
+    setProfileSaveSuccess(false);
+    setProfileSaveFading(false);
+    setProfileDirty(false);
+  };
 
   useEffect(() => {
     setAuthError(null);
@@ -62,29 +279,36 @@ export default function Header() {
     };
   }, [searchOpen, settingsOpen, authOpen]);
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (authLoading) return;
 
+    const loginValue = loginInputRef.current?.value ?? "";
+    const passwordValue = passwordInputRef.current?.value ?? "";
+
+    setAuthError(null);
+    setAuthLoading(true);
+
+    let result;
     if (authMode === "login") {
-      const loginValue = loginInputRef.current?.value ?? "";
-      const passwordValue = passwordInputRef.current?.value ?? "";
-      const result = auth.login(loginValue, passwordValue);
-      if (result.ok) {
-        setAuthError(null);
-        setAuthLoading(true);
-        setTimeout(() => {
-          router.push(`/profile/yumekoadmin`);
-          setTimeout(() => {
-            setAuthOpen(false);
-            setAuthLoading(false);
-          }, 250);
-        }, 900);
-      } else {
-        setAuthError(result.error);
-      }
+      result = await auth.login(loginValue, passwordValue);
     } else {
-      setAuthError("Регистрация пока недоступна");
+      const confirmValue = confirmPasswordInputRef.current?.value ?? "";
+      result = await auth.register(loginValue, passwordValue, confirmValue);
+    }
+
+    if (result.ok) {
+      const user = result.user;
+      setTimeout(() => {
+        router.push(`/profile/${user.username}`);
+        setTimeout(() => {
+          setAuthOpen(false);
+          setAuthLoading(false);
+        }, 250);
+      }, 900);
+    } else {
+      setAuthError(result.error);
+      setAuthLoading(false);
     }
   };
 
@@ -120,13 +344,14 @@ export default function Header() {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (friendsOpen && !friendsClosing) closeFriends();
         if (searchOpen && !searchClosing) closeSearch();
         if (settingsOpen && !settingsClosing) closeSettings();
         if (authOpen && !authClosing) closeAuth();
         setProfileMenuOpen(false);
       }
     };
-    if (searchOpen || settingsOpen || profileMenuOpen) document.addEventListener("keydown", handleEsc);
+    if (searchOpen || settingsOpen || profileMenuOpen || friendsOpen) document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, [searchOpen, settingsOpen, profileMenuOpen]);
 
@@ -191,7 +416,7 @@ export default function Header() {
   };
 
   const subTabTitles: Record<string, Record<string, string>> = {
-    profile: { username: "Имя пользователя", avatar: "Аватар", bio: "О себе" },
+    profile: { username: "Имя пользователя", avatar: "Аватар", bio: "О себе", customize: "Кастомизация профиля" },
     security: { password: "Пароль", twofa: "Двухфакторная аутентификация", sessions: "Активные сессии" },
     notifications: { push: "Push-уведомления", email: "Email-уведомления", releases: "Уведомления о релизах" },
     appearance: { theme: "Тема", accent: "Акцентный цвет", font: "Размер шрифта" },
@@ -262,8 +487,8 @@ export default function Header() {
                 onClick={() => setProfileMenuOpen((v) => !v)}
               >
                 <div className={styles.avatarAuth}>
-                  {auth.user.avatarUrl ? (
-                    <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
+                  {auth.user.hasAvatar ? (
+                    <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/avatar?v=${auth.user.imageVersion}`} alt={auth.user.displayName} className={styles.avatarAuthImg} />
                   ) : (
                     <span className={styles.avatarInitial}>{auth.user.displayName.charAt(0)}</span>
                   )}
@@ -272,12 +497,14 @@ export default function Header() {
 
               {profileMenuOpen && (
                 <div className={styles.profileMenu} role="menu">
-                  <div className={styles.profileMenuBanner} />
+                  <div className={styles.profileMenuBanner}>
+                    {auth.user.hasBanner && <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/banner?v=${auth.user.imageVersion}`} alt="banner" className={styles.profileMenuBannerImg} />}
+                  </div>
 
                   <div className={styles.profileMenuTop}>
                     <div className={styles.profileMenuAvatar}>
-                      {auth.user.avatarUrl ? (
-                        <img src={auth.user.avatarUrl} alt={auth.user.displayName} />
+                      {auth.user.hasAvatar ? (
+                        <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/avatar?v=${auth.user.imageVersion}`} alt={auth.user.displayName} className={styles.profileMenuAvatarImg} />
                       ) : (
                         <span>{auth.user.displayName.charAt(0)}</span>
                       )}
@@ -288,22 +515,15 @@ export default function Header() {
                         <span className={styles.profileMenuName}>{auth.user.displayName}</span>
                         <div className={styles.profileMenuBadges}>
                           <span
-                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeAdmin}`}
-                            title="Администратор"
+                            className={styles.profileMenuBadge}
+                            style={{ color: auth.user.role.color }}
+                            title={auth.user.role.displayName}
                           >
-                            <Crown size={14} strokeWidth={2.4} />
-                          </span>
-                          <span
-                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeEarly}`}
-                            title="Ранний пользователь"
-                          >
-                            <Sparkles size={14} strokeWidth={2.4} />
-                          </span>
-                          <span
-                            className={`${styles.profileMenuBadge} ${styles.profileMenuBadgeStar}`}
-                            title="Избранный"
-                          >
-                            <Star size={14} strokeWidth={2.4} />
+                            {auth.user.role.name === "ADMIN" && <Crown size={14} strokeWidth={2.4} />}
+                            {auth.user.role.name === "PRE_ADMIN" && <Shield size={14} strokeWidth={2.4} />}
+                            {auth.user.role.name === "ST_MODERATOR" && <ShieldCheck size={14} strokeWidth={2.4} />}
+                            {auth.user.role.name === "MODERATOR" && <Shield size={14} strokeWidth={2.4} />}
+                            {auth.user.role.name === "USER" && <Star size={14} strokeWidth={2.4} />}
                           </span>
                         </div>
                       </div>
@@ -313,7 +533,7 @@ export default function Header() {
                     <div className={styles.profileMenuBio}>
                       <span className={styles.profileMenuBioLabel}>О себе</span>
                       <p className={styles.profileMenuBioText}>
-                        Пока вы ничего о себе не рассказали.
+                        {auth.user.bio || "Пока вы ничего о себе не рассказали."}
                       </p>
                     </div>
                   </div>
@@ -339,6 +559,14 @@ export default function Header() {
                       <Bookmark size={16} />
                       <span>Мои закладки</span>
                     </Link>
+                    <button
+                      className={styles.profileMenuItem}
+                      onClick={() => { setProfileMenuOpen(false); setFriendsOpen(true); }}
+                      role="menuitem"
+                    >
+                      <Users size={16} />
+                      <span>Мои друзья</span>
+                    </button>
                     {auth.user.username === "yumekoadmin" && (
                       <Link
                         href="/admin"
@@ -498,10 +726,24 @@ export default function Header() {
                       <ChevronRight size={16} className={styles.settingsCardChevron} />
                     </div>
                   </div>
+                  <div className={styles.settingsCard} onClick={() => openSubTab("banner")}>
+                    <div className={styles.settingsCardInner}>
+                      <div><div className={styles.settingsCardTitle}>Баннер</div>
+                      <div className={styles.settingsCardDesc}>Загрузите изображение для баннера вашего профиля.</div></div>
+                      <ChevronRight size={16} className={styles.settingsCardChevron} />
+                    </div>
+                  </div>
                   <div className={styles.settingsCard} onClick={() => openSubTab("bio")}>
                     <div className={styles.settingsCardInner}>
                       <div><div className={styles.settingsCardTitle}>О себе</div>
                       <div className={styles.settingsCardDesc}>Расскажите немного о себе. Эта информация будет видна в вашем профиле.</div></div>
+                      <ChevronRight size={16} className={styles.settingsCardChevron} />
+                    </div>
+                  </div>
+                  <div className={`${styles.settingsCard}${!canCustomize ? ` ${styles.settingsCardDisabled}` : ""}`} onClick={canCustomize ? () => openSubTab("customize") : undefined}>
+                    <div className={styles.settingsCardInner}>
+                      <div><div className={styles.settingsCardTitle}>Кастомизация профиля</div>
+                      <div className={styles.settingsCardDesc}>{canCustomize ? "Настройте визуальные эффекты вашего профиля: свечение, анимации, акцентный цвет." : "Доступно для модераторов и выше."}</div></div>
                       <ChevronRight size={16} className={styles.settingsCardChevron} />
                     </div>
                   </div>
@@ -516,10 +758,10 @@ export default function Header() {
                       <ChevronRight size={16} className={styles.settingsCardChevron} />
                     </div>
                   </div>
-                  <div className={styles.settingsCard} onClick={() => openSubTab("twofa")}>
+                  <div className={`${styles.settingsCard} ${styles.settingsCardDisabled}`}>
                     <div className={styles.settingsCardInner}>
                       <div><div className={styles.settingsCardTitle}>Двухфакторная аутентификация</div>
-                      <div className={styles.settingsCardDesc}>Добавьте дополнительный уровень защиты с помощью 2FA.</div></div>
+                      <div className={styles.settingsCardDesc}>Скоро — добавьте дополнительный уровень защиты с помощью 2FA.</div></div>
                       <ChevronRight size={16} className={styles.settingsCardChevron} />
                     </div>
                   </div>
@@ -609,9 +851,199 @@ export default function Header() {
               )}
 
               {/* Sub-tab content */}
-              {settingsSubTab === "username" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Отображаемое имя</p><input className={styles.settingsInput} type="text" placeholder="Введите имя пользователя" /><p className={styles.settingsSubHint}>Имя будет видно другим пользователям на платформе.</p></div>}
-              {settingsSubTab === "avatar" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Загрузка аватара</p><div className={styles.settingsAvatarUpload}><div className={styles.settingsAvatarPreview} /><button className={styles.settingsBtn}>Выбрать файл</button></div><p className={styles.settingsSubHint}>Рекомендуемый размер: 256×256 px. Форматы: JPG, PNG, WebP.</p></div>}
-              {settingsSubTab === "bio" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>О себе</p><textarea className={styles.settingsTextarea} placeholder="Расскажите немного о себе..." rows={4} /><p className={styles.settingsSubHint}>Максимум 200 символов.</p></div>}
+              {settingsSubTab === "username" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>Отображаемое имя</p>
+                  <input
+                    className={styles.settingsInput}
+                    type="text"
+                    placeholder="Введите имя пользователя"
+                    value={profileDisplayName}
+                    onChange={(e) => { setProfileDisplayName(e.target.value); setProfileDirty(true); setProfileSaveSuccess(false); setProfileSaveFading(false); }}
+                    maxLength={64}
+                  />
+                  <p className={styles.settingsSubHint}>Имя будет видно другим пользователям на платформе.</p>
+                  {profileSaveError && <div className={styles.settingsSaveError}>{profileSaveError}</div>}
+                  <div className={styles.settingsFooterRow}>
+                    {profileSaveSuccess && (
+                      <div className={`${styles.settingsSaveSuccess} ${profileSaveFading ? styles.settingsSaveSuccessFading : ""}`}>
+                        Сохранено успешно!
+                      </div>
+                    )}
+                    <div className={styles.settingsBtnRow}>
+                      <button className={styles.settingsBtnCancel} onClick={handleProfileCancel} disabled={profileSaving}>Отменить</button>
+                      <button
+                        className={`${styles.settingsBtn} ${profileSaving ? styles.settingsBtnLoading : ""}`}
+                        onClick={() => handleProfileSave("displayName")}
+                        disabled={profileSaving || !profileDirty}
+                      >
+                        <span style={profileSaving ? { visibility: "hidden" } : undefined}>Сохранить</span>
+                        {profileSaving && <span className={styles.settingsBtnSpinner} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {settingsSubTab === "avatar" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>Загрузка аватара</p>
+                  <div className={styles.settingsAvatarUpload}>
+                    <div className={styles.settingsAvatarPreview}>
+                      {auth.user?.hasAvatar && <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/avatar?v=${auth.user.imageVersion}`} alt="avatar" className={styles.settingsAvatarImg} />}
+                    </div>
+                    <button className={`${styles.settingsBtn} ${imageUploading ? styles.settingsBtnLoading : ""}`} onClick={() => avatarInputRef.current?.click()} disabled={imageUploading}>
+                      <span style={imageUploading ? { visibility: "hidden" } : undefined}>Выбрать файл</span>
+                      {imageUploading && <span className={styles.settingsBtnSpinner} />}
+                    </button>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      style={{ display: "none" }}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload("avatar", f); e.target.value = ""; }}
+                    />
+                  </div>
+                  <p className={styles.settingsSubHint}>Рекомендуемый размер: 256×256 px. Форматы: JPG, PNG, WebP, GIF. Максимум 5 МБ.</p>
+                  {imageUploadError && <div className={styles.settingsSaveError}>{imageUploadError}</div>}
+                  {imageUploadSuccess && (
+                    <div className={`${styles.settingsSaveSuccess} ${imageUploadFading ? styles.settingsSaveSuccessFading : ""}`}>
+                      Аватар загружен!
+                    </div>
+                  )}
+                </div>
+              )}
+              {settingsSubTab === "banner" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>Загрузка баннера</p>
+                  <div className={styles.settingsBannerUpload}>
+                    <div className={styles.settingsBannerPreview}>
+                      {auth.user?.hasBanner && <ProtectedImage src={`${API_URL}/api/media/${auth.user.username}/banner?v=${auth.user.imageVersion}`} alt="banner" className={styles.settingsBannerImg} />}
+                    </div>
+                    <button className={`${styles.settingsBtn} ${imageUploading ? styles.settingsBtnLoading : ""}`} onClick={() => bannerInputRef.current?.click()} disabled={imageUploading}>
+                      <span style={imageUploading ? { visibility: "hidden" } : undefined}>Выбрать файл</span>
+                      {imageUploading && <span className={styles.settingsBtnSpinner} />}
+                    </button>
+                    <input
+                      ref={bannerInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      style={{ display: "none" }}
+                      onChange={handleBannerFileSelect}
+                    />
+                  </div>
+                  <p className={styles.settingsSubHint}>Рекомендуемый размер: 1200×400 px. Форматы: JPG, PNG, WebP, GIF. Максимум 5 МБ.</p>
+                  {imageUploadError && <div className={styles.settingsSaveError}>{imageUploadError}</div>}
+                  {imageUploadSuccess && (
+                    <div className={`${styles.settingsSaveSuccess} ${imageUploadFading ? styles.settingsSaveSuccessFading : ""}`}>
+                      Баннер загружен!
+                    </div>
+                  )}
+                </div>
+              )}
+              {settingsSubTab === "bio" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>О себе</p>
+                  <textarea
+                    className={styles.settingsTextarea}
+                    placeholder="Расскажите немного о себе..."
+                    rows={4}
+                    value={profileBio}
+                    onChange={(e) => { setProfileBio(e.target.value); setProfileDirty(true); setProfileSaveSuccess(false); setProfileSaveFading(false); }}
+                    maxLength={300}
+                  />
+                  <p className={styles.settingsSubHint}>Максимум 300 символов. ({profileBio.length}/300)</p>
+                  {profileSaveError && <div className={styles.settingsSaveError}>{profileSaveError}</div>}
+                  <div className={styles.settingsFooterRow}>
+                    {profileSaveSuccess && (
+                      <div className={`${styles.settingsSaveSuccess} ${profileSaveFading ? styles.settingsSaveSuccessFading : ""}`}>
+                        Сохранено успешно!
+                      </div>
+                    )}
+                    <div className={styles.settingsBtnRow}>
+                      <button className={styles.settingsBtnCancel} onClick={handleProfileCancel} disabled={profileSaving}>Отменить</button>
+                      <button
+                        className={`${styles.settingsBtn} ${profileSaving ? styles.settingsBtnLoading : ""}`}
+                        onClick={() => handleProfileSave("bio")}
+                        disabled={profileSaving || !profileDirty}
+                      >
+                        <span style={profileSaving ? { visibility: "hidden" } : undefined}>Сохранить</span>
+                        {profileSaving && <span className={styles.settingsBtnSpinner} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {settingsSubTab === "customize" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>Эффекты профиля</p>
+                  <p className={styles.settingsSubHint}>Включите или отключите визуальные эффекты для вашего публичного профиля.</p>
+                  <div className={styles.settingsToggleRow}>
+                    <span>Shimmer-эффект</span>
+                    <div className={`${styles.settingsToggle} ${custShimmer ? styles.settingsToggleOn : ""}`} onClick={() => { setCustShimmer(!custShimmer); setCustDirty(true); }}>
+                      <div className={styles.settingsToggleKnob} />
+                    </div>
+                  </div>
+                  <div className={styles.settingsToggleRow}>
+                    <span>Анимированная рамка</span>
+                    <div className={`${styles.settingsToggle} ${custBorderGlow ? styles.settingsToggleOn : ""}`} onClick={() => { setCustBorderGlow(!custBorderGlow); setCustDirty(true); }}>
+                      <div className={styles.settingsToggleKnob} />
+                    </div>
+                  </div>
+                  <div className={styles.settingsToggleRow}>
+                    <span>Свечение аватара</span>
+                    <div className={`${styles.settingsToggle} ${custAvatarGlow ? styles.settingsToggleOn : ""}`} onClick={() => { setCustAvatarGlow(!custAvatarGlow); setCustDirty(true); }}>
+                      <div className={styles.settingsToggleKnob} />
+                    </div>
+                  </div>
+                  <div className={styles.settingsToggleRow}>
+                    <span>Бейдж верификации</span>
+                    <div className={`${styles.settingsToggle} ${custVerified ? styles.settingsToggleOn : ""}`} onClick={() => { setCustVerified(!custVerified); setCustDirty(true); }}>
+                      <div className={styles.settingsToggleKnob} />
+                    </div>
+                  </div>
+                  <p className={styles.settingsSubLabel} style={{ marginTop: 20 }}>Акцентный цвет</p>
+                  <p className={styles.settingsSubHint}>Установите цвет свечения профиля. Оставьте пустым для цвета по умолчанию.</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <input
+                      type="color"
+                      value={custAccent || "#a78bfa"}
+                      onChange={(e) => { setCustAccent(e.target.value); setCustDirty(true); }}
+                      style={{ width: 40, height: 40, border: "none", borderRadius: 8, cursor: "pointer", background: "transparent" }}
+                    />
+                    <input
+                      className={styles.settingsInput}
+                      type="text"
+                      placeholder="#a78bfa"
+                      value={custAccent}
+                      onChange={(e) => { setCustAccent(e.target.value); setCustDirty(true); }}
+                      maxLength={7}
+                      style={{ flex: 1 }}
+                    />
+                    {custAccent && (
+                      <button className={styles.settingsBtnCancel} onClick={() => { setCustAccent(""); setCustDirty(true); }}>Сбросить</button>
+                    )}
+                  </div>
+                  {custSaveError && <div className={styles.settingsSaveError}>{custSaveError}</div>}
+                  <div className={styles.settingsFooterRow}>
+                    {custSaveSuccess && (
+                      <div className={`${styles.settingsSaveSuccess} ${custSaveFading ? styles.settingsSaveSuccessFading : ""}`}>
+                        Сохранено успешно!
+                      </div>
+                    )}
+                    <div className={styles.settingsBtnRow}>
+                      <button className={styles.settingsBtnCancel} onClick={() => { if (auth.user) { const f = auth.user.effects; setCustShimmer(f?.effectShimmer ?? false); setCustBorderGlow(f?.effectBorderGlow ?? false); setCustAvatarGlow(f?.effectAvatarGlow ?? false); setCustVerified(f?.effectVerifiedBadge ?? false); setCustAccent(f?.accentColor || ""); setCustDirty(false); } }} disabled={custSaving}>Отменить</button>
+                      <button
+                        className={`${styles.settingsBtn} ${custSaving ? styles.settingsBtnLoading : ""}`}
+                        onClick={handleCustSave}
+                        disabled={custSaving || !custDirty}
+                      >
+                        <span style={custSaving ? { visibility: "hidden" } : undefined}>Сохранить</span>
+                        {custSaving && <span className={styles.settingsBtnSpinner} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {settingsSubTab === "password" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Текущий пароль</p><input className={styles.settingsInput} type="password" placeholder="Введите текущий пароль" /><p className={styles.settingsSubLabel}>Новый пароль</p><input className={styles.settingsInput} type="password" placeholder="Введите новый пароль" /><p className={styles.settingsSubLabel}>Подтвердите пароль</p><input className={styles.settingsInput} type="password" placeholder="Повторите новый пароль" /><button className={styles.settingsBtn}>Сохранить</button></div>}
               {settingsSubTab === "twofa" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Двухфакторная аутентификация</p><p className={styles.settingsSubHint}>Защитите свой аккаунт с помощью приложения-аутентификатора.</p><button className={styles.settingsBtn}>Включить 2FA</button></div>}
               {settingsSubTab === "sessions" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Активные сессии</p><div className={styles.settingsCard}><div className={styles.settingsCardTitle}>Windows · Chrome</div><div className={styles.settingsCardDesc}>Текущая сессия · Москва, Россия</div></div><p className={styles.settingsSubHint}>Завершите сессии на устройствах, которым вы не доверяете.</p></div>}
@@ -836,6 +1268,7 @@ export default function Header() {
                   <div className={styles.authInputWrap}>
                     <Lock size={16} className={styles.authInputIcon} />
                     <input
+                      ref={confirmPasswordInputRef}
                       type={showPassword ? "text" : "password"}
                       className={styles.authInput}
                       placeholder="Повторите пароль"
@@ -872,6 +1305,103 @@ export default function Header() {
                 </span>
               </button>
             </form>
+          </div>
+        </>
+      )}
+      {bannerCropSrc && (
+        <CropModal
+          imageSrc={bannerCropSrc}
+          aspect={3}
+          onApply={handleBannerCropApply}
+          onCancel={() => setBannerCropSrc(null)}
+        />
+      )}
+      {friendsOpen && (
+        <>
+          <div className={styles.searchOverlay} onClick={closeFriends} />
+          <div className={`${styles.friendsModal} ${friendsClosing ? styles.friendsModalClosing : ""}`}>
+            <div className={styles.friendsHeader}>
+              <div className={styles.friendsTabs}>
+                <button className={`${styles.friendsTabBtn} ${friendsTab === "friends" ? styles.friendsTabBtnActive : ""}`} onClick={() => setFriendsTab("friends")}>
+                  Друзья{friendsList.length > 0 && <span className={styles.friendsTabCount}>{friendsList.length}</span>}
+                </button>
+                <button className={`${styles.friendsTabBtn} ${friendsTab === "pending" ? styles.friendsTabBtnActive : ""}`} onClick={() => setFriendsTab("pending")}>
+                  Запросы{pendingList.length > 0 && <span className={styles.friendsTabCount}>{pendingList.length}</span>}
+                </button>
+              </div>
+              <button className={styles.searchClose} onClick={closeFriends}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.friendsBody}>
+              {friendsLoading ? (
+                <div className={styles.friendsEmpty}><p>Загрузка...</p></div>
+              ) : friendsTab === "friends" ? (
+                friendsList.length === 0 ? (
+                  <div className={styles.friendsEmpty}>
+                    <Users size={48} strokeWidth={1.2} />
+                    <p>У вас пока нет друзей</p>
+                    <span>Добавляйте друзей через их профили</span>
+                  </div>
+                ) : (
+                  <div className={styles.friendsGrid}>
+                    {friendsList.map((f: any) => (
+                      <div key={f.id} className={styles.friendCard}>
+                        <Link href={`/profile/${f.username}`} className={styles.friendCardLink} onClick={closeFriends}>
+                          <div className={styles.friendAvatar}>
+                            {f.hasAvatar ? (
+                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                            ) : (
+                              <span>{f.displayName.charAt(0)}</span>
+                            )}
+                          </div>
+                          <div className={styles.friendInfo}>
+                            <span className={styles.friendName}>{f.displayName}</span>
+                            <span className={styles.friendHandle}>@{f.username}</span>
+                          </div>
+                        </Link>
+                        <button className={styles.friendRemoveBtn} onClick={() => handleRejectFriend(f.username)} title="Удалить">
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                pendingList.length === 0 ? (
+                  <div className={styles.friendsEmpty}>
+                    <Bell size={48} strokeWidth={1.2} />
+                    <p>Нет входящих запросов</p>
+                  </div>
+                ) : (
+                  <div className={styles.friendsGrid}>
+                    {pendingList.map((f: any) => (
+                      <div key={f.id} className={styles.friendCard}>
+                        <Link href={`/profile/${f.username}`} className={styles.friendCardLink} onClick={closeFriends}>
+                          <div className={styles.friendAvatar}>
+                            {f.hasAvatar ? (
+                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                            ) : (
+                              <span>{f.displayName.charAt(0)}</span>
+                            )}
+                          </div>
+                          <div className={styles.friendInfo}>
+                            <span className={styles.friendName}>{f.displayName}</span>
+                            <span className={styles.friendHandle}>@{f.username}</span>
+                          </div>
+                        </Link>
+                        <div className={styles.friendActions}>
+                          <button className={styles.friendAcceptBtn} onClick={() => handleAcceptFriend(f.username)} title="Принять">✓</button>
+                          <button className={styles.friendRemoveBtn} onClick={() => handleRejectFriend(f.username)} title="Отклонить">
+                            <X size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </>
       )}
