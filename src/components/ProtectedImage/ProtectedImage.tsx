@@ -23,19 +23,10 @@ export default function ProtectedImage({ src, alt, className, style, fallback }:
     fetch(src)
       .then((res) => {
         if (!res.ok) throw new Error("Failed");
-        return res.text();
+        return res.blob();
       })
-      .then((hexDump) => {
+      .then((blob) => {
         if (cancelled) return;
-        const bytes: number[] = [];
-        for (const line of hexDump.split("\n")) {
-          if (!line.trim()) continue;
-          const hexPart = line.substring(10, 58).trim();
-          for (const h of hexPart.split(/\s+/)) {
-            if (h.length === 2) bytes.push(parseInt(h, 16));
-          }
-        }
-        const blob = new Blob([new Uint8Array(bytes)]);
         const url = URL.createObjectURL(blob);
         blobRef.current = url;
         setBlobUrl(url);
