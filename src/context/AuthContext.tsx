@@ -1,8 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+import { API_URL } from "@/config/hosts";
 const CRYPTO_SECRET = process.env.NEXT_PUBLIC_CRYPTO_SECRET || "Ym3k0Stud10_S3cR3t_K3y_2024!xQ9";
 
 export type Role = {

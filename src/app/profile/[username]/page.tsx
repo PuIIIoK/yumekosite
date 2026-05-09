@@ -7,8 +7,7 @@ import { useAuth, type User, type Role } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import styles from "./profile.module.scss";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+import { API_URL } from "@/config/hosts";
 
 function mapProfileUser(dto: any): User {
   return {

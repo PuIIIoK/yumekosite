@@ -10,8 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import CropModal from "@/components/CropModal/CropModal";
 import styles from "./Header.module.scss";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+import { API_URL } from "@/config/hosts";
 
 export default function Header() {
   const pathname = usePathname();
