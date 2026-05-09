@@ -292,16 +292,21 @@
 .displayName {
   font-size: clamp(56px, 9.4vw, 132px);
   font-weight: 700;
-  line-height: 0.96;
+  line-height: 0.92;
   letter-spacing: -0.025em;
   color: var(--text-primary);
   margin: 0;
+}
 
-  // Outline chunk for postmodern feel
-  & > span {
-    color: transparent;
-    -webkit-text-stroke: 1.5px var(--text-primary);
-  }
+.displayNameSub {
+  display: block;
+  font-size: clamp(32px, 5vw, 72px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-top: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--text-primary);
 }
 
 .heroSubRow {

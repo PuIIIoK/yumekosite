@@ -141,7 +141,9 @@ export default function ProfilePage() {
 
   const isOwner = auth.user?.username.toLowerCase() === username.toLowerCase();
 
-  const nameParts = profileUser.displayName.split(/(?=[A-ZА-Я])/);
+  const nameWords = profileUser.displayName.split(/\s+/);
+  const nameFirstLine = nameWords[0];
+  const nameRest = nameWords.slice(1).join(" ");
 
   const ROLE_COLORS: Record<string, { c1: string; c2: string; c3: string }> = {
     ADMIN:        { c1: "#a78bfa", c2: "#f472b6", c3: "#818cf8" },
@@ -197,8 +199,8 @@ export default function ProfilePage() {
           <div className={styles.heroLeft}>
             <span className={styles.heroIndex}>// 01 — IDENTITY</span>
             <h1 className={styles.displayName}>
-              {nameParts[0]}
-              {nameParts[1] && <span>{nameParts[1]}</span>}
+              {nameFirstLine}
+              {nameRest && <span className={styles.displayNameSub}>{nameRest}</span>}
             </h1>
             <div className={styles.heroSubRow}>
               <span className={styles.handle}>{profileUser.handle}</span>

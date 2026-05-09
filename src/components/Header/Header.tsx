@@ -26,6 +26,7 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState(animeCatalog.slice(0, 0));
+  const [userResults, setUserResults] = useState<any[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -439,11 +440,12 @@ export default function Header() {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setUserResults([]);
       setSearchLoading(false);
       return;
     }
     setSearchLoading(true);
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       const q = searchQuery.toLowerCase();
       const results = animeCatalog.filter(
         (a) =>
@@ -452,6 +454,16 @@ export default function Header() {
           a.genres.toLowerCase().includes(q)
       );
       setSearchResults(results);
+
+      try {
+        const res = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        const data = parseHex(await res.text());
+        if (data.ok) setUserResults(data.users || []);
+        else setUserResults([]);
+      } catch {
+        setUserResults([]);
+      }
+
       setSearchLoading(false);
     }, 400);
     return () => clearTimeout(timer);
@@ -1218,45 +1230,76 @@ export default function Header() {
             </div>
             {searchLoading && <div className={styles.searchLoader}><div className={styles.searchLoaderBar} /></div>}
             {!searchQuery.trim() && !searchLoading && (
-              <div className={styles.searchHint}>Начните вводить название аниме</div>
+              <div className={styles.searchHint}>Начните вводить название аниме или пользователя</div>
             )}
-            {searchQuery.trim() && !searchLoading && searchResults.length === 0 && (
+            {searchQuery.trim() && !searchLoading && searchResults.length === 0 && userResults.length === 0 && (
               <div className={styles.searchHint}>Ничего не найдено</div>
             )}
             {searchResults.length > 0 && !searchLoading && (
-              <div className={styles.searchResultsGrid}>
-                {searchResults.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/realeses/anime-page/${item.id}`}
-                    className={styles.searchCard}
-                    onClick={closeSearch}
-                  >
-                    <div className={styles.searchCardPoster}>
-                      <img
-                        src={item.poster}
-                        alt={item.title}
-                        className={styles.searchCardImg}
-                      />
-                      <span
-                        className={styles.searchCardRating}
-                        style={{ background: getAccent(item.rating) }}
-                      >
-                        {item.rating}
-                      </span>
-                    </div>
-                    <div className={styles.searchCardInfo}>
-                      <span className={styles.searchCardTitle}>{item.title}</span>
-                      <span className={styles.searchCardMeta}>
-                        {item.year} • {item.format} • {item.status}
-                      </span>
-                      <span className={styles.searchCardGenres} style={{ color: getAccent(item.rating) }}>
-                        {item.genres}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <>
+                {userResults.length > 0 && <div className={styles.searchSectionLabel}>Аниме</div>}
+                <div className={styles.searchResultsGrid}>
+                  {searchResults.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/realeses/anime-page/${item.id}`}
+                      className={styles.searchCard}
+                      onClick={closeSearch}
+                    >
+                      <div className={styles.searchCardPoster}>
+                        <img
+                          src={item.poster}
+                          alt={item.title}
+                          className={styles.searchCardImg}
+                        />
+                        <span
+                          className={styles.searchCardRating}
+                          style={{ background: getAccent(item.rating) }}
+                        >
+                          {item.rating}
+                        </span>
+                      </div>
+                      <div className={styles.searchCardInfo}>
+                        <span className={styles.searchCardTitle}>{item.title}</span>
+                        <span className={styles.searchCardMeta}>
+                          {item.year} • {item.format} • {item.status}
+                        </span>
+                        <span className={styles.searchCardGenres} style={{ color: getAccent(item.rating) }}>
+                          {item.genres}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+            {userResults.length > 0 && !searchLoading && (
+              <>
+                {searchResults.length > 0 && <div className={styles.searchSectionLabel}>Пользователи</div>}
+                <div className={styles.searchUsersList}>
+                  {userResults.map((u) => (
+                    <Link
+                      key={u.id}
+                      href={`/profile/${u.username}`}
+                      className={styles.searchUserRow}
+                      onClick={closeSearch}
+                    >
+                      <div className={styles.searchUserAvatar}>
+                        {u.hasAvatar ? (
+                          <ProtectedImage src={`${API_URL}/api/media/${u.username}/avatar?v=${Date.now()}`} alt={u.displayName} className={styles.searchUserAvatarImg} />
+                        ) : (
+                          <span className={styles.searchUserInitial}>{(u.displayName || u.username).charAt(0)}</span>
+                        )}
+                      </div>
+                      <div className={styles.searchUserInfo}>
+                        <span className={styles.searchUserName}>{u.displayName || u.username}</span>
+                        <span className={styles.searchUserHandle}>@{u.username}</span>
+                      </div>
+                      <span className={styles.searchUserRole} style={{ color: u.role?.color || "#6b7280" }}>{u.role?.displayName}</span>
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </>
