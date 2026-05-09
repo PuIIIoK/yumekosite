@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
 import { animeCatalog, getAccent, getAnimeById } from "@/data/anime";
@@ -110,6 +111,28 @@ type AnimePageProps = {
     id_anime: string;
   }>;
 };
+
+export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
+  const { id_anime } = await params;
+  const anime = getAnimeById(id_anime);
+  if (!anime) return { title: "Релиз не найден" };
+  return {
+    title: anime.title,
+    description: anime.description || anime.synopsis || `${anime.title} — смотрите онлайн в озвучке YumekoStudio`,
+    openGraph: {
+      title: `${anime.title} | YumekoStudio`,
+      description: anime.description || anime.synopsis,
+      images: anime.poster ? [{ url: anime.poster, width: 600, height: 900, alt: anime.title }] : [],
+      type: "video.movie",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${anime.title} | YumekoStudio`,
+      description: anime.description || anime.synopsis,
+      images: anime.poster ? [anime.poster] : [],
+    },
+  };
+}
 
 export default async function AnimePage({ params }: AnimePageProps) {
   const { id_anime } = await params;

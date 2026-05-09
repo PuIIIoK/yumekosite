@@ -70,6 +70,11 @@ export default function Header() {
   const canCustomize = (auth.user?.role.priority ?? 0) >= 70;
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [friendsClosing, setFriendsClosing] = useState(false);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [bookmarksClosing, setBookmarksClosing] = useState(false);
+  const [bookmarksTab, setBookmarksTab] = useState<string>("favorites");
+  const [bmIndicator, setBmIndicator] = useState({ left: 0, width: 0 });
+  const bmTabsRef = useRef<HTMLDivElement>(null);
   const [friendsList, setFriendsList] = useState<any[]>([]);
   const [pendingList, setPendingList] = useState<any[]>([]);
   const [friendsTab, setFriendsTab] = useState<"friends" | "pending">("friends");
@@ -124,6 +129,20 @@ export default function Header() {
     setFriendsClosing(true);
     setTimeout(() => { setFriendsOpen(false); setFriendsClosing(false); }, 350);
   };
+
+  const closeBookmarks = () => {
+    if (bookmarksClosing) return;
+    setBookmarksClosing(true);
+    setTimeout(() => { setBookmarksOpen(false); setBookmarksClosing(false); }, 350);
+  };
+
+  useEffect(() => {
+    if (!bmTabsRef.current) return;
+    const active = bmTabsRef.current.querySelector("[data-active='true']") as HTMLElement | null;
+    if (active) {
+      setBmIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+    }
+  }, [bookmarksTab, bookmarksOpen]);
 
   useEffect(() => {
     if (friendsOpen) { setFriendsTab("friends"); fetchFriendsData(); }
@@ -415,6 +434,7 @@ export default function Header() {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        if (bookmarksOpen && !bookmarksClosing) closeBookmarks();
         if (friendsOpen && !friendsClosing) closeFriends();
         if (searchOpen && !searchClosing) closeSearch();
         if (settingsOpen && !settingsClosing) closeSettings();
@@ -557,7 +577,7 @@ export default function Header() {
             <Heart size={15} strokeWidth={2.5} />
             Поддержать
           </Link>
-          <button className={styles.iconBtn} aria-label="Закладки">
+          <button className={styles.iconBtn} aria-label="Закладки" onClick={() => setBookmarksOpen(true)}>
             <BookMarked size={20} />
           </button>
           {auth.isAuthenticated && auth.user ? (
@@ -632,15 +652,14 @@ export default function Header() {
                       <User size={16} />
                       <span>Мой профиль</span>
                     </Link>
-                    <Link
-                      href="/bookmarks"
+                    <button
                       className={styles.profileMenuItem}
-                      onClick={() => setProfileMenuOpen(false)}
+                      onClick={() => { setProfileMenuOpen(false); setBookmarksOpen(true); }}
                       role="menuitem"
                     >
                       <Bookmark size={16} />
                       <span>Мои закладки</span>
-                    </Link>
+                    </button>
                     <button
                       className={styles.profileMenuItem}
                       onClick={() => { setProfileMenuOpen(false); setFriendsOpen(true); }}
@@ -1539,6 +1558,85 @@ export default function Header() {
                   </div>
                 )
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {bookmarksOpen && (
+        <>
+          <div className={styles.searchOverlay} onClick={closeBookmarks} />
+          <div className={`${styles.bookmarksModal} ${bookmarksClosing ? styles.bookmarksModalClosing : ""}`}>
+            <div className={styles.bookmarksHeader}>
+              <div className={styles.bookmarksTabs} ref={bmTabsRef}>
+                {[
+                  { key: "favorites", label: "Избранное" },
+                  { key: "watching", label: "Смотрю" },
+                  { key: "planned", label: "В планах" },
+                  { key: "completed", label: "Просмотренно" },
+                  { key: "onhold", label: "Отложенно" },
+                  { key: "dropped", label: "Брошенно" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    data-active={bookmarksTab === t.key}
+                    className={`${styles.bookmarksTabBtn} ${bookmarksTab === t.key ? styles.bookmarksTabBtnActive : ""}`}
+                    onClick={() => setBookmarksTab(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+                <div className={styles.bmTabIndicator} style={{ left: bmIndicator.left, width: bmIndicator.width }} />
+              </div>
+              <button className={styles.searchClose} onClick={closeBookmarks}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.bookmarksBody} key={bookmarksTab}>
+              {(() => {
+                const tabAnimeMap: Record<string, number[]> = {
+                  favorites: [1, 3, 7],
+                  watching: [7, 8],
+                  planned: [2, 5, 6],
+                  completed: [1, 4],
+                  onhold: [3],
+                  dropped: [6],
+                };
+                const ids = tabAnimeMap[bookmarksTab] || [];
+                const items = animeCatalog.filter((a) => ids.includes(a.id));
+                if (items.length === 0) {
+                  return (
+                    <div className={styles.bookmarksEmpty}>
+                      <Bookmark size={48} strokeWidth={1.2} />
+                      <p>Пока пусто</p>
+                      <span>Добавляйте аниме через страницу релиза</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div className={styles.bookmarksGrid}>
+                    {items.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/realeses/anime-page/${item.id}`}
+                        className={styles.bookmarkCard}
+                        onClick={closeBookmarks}
+                      >
+                        <div className={styles.bookmarkCardPoster}>
+                          <img src={item.poster} alt={item.title} className={styles.bookmarkCardImg} />
+                          <div className={styles.bookmarkCardAccent} style={{ background: getAccent(item.rating) }} />
+                          <span className={styles.bookmarkCardRating}>{item.rating}</span>
+                        </div>
+                        <div className={styles.bookmarkCardInfo}>
+                          <span className={styles.bookmarkCardTitle}>{item.title}</span>
+                          <span className={styles.bookmarkCardMeta}>{item.meta}</span>
+                          <span className={styles.bookmarkCardGenres} style={{ color: getAccent(item.rating) }}>{item.genres}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </>

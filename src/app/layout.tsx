@@ -15,8 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Yumeko — Аниме онлайн",
+  title: {
+    default: "YumekoStudio - твоя любимая озвучка!",
+    template: "%s | YumekoStudio",
+  },
   description: "Смотрите аниме онлайн в качественной озвучке. Свежие релизы, расписание, огромная коллекция тайтлов.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

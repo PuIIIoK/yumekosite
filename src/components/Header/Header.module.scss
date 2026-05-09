@@ -1949,6 +1949,238 @@
   animation: settingsFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+// ---------- Bookmarks Modal ----------
+.bookmarksModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -49%);
+  width: 1450px;
+  max-width: 90vw;
+  height: 780px;
+  max-height: 80vh;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 16, 20, 0.98);
+  backdrop-filter: blur(24px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: settingsFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bookmarksModalClosing {
+  animation: settingsFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bookmarksHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.bookmarksTabs {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+
+.bookmarksTabBtn {
+  background: none;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.25s ease;
+  position: relative;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.bookmarksTabBtnActive {
+  color: var(--accent);
+}
+
+.bmTabIndicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.bookmarksBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  animation: bookmarksFadeContent 0.3s ease;
+}
+
+@keyframes bookmarksFadeContent {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bookmarksEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+
+  svg {
+    opacity: 0.3;
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  span {
+    font-size: 13px;
+  }
+}
+
+.bookmarksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 18px;
+}
+
+.bookmarkCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.22s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+
+    .bookmarkCardPoster {
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.bookmarkCardPoster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  background: #18181c;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 50%),
+      linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+.bookmarkCardImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.bookmarkCardAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  opacity: 0.9;
+}
+
+.bookmarkCardRating {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.bookmarkCardEpBadge {
+  position: absolute;
+  bottom: 9px;
+  left: 9px;
+  z-index: 3;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+}
+
+.bookmarkCardInfo {
+  padding: 0 2px;
+}
+
+.bookmarkCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.bookmarkCardMeta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.bookmarkCardGenres {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .friendsHeader {
   display: flex;
   align-items: center;
