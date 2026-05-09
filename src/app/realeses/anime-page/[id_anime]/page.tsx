@@ -122,8 +122,11 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
     openGraph: {
       title: `${anime.title} | YumekoStudio`,
       description: anime.description || anime.synopsis,
+      url: `/realeses/anime-page/${id_anime}`,
+      siteName: "YumekoStudio",
       images: anime.poster ? [{ url: anime.poster, width: 600, height: 900, alt: anime.title }] : [],
       type: "video.movie",
+      locale: "ru_RU",
     },
     twitter: {
       card: "summary_large_image",

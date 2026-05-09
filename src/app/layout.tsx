@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yumeko.ru"),
   title: {
     default: "YumekoStudio - твоя любимая озвучка!",
     template: "%s | YumekoStudio",
@@ -22,6 +23,14 @@ export const metadata: Metadata = {
   description: "Смотрите аниме онлайн в качественной озвучке. Свежие релизы, расписание, огромная коллекция тайтлов.",
   icons: {
     icon: "/favicon.png",
+  },
+  openGraph: {
+    siteName: "YumekoStudio",
+    locale: "ru_RU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 
