@@ -97,8 +97,10 @@ export default function EpisodeManager() {
   const [previewUploading, setPreviewUploading] = useState<number | null>(null);
   const [modalEp, setModalEp] = useState<Episode | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [filterStudio, setFilterStudio] = useState<string | null>(null);
   const [studios, setStudios] = useState<string[]>(DEFAULT_STUDIOS);
   const [addingStudio, setAddingStudio] = useState(false);
+  const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
   const [newStudioName, setNewStudioName] = useState("");
   const newStudioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -167,15 +169,25 @@ export default function EpisodeManager() {
     );
   }, [animeList, animeSearch]);
 
+  const episodeStudios = useMemo(() => {
+    return [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort();
+  }, [episodes]);
+
   const filteredEpisodes = useMemo(() => {
-    if (!search.trim()) return episodes;
-    const q = search.trim().toLowerCase();
-    return episodes.filter(
-      (e) =>
-        String(e.number).includes(q) ||
-        (e.title && e.title.toLowerCase().includes(q))
-    );
-  }, [episodes, search]);
+    let list = episodes;
+    if (filterStudio) {
+      list = list.filter((e) => (e.studio || "YumekoStudio") === filterStudio);
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(
+        (e) =>
+          String(e.number).includes(q) ||
+          (e.title && e.title.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [episodes, search, filterStudio]);
 
   const selectAnime = (anime: AnimeDetails) => {
     setSelectedAnime(anime);
@@ -480,14 +492,52 @@ export default function EpisodeManager() {
                   </div>
                 ) : (
                   <div className={styles.epStudioRow}>
-                    <select
-                      value={form.studio}
-                      onChange={(e) => setForm({ ...form, studio: e.target.value })}
-                    >
-                      {studios.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                    <div className={styles.epStudioDropdown}>
+                      <button
+                        type="button"
+                        className={styles.epStudioDropdownTrigger}
+                        onClick={() => setStudioDropdownOpen(!studioDropdownOpen)}
+                      >
+                        <span>{form.studio}</span>
+                        <ChevronDown size={14} />
+                      </button>
+                      {studioDropdownOpen && (
+                        <div className={styles.epStudioDropdownMenu}>
+                          {studios.map((s) => (
+                            <div key={s} className={`${styles.epStudioDropdownItem} ${form.studio === s ? styles.epStudioDropdownItemActive : ""}`}>
+                              <button
+                                type="button"
+                                className={styles.epStudioDropdownSelect}
+                                onClick={() => {
+                                  setForm({ ...form, studio: s });
+                                  setStudioDropdownOpen(false);
+                                }}
+                              >
+                                {s}
+                              </button>
+                              {!DEFAULT_STUDIOS.includes(s) && (
+                                <button
+                                  type="button"
+                                  className={styles.epStudioDropdownDelete}
+                                  title={`Удалить ${s}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const updated = studios.filter((st) => st !== s);
+                                    setStudios(updated);
+                                    localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                                    if (form.studio === s) {
+                                      setForm({ ...form, studio: updated[0] || "YumekoStudio" });
+                                    }
+                                  }}
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className={styles.epStudioAddBtn}
@@ -553,7 +603,7 @@ export default function EpisodeManager() {
           {/* Episode list */}
           <div className={styles.episodeListSection}>
             <div className={styles.episodeListHeader}>
-              <h3>Эпизоды ({episodes.length})</h3>
+              <h3>Эпизоды ({filterStudio ? filteredEpisodes.length : episodes.length})</h3>
               {episodes.length > 3 && (
                 <div className={styles.episodeSearchWrap}>
                   <Search size={13} />
@@ -566,6 +616,25 @@ export default function EpisodeManager() {
                 </div>
               )}
             </div>
+            {episodeStudios.length > 1 && (
+              <div className={styles.epStudioFilter}>
+                <button
+                  className={`${styles.epStudioFilterBtn} ${!filterStudio ? styles.epStudioFilterBtnActive : ""}`}
+                  onClick={() => setFilterStudio(null)}
+                >
+                  Все
+                </button>
+                {episodeStudios.map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.epStudioFilterBtn} ${filterStudio === s ? styles.epStudioFilterBtnActive : ""}`}
+                    onClick={() => setFilterStudio(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {episodesLoading ? (
               <div className={styles.loader}>Загрузка эпизодов...</div>

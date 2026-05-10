@@ -136,6 +136,10 @@
   position: relative;
 }
 
+.progressSeeking {
+  cursor: grabbing;
+}
+
 .progressTrack {
   width: 100%;
   height: 4px;
@@ -145,7 +149,8 @@
   overflow: hidden;
   transition: height 0.15s;
 
-  .progressWrap:hover & {
+  .progressWrap:hover &,
+  .progressSeeking & {
     height: 6px;
   }
 }
@@ -180,7 +185,8 @@
   transform: translateX(50%) scale(0);
   transition: transform 0.15s;
 
-  .progressWrap:hover & {
+  .progressWrap:hover &,
+  .progressSeeking & {
     transform: translateX(50%) scale(1);
   }
 }
@@ -401,4 +407,35 @@
 .menuItemPlay {
   color: var(--player-accent, #10b981);
   flex-shrink: 0;
+}
+
+// ── Responsive ──
+
+@media (max-width: 640px) {
+  .controlBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .time {
+    font-size: 11px;
+    padding: 0 2px;
+  }
+
+  .volumeSlider {
+    width: 60px;
+  }
+
+  .topTitle {
+    font-size: 12px;
+  }
+
+  .menu {
+    min-width: 160px;
+  }
+
+  .menuItem {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
 }

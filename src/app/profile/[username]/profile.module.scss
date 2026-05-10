@@ -743,6 +743,41 @@
   letter-spacing: 0.04em;
 }
 
+.activityEpThumb {
+  width: 80px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #0c0c0e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.activityEpThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.activityEpThumbEmpty {
+  width: 100%;
+  height: 100%;
+  background: #0c0c0e;
+}
+
+.activityStudio {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
 // Info list — postmodern key/value
 .infoList {
   display: flex;

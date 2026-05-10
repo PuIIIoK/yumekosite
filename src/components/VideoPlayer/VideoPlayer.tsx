@@ -8,6 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import Hls from "hls.js";
+import { API_URL } from "@/config/hosts";
 import {
   Play,
   Pause,
@@ -40,7 +41,11 @@ interface Props {
   onEpisodeChange?: (ep: EpisodeInfo) => void;
   accent?: string;
   autoPlay?: boolean;
+  userId?: number | null;
 }
+
+const VOLUME_KEY = "yumeko_player_volume";
+const MUTED_KEY = "yumeko_player_muted";
 
 function formatTime(s: number): string {
   if (!isFinite(s) || s < 0) return "0:00";
@@ -58,12 +63,14 @@ export default function VideoPlayer({
   onEpisodeChange,
   accent = "var(--accent)",
   autoPlay = true,
+  userId,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const progressSaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Playback state
   const [playing, setPlaying] = useState(false);
@@ -72,10 +79,55 @@ export default function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Volume
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
+  // Volume — load from localStorage
+  const [volume, setVolume] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    const saved = localStorage.getItem(VOLUME_KEY);
+    return saved ? parseFloat(saved) : 1;
+  });
+  const [muted, setMuted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(MUTED_KEY) === "true";
+  });
   const [showVolume, setShowVolume] = useState(false);
+
+  // Save volume to localStorage
+  useEffect(() => {
+    localStorage.setItem(VOLUME_KEY, String(volume));
+  }, [volume]);
+
+  useEffect(() => {
+    localStorage.setItem(MUTED_KEY, String(muted));
+  }, [muted]);
+
+  // ── Watch progress: save every 5 seconds ──
+  useEffect(() => {
+    if (!userId || !currentEpisodeId) return;
+
+    progressSaveTimer.current = setInterval(() => {
+      const v = videoRef.current;
+      if (!v || v.paused || !v.duration) return;
+      fetch(`${API_URL}/api/watch-progress?userId=${userId}&episodeId=${currentEpisodeId}&watchedSeconds=${v.currentTime}&totalSeconds=${v.duration}`, {
+        method: "POST",
+      }).catch(() => {});
+    }, 5000);
+
+    return () => {
+      if (progressSaveTimer.current) clearInterval(progressSaveTimer.current);
+    };
+  }, [userId, currentEpisodeId]);
+
+  // Save progress on unmount / episode change
+  useEffect(() => {
+    return () => {
+      const v = videoRef.current;
+      if (v && userId && currentEpisodeId && v.duration) {
+        navigator.sendBeacon(
+          `${API_URL}/api/watch-progress?userId=${userId}&episodeId=${currentEpisodeId}&watchedSeconds=${v.currentTime}&totalSeconds=${v.duration}`
+        );
+      }
+    };
+  }, [userId, currentEpisodeId]);
 
   // UI
   const [controlsVisible, setControlsVisible] = useState(true);
@@ -96,6 +148,22 @@ export default function VideoPlayer({
   const prevEp = currentIdx > 0 ? sorted[currentIdx - 1] : null;
   const nextEp = currentIdx >= 0 && currentIdx < sorted.length - 1 ? sorted[currentIdx + 1] : null;
 
+  // ── Resume position ──
+  const resumeFetched = useRef(false);
+
+  const fetchAndResume = useCallback(async (video: HTMLVideoElement) => {
+    if (!userId || !currentEpisodeId) return;
+    try {
+      const res = await fetch(`${API_URL}/api/watch-progress?userId=${userId}&episodeId=${currentEpisodeId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.watchedSeconds > 0 && !data.completed) {
+        video.currentTime = data.watchedSeconds;
+        setCurrentTime(data.watchedSeconds);
+      }
+    } catch {}
+  }, [userId, currentEpisodeId]);
+
   // ── HLS setup ──
   useEffect(() => {
     const video = videoRef.current;
@@ -105,6 +173,7 @@ export default function VideoPlayer({
     setPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    resumeFetched.current = false;
 
     if (Hls.isSupported()) {
       const hls = new Hls({ startLevel: -1 });
@@ -120,7 +189,14 @@ export default function VideoPlayer({
         }));
         setQualities(levels);
         setCurrentQuality(-1);
-        if (autoPlay) video.play().catch(() => {});
+        if (!resumeFetched.current) {
+          resumeFetched.current = true;
+          fetchAndResume(video).then(() => {
+            if (autoPlay) video.play().catch(() => {});
+          });
+        } else {
+          if (autoPlay) video.play().catch(() => {});
+        }
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
@@ -136,7 +212,9 @@ export default function VideoPlayer({
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
       video.addEventListener("loadedmetadata", () => {
-        if (autoPlay) video.play().catch(() => {});
+        fetchAndResume(video).then(() => {
+          if (autoPlay) video.play().catch(() => {});
+        });
       });
     }
   }, [src]);
@@ -292,17 +370,44 @@ export default function VideoPlayer({
     }
   };
 
-  const handleSeek = (e: ReactMouseEvent<HTMLDivElement>) => {
+  const seekFromEvent = useCallback((clientX: number) => {
     const bar = progressRef.current;
-    const v = videoRef.current;
-    if (!bar || !v || !duration) return;
+    if (!bar || !duration) return;
     const rect = bar.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    v.currentTime = pct * duration;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     setCurrentTime(pct * duration);
+    setHoverTime(pct * duration);
+    setHoverX(clientX - rect.left);
+    return pct;
+  }, [duration]);
+
+  const handleProgressMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setSeeking(true);
+    seekFromEvent(e.clientX);
+
+    const onMove = (ev: MouseEvent) => {
+      seekFromEvent(ev.clientX);
+    };
+    const onUp = (ev: MouseEvent) => {
+      const bar = progressRef.current;
+      const v = videoRef.current;
+      if (bar && v && duration) {
+        const rect = bar.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        v.currentTime = pct * duration;
+      }
+      setSeeking(false);
+      setHoverTime(null);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   };
 
   const handleProgressHover = (e: ReactMouseEvent<HTMLDivElement>) => {
+    if (seeking) return;
     const bar = progressRef.current;
     if (!bar || !duration) return;
     const rect = bar.getBoundingClientRect();
@@ -383,10 +488,10 @@ export default function VideoPlayer({
         {/* Progress bar */}
         <div
           ref={progressRef}
-          className={styles.progressWrap}
-          onClick={handleSeek}
+          className={`${styles.progressWrap} ${seeking ? styles.progressSeeking : ""}`}
+          onMouseDown={handleProgressMouseDown}
           onMouseMove={handleProgressHover}
-          onMouseLeave={() => setHoverTime(null)}
+          onMouseLeave={() => { if (!seeking) setHoverTime(null); }}
         >
           <div className={styles.progressTrack}>
             <div className={styles.progressBuffered} style={{ width: `${bufferedPct}%` }} />

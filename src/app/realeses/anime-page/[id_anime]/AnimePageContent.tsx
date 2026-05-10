@@ -107,19 +107,55 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   }, [anime.relatedIds]);
 
   const readyEpisodes = dbEpisodes.filter((db) => db.status === "ready");
-  const studioList = [...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio"))].sort();
+  const studioSet = [...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio"))];
+  const studioList = studioSet.sort((a, b) => {
+    if (a === "YumekoStudio") return -1;
+    if (b === "YumekoStudio") return 1;
+    return a.localeCompare(b);
+  });
   const activeStudio = selectedStudio ?? studioList[0] ?? null;
+
+  // ── Watch progress ──
+  const [watchProgress, setWatchProgress] = useState<Record<number, { watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }>>({});
+  const [lastWatchedEpId, setLastWatchedEpId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!auth.user || readyEpisodes.length === 0) return;
+    const ids = readyEpisodes.map((e) => e.id);
+    fetch(`${API_URL}/api/watch-progress/bulk?userId=${auth.user.id}&${ids.map((id) => `episodeIds=${id}`).join("&")}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((list: { episodeId: number; watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }[]) => {
+        const map: Record<number, { watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }> = {};
+        list.forEach((wp) => { map[wp.episodeId] = wp; });
+        setWatchProgress(map);
+
+        // Find the most recently watched non-completed episode
+        const inProgress = list.filter((wp) => !wp.completed && wp.watchedSeconds > 0);
+        if (inProgress.length > 0) {
+          inProgress.sort((a, b) => {
+            if (a.updatedAt && b.updatedAt) return b.updatedAt.localeCompare(a.updatedAt);
+            return b.watchedSeconds - a.watchedSeconds;
+          });
+          setLastWatchedEpId(inProgress[0].episodeId);
+        } else {
+          setLastWatchedEpId(null);
+        }
+      })
+      .catch(() => {});
+  }, [auth.user, readyEpisodes.length]);
 
   const episodes = readyEpisodes
     .filter((db) => studioList.length <= 1 || (db.studio || "YumekoStudio") === activeStudio)
     .sort((a, b) => a.number - b.number)
     .map((db) => {
       const num = db.number;
+      const wp = watchProgress[db.id];
+      const progress = wp && wp.totalSeconds > 0 ? wp.watchedSeconds / wp.totalSeconds : 0;
       return {
         num,
-        watched: false,
-        current: false,
-        progress: 0,
+        watched: wp?.completed ?? false,
+        current: db.id === lastWatchedEpId,
+        progress: Math.round(progress * 100),
         name: db.title,
         durationFormatted: db.duration ?? anime.duration,
         preview: db.previewUrl,
@@ -346,11 +382,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                   {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
                   <Play size={16} className={styles.epRowPlay} />
                 </div>
-                {ep.progress > 0 && (
+                {ep.progress > 0 && !ep.watched && (
                   <div className={styles.epRowProgress}>
                     <div
                       className={styles.epRowProgressBar}
-                      style={{ width: `${ep.progress}%`, background: ep.watched ? 'var(--text-muted)' : 'var(--accent)' }}
+                      style={{ width: `${ep.progress}%`, background: 'var(--accent)' }}
                     />
                   </div>
                 )}
@@ -402,11 +438,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                   <span className={styles.epCardNum}>{ep.num} эпизод</span>
                 </div>
                 <span className={styles.epCardDuration}>{ep.durationFormatted}</span>
-                {ep.progress > 0 && (
+                {ep.progress > 0 && !ep.watched && (
                   <div className={styles.epCardProgress}>
                     <div
                       className={styles.epCardProgressBar}
-                      style={{ width: `${ep.progress}%`, background: ep.watched ? 'rgba(255,255,255,0.3)' : 'var(--accent)' }}
+                      style={{ width: `${ep.progress}%`, background: 'var(--accent)' }}
                     />
                   </div>
                 )}

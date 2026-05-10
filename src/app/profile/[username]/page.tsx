@@ -350,24 +350,42 @@ export default function ProfilePage() {
                 <p className={styles.emptyText}>no_recent_activity.log</p>
               ) : (
                 <div className={styles.activityList}>
-                  {activities.map((a) => (
-                    <div key={a.id} className={styles.activityItem}>
-                      {a.animePoster && (
-                        <img src={a.animePoster} alt="" className={styles.activityPoster} />
-                      )}
-                      <div className={styles.activityContent}>
-                        <span className={styles.activityText}>
-                          {a.type === "collection_add" && <>{formatActivityStatus(a.statusTo)} — <strong>{a.animeTitle}</strong></>}
-                          {a.type === "collection_move" && <>Переместил(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)} в {formatActivityStatus(a.statusTo)}</>}
-                          {a.type === "collection_remove" && <>Убрал(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)}</>}
-                          {a.type === "favorite" && <>Добавил(а) <strong>{a.animeTitle}</strong> в избранное</>}
-                          {a.type === "unfavorite" && <>Убрал(а) <strong>{a.animeTitle}</strong> из избранного</>}
-                          {a.type === "episode_watch" && <>Посмотрел(а) {a.episodeNumber} эпизод — <strong>{a.animeTitle}</strong></>}
-                        </span>
-                        <span className={styles.activityTime}>{formatTimeAgo(a.createdAt)}</span>
+                  {activities.map((a) => {
+                    const isEpWatch = a.type === "episode_watch";
+                    const epThumb = isEpWatch ? a.episodePreview : a.animePoster;
+                    const showStudio = isEpWatch && a.episodeStudio && a.episodeStudio !== "YumekoStudio" && a.episodeStudio !== "Yumeko Studio";
+                    return (
+                      <div key={a.id} className={styles.activityItem}>
+                        {isEpWatch ? (
+                          <div className={styles.activityEpThumb}>
+                            {epThumb ? (
+                              <img src={epThumb} alt="" className={styles.activityEpThumbImg} />
+                            ) : (
+                              <div className={styles.activityEpThumbEmpty} />
+                            )}
+                          </div>
+                        ) : (
+                          a.animePoster && <img src={a.animePoster} alt="" className={styles.activityPoster} />
+                        )}
+                        <div className={styles.activityContent}>
+                          <span className={styles.activityText}>
+                            {a.type === "collection_add" && <>{formatActivityStatus(a.statusTo)} — <strong>{a.animeTitle}</strong></>}
+                            {a.type === "collection_move" && <>Переместил(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)} в {formatActivityStatus(a.statusTo)}</>}
+                            {a.type === "collection_remove" && <>Убрал(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)}</>}
+                            {a.type === "favorite" && <>Добавил(а) <strong>{a.animeTitle}</strong> в избранное</>}
+                            {a.type === "unfavorite" && <>Убрал(а) <strong>{a.animeTitle}</strong> из избранного</>}
+                            {isEpWatch && (
+                              <>
+                                Посмотрел(а) {a.episodeNumber} эпизод{a.episodeTitle ? ` «${a.episodeTitle}»` : ""} — <strong>{a.animeTitle}</strong>
+                                {showStudio && <span className={styles.activityStudio}>{a.episodeStudio}</span>}
+                              </>
+                            )}
+                          </span>
+                          <span className={styles.activityTime}>{formatTimeAgo(a.createdAt)}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
