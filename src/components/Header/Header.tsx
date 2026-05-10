@@ -609,7 +609,7 @@ export default function Header() {
           </Link>
           <nav className={styles.nav}>
             <Link
-              href="/releases"
+              href="/realeses"
               className={`${styles.navLink} ${isReleasesActive ? styles.navLinkActive : ""}`}
               aria-current={isReleasesActive ? "page" : undefined}
             >
