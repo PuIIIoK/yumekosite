@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppearanceProvider } from "@/context/AppearanceContext";
 import { AuthProvider } from "@/context/AuthContext";
+import ParticleCanvas from "@/components/ParticleCanvas/ParticleCanvas";
 import "./globals.scss";
 
 const geistSans = Geist({
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="ru" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <AppearanceProvider>
+          <ParticleCanvas />
           <AuthProvider>{children}</AuthProvider>
         </AppearanceProvider>
       </body>
