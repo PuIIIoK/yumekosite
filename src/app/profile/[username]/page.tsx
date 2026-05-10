@@ -9,6 +9,31 @@ import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import styles from "./profile.module.scss";
 import { API_URL } from "@/config/hosts";
 
+const STATUS_LABELS: Record<string, string> = {
+  watching: "Смотрю",
+  planned: "В планах",
+  completed: "Просмотрено",
+  onhold: "Отложено",
+  dropped: "Брошено",
+  favorites: "Избранное",
+};
+
+function formatActivityStatus(status: string | null): string {
+  if (!status) return "";
+  return STATUS_LABELS[status] ?? status;
+}
+
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diff < 60) return "только что";
+  if (diff < 3600) return `${Math.floor(diff / 60)} мин. назад`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} ч. назад`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} дн. назад`;
+  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+}
+
 function mapProfileUser(dto: any): User {
   return {
     id: dto.id,
@@ -41,6 +66,8 @@ export default function ProfilePage() {
   const [friendStatus, setFriendStatus] = useState<string>("none");
   const [friendCount, setFriendCount] = useState(0);
   const [friendLoading, setFriendLoading] = useState(false);
+  const [collectionStats, setCollectionStats] = useState<{ inList: number; completed: number; favorites: number }>({ inList: 0, completed: 0, favorites: 0 });
+  const [activities, setActivities] = useState<any[]>([]);
 
   function parseHex(hexDump: string): any {
     const bytes: number[] = [];
@@ -53,6 +80,35 @@ export default function ProfilePage() {
     }
     return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)));
   }
+
+  useEffect(() => {
+    async function fetchCollectionStats() {
+      try {
+        const res = await fetch(`${API_URL}/api/collections/${username.toLowerCase()}`);
+        if (res.ok) {
+          const items: { animeId: number; status: string }[] = await res.json();
+          const favCount = items.filter(i => i.status === "favorites").length;
+          const compCount = items.filter(i => i.status === "completed").length;
+          const listCount = new Set(items.filter(i => i.status !== "favorites").map(i => i.animeId)).size;
+          setCollectionStats({ inList: listCount, completed: compCount, favorites: favCount });
+        }
+      } catch {}
+    }
+    if (username) fetchCollectionStats();
+  }, [username]);
+
+  useEffect(() => {
+    async function fetchActivity() {
+      try {
+        const res = await fetch(`${API_URL}/api/activity/${username.toLowerCase()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setActivities(data);
+        }
+      } catch {}
+    }
+    if (username) fetchActivity();
+  }, [username]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -247,17 +303,17 @@ export default function ProfilePage() {
         <section className={styles.statsGrid}>
           <div className={styles.statCell}>
             <span className={styles.statIndex}>02 / 01</span>
-            <span className={styles.statValue}>00</span>
+            <span className={styles.statValue}>{String(collectionStats.inList).padStart(2, "0")}</span>
             <span className={styles.statLabel}>в списке</span>
           </div>
           <div className={styles.statCell}>
             <span className={styles.statIndex}>02 / 02</span>
-            <span className={styles.statValue}>00</span>
+            <span className={styles.statValue}>{String(collectionStats.completed).padStart(2, "0")}</span>
             <span className={styles.statLabel}>просмотрено</span>
           </div>
           <div className={styles.statCell}>
             <span className={styles.statIndex}>02 / 03</span>
-            <span className={styles.statValue}>00</span>
+            <span className={styles.statValue}>{String(collectionStats.favorites).padStart(2, "0")}</span>
             <span className={styles.statLabel}>избранное</span>
           </div>
           <div className={styles.statCell}>
@@ -287,7 +343,30 @@ export default function ProfilePage() {
                 <h2 className={styles.sectionTitle}>Активность</h2>
                 <span className={styles.sectionLine} />
               </div>
-              <p className={styles.emptyText}>no_recent_activity.log</p>
+              {activities.length === 0 ? (
+                <p className={styles.emptyText}>no_recent_activity.log</p>
+              ) : (
+                <div className={styles.activityList}>
+                  {activities.map((a) => (
+                    <div key={a.id} className={styles.activityItem}>
+                      {a.animePoster && (
+                        <img src={a.animePoster} alt="" className={styles.activityPoster} />
+                      )}
+                      <div className={styles.activityContent}>
+                        <span className={styles.activityText}>
+                          {a.type === "collection_add" && <>{formatActivityStatus(a.statusTo)} — <strong>{a.animeTitle}</strong></>}
+                          {a.type === "collection_move" && <>Переместил(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)} в {formatActivityStatus(a.statusTo)}</>}
+                          {a.type === "collection_remove" && <>Убрал(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)}</>}
+                          {a.type === "favorite" && <>Добавил(а) <strong>{a.animeTitle}</strong> в избранное</>}
+                          {a.type === "unfavorite" && <>Убрал(а) <strong>{a.animeTitle}</strong> из избранного</>}
+                          {a.type === "episode_watch" && <>Посмотрел(а) {a.episodeNumber} эпизод — <strong>{a.animeTitle}</strong></>}
+                        </span>
+                        <span className={styles.activityTime}>{formatTimeAgo(a.createdAt)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

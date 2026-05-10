@@ -282,6 +282,15 @@
   transform: rotate(180deg);
 }
 
+.collectionBtnActive {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+}
+
 .collectionDropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -347,6 +356,21 @@
   }
 }
 
+.dropdownItemActive {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+
+  svg {
+    opacity: 1;
+    color: var(--accent);
+  }
+}
+
+.dropdownCheck {
+  margin-left: auto;
+  opacity: 0.8;
+}
+
 .iconBtn {
   display: inline-flex;
   align-items: center;
@@ -363,6 +387,16 @@
   &:hover {
     background: rgba(255, 255, 255, 0.12);
     color: var(--text-primary);
+  }
+}
+
+.iconBtnActive {
+  color: #ff4466;
+  background: rgba(255, 68, 102, 0.12);
+
+  &:hover {
+    background: rgba(255, 68, 102, 0.2);
+    color: #ff4466;
   }
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { Play, Heart, BookMarked, ChevronRight, ChevronDown, Clock, List, LayoutGrid, Eye, CalendarClock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
 import { getAccent, type AnimeDetails } from "@/data/anime";
@@ -38,14 +39,64 @@ function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const COLLECTION_ITEMS = [
+  { key: "watching", label: "Смотрю", icon: Eye },
+  { key: "planned", label: "Запланировано", icon: CalendarClock },
+  { key: "completed", label: "Просмотрено", icon: CheckCircle2 },
+  { key: "onhold", label: "Отложено", icon: PauseCircle },
+  { key: "dropped", label: "Брошено", icon: XCircle },
+] as const;
+
 export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Props) {
+  const auth = useAuth();
   const [tab, setTab] = useState<Tab>("episodes");
   const [collectionOpen, setCollectionOpen] = useState(false);
+  const collectionRef = useRef<HTMLDivElement>(null);
+  const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
   const [epView, setEpView] = useState<"list" | "grid">("grid");
   const genreTags = anime.genres.split(" • ");
   const epCount = parseEpisodeCount(anime.episodes);
   const currentEp = parseInt(anime.ep.match(/\d+/)?.[0] ?? "1");
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
+
+  const fetchStatuses = useCallback(async () => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setActiveStatuses(data.statuses || []);
+      }
+    } catch {}
+  }, [auth.user, anime.id]);
+
+  useEffect(() => { fetchStatuses(); }, [fetchStatuses]);
+
+  useEffect(() => {
+    if (!collectionOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (collectionRef.current && !collectionRef.current.contains(e.target as Node)) {
+        setCollectionOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [collectionOpen]);
+
+  const toggleStatus = async (status: string) => {
+    if (!auth.user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setActiveStatuses(data.statuses || []);
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     if (anime.relatedIds.length === 0) return;
@@ -183,37 +234,46 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
           </dl>
 
           <div className={styles.actions}>
-            <div className={styles.collectionWrap}>
+            <div className={styles.collectionWrap} ref={collectionRef}>
               <button
-                className={styles.collectionBtn}
-                onClick={() => setCollectionOpen(!collectionOpen)}
+                className={`${styles.collectionBtn} ${activeStatuses.some(s => s !== "favorites") ? styles.collectionBtnActive : ""}`}
+                onClick={() => auth.user ? setCollectionOpen(!collectionOpen) : undefined}
               >
-                <BookMarked size={15} />
-                Добавить в список
+                {(() => {
+                  const currentList = COLLECTION_ITEMS.find(c => activeStatuses.includes(c.key));
+                  if (currentList) {
+                    const Icon = currentList.icon;
+                    return <><Icon size={15} /> {currentList.label}</>;
+                  }
+                  return <><BookMarked size={15} /> Добавить в список</>;
+                })()}
                 <ChevronDown size={14} className={collectionOpen ? styles.chevronOpen : ''} />
               </button>
               {collectionOpen && (
                 <div className={styles.collectionDropdown}>
-                  <button className={styles.dropdownItem}>
-                    <Eye size={15} /> Смотрю
-                  </button>
-                  <button className={styles.dropdownItem}>
-                    <CalendarClock size={15} /> Запланировано
-                  </button>
-                  <button className={styles.dropdownItem}>
-                    <CheckCircle2 size={15} /> Просмотрено
-                  </button>
-                  <button className={styles.dropdownItem}>
-                    <PauseCircle size={15} /> Отложено
-                  </button>
-                  <button className={styles.dropdownItem}>
-                    <XCircle size={15} /> Брошено
-                  </button>
+                  {COLLECTION_ITEMS.map((item) => {
+                    const active = activeStatuses.includes(item.key);
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.key}
+                        className={`${styles.dropdownItem} ${active ? styles.dropdownItemActive : ""}`}
+                        onClick={() => toggleStatus(item.key)}
+                      >
+                        <Icon size={15} /> {item.label}
+                        {active && <CheckCircle2 size={14} className={styles.dropdownCheck} />}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
-            <button className={styles.iconBtn} aria-label="В избранное">
-              <Heart size={16} />
+            <button
+              className={`${styles.iconBtn} ${activeStatuses.includes("favorites") ? styles.iconBtnActive : ""}`}
+              aria-label="В избранное"
+              onClick={() => auth.user ? toggleStatus("favorites") : undefined}
+            >
+              <Heart size={16} fill={activeStatuses.includes("favorites") ? "currentColor" : "none"} />
             </button>
           </div>
         </div>

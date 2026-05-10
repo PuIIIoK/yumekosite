@@ -93,6 +93,26 @@ export default function Header() {
   const [pendingList, setPendingList] = useState<any[]>([]);
   const [friendsTab, setFriendsTab] = useState<"friends" | "pending">("friends");
   const [friendsLoading, setFriendsLoading] = useState(false);
+  const [collectionMap, setCollectionMap] = useState<Record<string, number[]>>({});
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+
+  const fetchCollections = async () => {
+    if (!auth.user) return;
+    setCollectionsLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/collections/${auth.user.username}`);
+      if (res.ok) {
+        const items: { animeId: number; status: string }[] = await res.json();
+        const map: Record<string, number[]> = {};
+        for (const item of items) {
+          if (!map[item.status]) map[item.status] = [];
+          map[item.status].push(item.animeId);
+        }
+        setCollectionMap(map);
+      }
+    } catch {}
+    setCollectionsLoading(false);
+  };
 
   function parseHex(hex: string): any {
     const bytes: number[] = [];
@@ -615,7 +635,7 @@ export default function Header() {
             <Heart size={15} strokeWidth={2.5} />
             Поддержать
           </Link>
-          <button className={styles.iconBtn} aria-label="Закладки" onClick={() => setBookmarksOpen(true)}>
+          <button className={styles.iconBtn} aria-label="Закладки" onClick={() => { setBookmarksOpen(true); fetchCollections(); }}>
             <BookMarked size={20} />
           </button>
           {auth.isAuthenticated && auth.user ? (
@@ -692,7 +712,7 @@ export default function Header() {
                     </Link>
                     <button
                       className={styles.profileMenuItem}
-                      onClick={() => { setProfileMenuOpen(false); setBookmarksOpen(true); }}
+                      onClick={() => { setProfileMenuOpen(false); setBookmarksOpen(true); fetchCollections(); }}
                       role="menuitem"
                     >
                       <Bookmark size={16} />
@@ -1674,15 +1694,14 @@ export default function Header() {
             </div>
             <div className={styles.bookmarksBody} key={bookmarksTab}>
               {(() => {
-                const tabAnimeMap: Record<string, number[]> = {
-                  favorites: [1, 3, 7],
-                  watching: [7, 8],
-                  planned: [2, 5, 6],
-                  completed: [1, 4],
-                  onhold: [3],
-                  dropped: [6],
-                };
-                const ids = tabAnimeMap[bookmarksTab] || [];
+                if (collectionsLoading) {
+                  return (
+                    <div className={styles.bookmarksEmpty}>
+                      <p>Загрузка...</p>
+                    </div>
+                  );
+                }
+                const ids = collectionMap[bookmarksTab] || [];
                 const items = animeCatalog.filter((a) => ids.includes(a.id));
                 if (items.length === 0) {
                   return (
