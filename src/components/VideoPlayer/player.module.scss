@@ -1,0 +1,404 @@
+// ── Container ──
+
+.player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 14px;
+  overflow: hidden;
+  user-select: none;
+  cursor: pointer;
+
+  &.playerFullscreen {
+    border-radius: 0;
+  }
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+// ── Spinner ──
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.spinnerIcon {
+  color: rgba(255, 255, 255, 0.8);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Big Play ──
+
+.bigPlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+  z-index: 4;
+  transition: opacity 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+// ── Gradient ──
+
+.gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.3s;
+
+  .playerShowControls & {
+    opacity: 1;
+  }
+}
+
+// ── Top bar ──
+
+.topBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), transparent);
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+
+  .playerShowControls & {
+    opacity: 1;
+  }
+}
+
+.topTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+// ── Controls ──
+
+.controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 8;
+  padding: 0 12px 10px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+
+  .playerShowControls & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// ── Progress ──
+
+.progressWrap {
+  width: 100%;
+  padding: 8px 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.15s;
+
+  .progressWrap:hover & {
+    height: 6px;
+  }
+}
+
+.progressBuffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+}
+
+.progressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--player-accent, #10b981);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.progressThumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--player-accent, #10b981);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  transform: translateX(50%) scale(0);
+  transition: transform 0.15s;
+
+  .progressWrap:hover & {
+    transform: translateX(50%) scale(1);
+  }
+}
+
+.progressTooltip {
+  position: absolute;
+  bottom: 22px;
+  transform: translateX(-50%);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+// ── Controls Row ──
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.controlsLeft,
+.controlsRight {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+    &:hover { background: transparent; }
+  }
+}
+
+// ── Volume ──
+
+.volumeWrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.volumeSlider {
+  width: 80px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.volumeInput {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--player-accent, #10b981) 0%,
+    var(--player-accent, #10b981) var(--vol-pct, 100%),
+    rgba(255, 255, 255, 0.2) var(--vol-pct, 100%),
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+  }
+}
+
+// ── Time ──
+
+.time {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Geist Mono", ui-monospace, monospace;
+  white-space: nowrap;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Menus ──
+
+.menuWrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
+  min-width: 200px;
+  max-height: 320px;
+  background: rgba(15, 15, 15, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.menuHeader {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.menuScroll {
+  overflow-y: auto;
+  max-height: 260px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: left;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+.menuItemActive {
+  color: var(--player-accent, #10b981);
+  font-weight: 600;
+
+  &:hover {
+    color: var(--player-accent, #10b981);
+  }
+}
+
+.menuItemNum {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  .menuItemActive & {
+    background: color-mix(in srgb, var(--player-accent, #10b981) 20%, transparent);
+    color: var(--player-accent, #10b981);
+  }
+}
+
+.menuItemTitle {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuItemPlay {
+  color: var(--player-accent, #10b981);
+  flex-shrink: 0;
+}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Hls from "hls.js";
 import { ChevronLeft, ChevronRight, Play, List } from "lucide-react";
 import type { AnimeDetails } from "@/data/anime";
+import VideoPlayer from "@/components/VideoPlayer/VideoPlayer";
 import styles from "./episode.module.scss";
 
 interface Episode {
@@ -27,28 +28,8 @@ interface Props {
 }
 
 export default function EpisodePlayerContent({ anime, episode, episodes, accent }: Props) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !episode.hlsUrl) return;
-
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(episode.hlsUrl);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => {});
-      });
-      return () => hls.destroy();
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = episode.hlsUrl;
-      video.addEventListener("loadedmetadata", () => {
-        video.play().catch(() => {});
-      });
-    }
-  }, [episode.hlsUrl]);
 
   const studioList = [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort();
   const [selectedStudio, setSelectedStudio] = useState<string>(
@@ -62,6 +43,10 @@ export default function EpisodePlayerContent({ anime, episode, episodes, accent 
   const currentIndex = sorted.findIndex((e) => e.id === episode.id);
   const prevEp = currentIndex > 0 ? sorted[currentIndex - 1] : null;
   const nextEp = currentIndex >= 0 && currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null;
+
+  const playerEpisodes = sorted
+    .filter((e) => e.hlsUrl)
+    .map((e) => ({ id: e.id, number: e.number, title: e.title, hlsUrl: e.hlsUrl }));
 
   return (
     <main className={styles.playerPage}>
@@ -79,20 +64,22 @@ export default function EpisodePlayerContent({ anime, episode, episodes, accent 
           </nav>
 
           {/* Player */}
-          <div className={styles.playerWrap}>
-            {episode.hlsUrl ? (
-              <video
-                ref={videoRef}
-                className={styles.video}
-                controls
-              />
-            ) : (
+          {episode.hlsUrl ? (
+            <VideoPlayer
+              src={episode.hlsUrl}
+              episodes={playerEpisodes}
+              currentEpisodeId={episode.id}
+              onEpisodeChange={(ep) => router.push(`/realeses/anime-page/${anime.id}/episodes/${ep.id}`)}
+              accent={accent}
+            />
+          ) : (
+            <div className={styles.playerWrap}>
               <div className={styles.noVideo}>
                 <Play size={48} strokeWidth={1} />
                 <p>Видео недоступно</p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Episode info */}
           <div className={styles.episodeInfo}>
