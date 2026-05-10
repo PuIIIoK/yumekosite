@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, ChevronLeft, ChevronRight, Shield, User as UserIcon, Pencil, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
 import { API_URL } from "@/config/hosts";
@@ -41,8 +41,9 @@ export default function UserManager() {
   const [deleting, setDeleting] = useState(false);
   const [navigating, setNavigating] = useState(false);
   const [navigateId, setNavigateId] = useState<number | null>(null);
+  const [imgVer, setImgVer] = useState(() => Date.now());
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [usersRes, rolesRes] = await Promise.all([
@@ -51,13 +52,20 @@ export default function UserManager() {
       ]);
       setUsers(await usersRes.json());
       setRoles(await rolesRes.json());
+      setImgVer(Date.now());
     } catch {
       setError("Не удалось загрузить данные");
     }
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const onFocus = () => { fetchData(); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [fetchData]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return users;
@@ -164,7 +172,7 @@ export default function UserManager() {
           <div key={user.id} className={styles.userCard}>
             <div className={styles.userCardAvatar}>
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className={styles.userCardAvatarImg} />
+                <img src={`${user.avatarUrl}${user.avatarUrl.includes('?') ? '&' : '?'}v=${imgVer}`} alt="" className={styles.userCardAvatarImg} />
               ) : (
                 <UserIcon size={20} />
               )}

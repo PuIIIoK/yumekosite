@@ -54,6 +54,8 @@ function EditUserContent() {
     accentColor: "",
   });
   const [loading, setLoading] = useState(true);
+  const [imgVer, setImgVer] = useState(() => Date.now());
+  const bust = (url: string | null) => url ? `${url.split('?')[0]}?v=${imgVer}` : null;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -84,10 +86,8 @@ function EditUserContent() {
       const res = await fetch(`${API_URL}/api/roles/users`);
       const users: UserData[] = await res.json();
       const found = users.find((u) => u.id === user.id);
-      if (found) {
-        const bust = `?v=${Date.now()}`;
-        setUser({ ...found, avatarUrl: found.avatarUrl ? found.avatarUrl.split("?")[0] + bust : found.avatarUrl });
-      }
+      if (found) setUser(found);
+      setImgVer(Date.now());
       if (auth.user && String(auth.user.id) === String(user.id)) await auth.refreshUser();
     } catch { setError("Ошибка загрузки аватара"); }
     setUploadingAvatar(false);
@@ -101,10 +101,8 @@ function EditUserContent() {
       const res = await fetch(`${API_URL}/api/roles/users`);
       const users: UserData[] = await res.json();
       const found = users.find((u) => u.id === user.id);
-      if (found) {
-        const bust = `?v=${Date.now()}`;
-        setUser({ ...found, bannerUrl: found.bannerUrl ? found.bannerUrl.split("?")[0] + bust : found.bannerUrl });
-      }
+      if (found) setUser(found);
+      setImgVer(Date.now());
       if (auth.user && String(auth.user.id) === String(user.id)) await auth.refreshUser();
     } catch { setError("Ошибка загрузки баннера"); }
     setUploadingBanner(false);
@@ -212,7 +210,7 @@ function EditUserContent() {
               <div className={styles.userHeader}>
                 <div className={styles.userHeaderAvatar}>
                   {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="" className={styles.userHeaderAvatarImg} />
+                    <img src={bust(user.avatarUrl)!} alt="" className={styles.userHeaderAvatarImg} />
                   ) : (
                     <UserIcon size={28} />
                   )}
@@ -242,7 +240,7 @@ function EditUserContent() {
                       {uploadingAvatar ? (
                         <Loader2 size={20} className={styles.saveSpin} />
                       ) : user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="" className={styles.mediaPreviewImg} />
+                        <img src={bust(user.avatarUrl)!} alt="" className={styles.mediaPreviewImg} />
                       ) : (
                         <Upload size={20} />
                       )}
@@ -258,7 +256,7 @@ function EditUserContent() {
                       {uploadingBanner ? (
                         <Loader2 size={20} className={styles.saveSpin} />
                       ) : user.bannerUrl ? (
-                        <img src={user.bannerUrl} alt="" className={styles.mediaBannerImg} />
+                        <img src={bust(user.bannerUrl)!} alt="" className={styles.mediaBannerImg} />
                       ) : (
                         <Upload size={20} />
                       )}
