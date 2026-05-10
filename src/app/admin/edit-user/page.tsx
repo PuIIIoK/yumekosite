@@ -84,7 +84,11 @@ function EditUserContent() {
       const res = await fetch(`${API_URL}/api/roles/users`);
       const users: UserData[] = await res.json();
       const found = users.find((u) => u.id === user.id);
-      if (found) setUser(found);
+      if (found) {
+        const bust = `?v=${Date.now()}`;
+        setUser({ ...found, avatarUrl: found.avatarUrl ? found.avatarUrl.split("?")[0] + bust : found.avatarUrl });
+      }
+      if (auth.user && String(auth.user.id) === String(user.id)) await auth.refreshUser();
     } catch { setError("Ошибка загрузки аватара"); }
     setUploadingAvatar(false);
   };
@@ -97,7 +101,11 @@ function EditUserContent() {
       const res = await fetch(`${API_URL}/api/roles/users`);
       const users: UserData[] = await res.json();
       const found = users.find((u) => u.id === user.id);
-      if (found) setUser(found);
+      if (found) {
+        const bust = `?v=${Date.now()}`;
+        setUser({ ...found, bannerUrl: found.bannerUrl ? found.bannerUrl.split("?")[0] + bust : found.bannerUrl });
+      }
+      if (auth.user && String(auth.user.id) === String(user.id)) await auth.refreshUser();
     } catch { setError("Ошибка загрузки баннера"); }
     setUploadingBanner(false);
   };
@@ -163,6 +171,9 @@ function EditUserContent() {
         setError(data.error || "Ошибка сохранения");
         setSaving(false);
         return;
+      }
+      if (auth.user && String(auth.user.id) === String(user.id)) {
+        await auth.refreshUser();
       }
       setSaving(false);
       setSaved(true);

@@ -43,6 +43,7 @@ type AuthContextType = {
   register: (username: string, password: string, confirmPassword: string) => Promise<AuthResult>;
   updateProfile: (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string }) => Promise<UpdateResult>;
   uploadImage: (type: "avatar" | "banner", file: File) => Promise<UpdateResult>;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 };
 
@@ -239,10 +240,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_URL}/api/profile/${user.username}`);
+      const hex = await res.text();
+      const json = JSON.parse(parseHexDump(hex));
+      if (json.ok && json.user) {
+        const u = mapUser(json.user);
+        u.imageVersion = Date.now();
+        setUser(u);
+      }
+    } catch {}
+  };
+
   const logout = () => setUser(null);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, updateProfile, uploadImage, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, updateProfile, uploadImage, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
