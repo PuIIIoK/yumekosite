@@ -726,17 +726,6 @@ export default function Header() {
                       <Users size={16} />
                       <span>Мои друзья</span>
                     </button>
-                    {auth.user.username === "yumekoadmin" && (
-                      <Link
-                        href="/admin"
-                        className={styles.profileMenuItem}
-                        onClick={() => setProfileMenuOpen(false)}
-                        role="menuitem"
-                      >
-                        <ShieldCheck size={16} />
-                        <span>Админ панель</span>
-                      </Link>
-                    )}
                     <button
                       className={styles.profileMenuItem}
                       onClick={() => {
@@ -750,7 +739,7 @@ export default function Header() {
                     </button>
                   </div>
 
-                  {(auth.user?.role?.priority ?? 0) >= 80 && (
+                  {Math.max(0, ...(auth.user?.roles ?? [auth.user?.role].filter(Boolean)).map((r) => r?.priority ?? 0)) >= 80 && (
                     <button
                       className={styles.profileMenuItem}
                       onClick={() => {

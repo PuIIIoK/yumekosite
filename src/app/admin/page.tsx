@@ -11,10 +11,16 @@ import EpisodeManager from "./EpisodeManager";
 import styles from "./admin.module.scss";
 
 const ADMIN_SECTIONS = [
-  { id: "anime", title: "Аниме каталог", icon: Film, color: "#a855f7" },
-  { id: "episodes", title: "Эпизоды", icon: Play, color: "#10b981" },
-  { id: "users", title: "Пользователи", icon: Users, color: "#3b82f6" },
+  { id: "anime", title: "Аниме каталог", icon: Film, color: "#a855f7", minPriority: 80 },
+  { id: "episodes", title: "Эпизоды", icon: Play, color: "#10b981", minPriority: 90 },
+  { id: "users", title: "Пользователи", icon: Users, color: "#3b82f6", minPriority: 150 },
 ];
+
+function getMaxPriority(user: { role?: { priority: number }; roles?: { priority: number }[] } | null): number {
+  if (!user) return 0;
+  const rolePriorities = (user.roles ?? [user.role].filter(Boolean)).map((r) => r?.priority ?? 0);
+  return Math.max(0, ...rolePriorities);
+}
 
 function AdminContent({ section }: { section: string }) {
   if (section === "anime") return <AnimeManager />;
@@ -73,15 +79,19 @@ export default function AdminPage() {
       router.replace("/");
       return;
     }
-    const priority = auth.user?.role?.priority ?? 0;
+    const priority = getMaxPriority(auth.user);
     if (priority < 80) {
       router.replace("/");
       return;
     }
+    const visibleSections = ADMIN_SECTIONS.filter((s) => priority >= s.minPriority);
     const hash = window.location.hash.replace("#", "");
-    if (hash && ADMIN_SECTIONS.some((s) => s.id === hash)) {
+    if (hash && visibleSections.some((s) => s.id === hash)) {
       setActiveSectionState(hash);
       setVisualSection(hash);
+    } else if (visibleSections.length > 0) {
+      setActiveSectionState(visibleSections[0].id);
+      setVisualSection(visibleSections[0].id);
     }
     setLoading(false);
   }, [auth.mounted, auth.isAuthenticated, auth.user, router]);
@@ -126,7 +136,7 @@ export default function AdminPage() {
                 "--indicator-color": ADMIN_SECTIONS.find(s => s.id === visualSection)?.color || "var(--accent)",
               } as React.CSSProperties}
             />
-            {ADMIN_SECTIONS.map((section) => {
+            {ADMIN_SECTIONS.filter((s) => getMaxPriority(auth.user) >= s.minPriority).map((section) => {
               const Icon = section.icon;
               const isActive = visualSection === section.id;
               return (

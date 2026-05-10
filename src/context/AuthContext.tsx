@@ -131,6 +131,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         parsed.hasAvatar = parsed.hasAvatar ?? false;
         parsed.hasBanner = parsed.hasBanner ?? false;
         parsed.imageVersion = parsed.imageVersion ?? Date.now();
+        if (!parsed.roles && parsed.role) {
+          parsed.roles = [parsed.role];
+        }
         setUser(parsed as User);
       }
     } catch {}

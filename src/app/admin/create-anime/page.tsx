@@ -109,7 +109,8 @@ function CreateAnimeContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!auth.isAuthenticated || (auth.user?.role?.priority ?? 0) < 80) {
+    const maxPri = Math.max(0, ...(auth.user?.roles ?? [auth.user?.role].filter(Boolean)).map((r) => r?.priority ?? 0));
+    if (!auth.isAuthenticated || maxPri < 80) {
       router.replace("/");
       return;
     }
