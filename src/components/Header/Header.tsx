@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BookMarked, Search, Settings, Heart, X, User, Users, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff, Bookmark, ShieldCheck, Sparkles, Crown, Star } from "lucide-react";
 import { type AnimeDetails, getAccent } from "@/data/anime";
-import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
+import { useAppearance, ACCENT_COLORS, CANVAS_STYLES, PROFILE_CANVAS_STYLES, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import CropModal from "@/components/CropModal/CropModal";
@@ -70,12 +70,13 @@ export default function Header() {
   const [custAvatarGlow, setCustAvatarGlow] = useState(false);
   const [custVerified, setCustVerified] = useState(false);
   const [custAccent, setCustAccent] = useState("");
+  const [custCanvasStyle, setCustCanvasStyle] = useState("");
   const [custSaving, setCustSaving] = useState(false);
   const [custSaveSuccess, setCustSaveSuccess] = useState(false);
   const [custSaveFading, setCustSaveFading] = useState(false);
   const [custSaveError, setCustSaveError] = useState<string | null>(null);
   const [custDirty, setCustDirty] = useState(false);
-  const canCustomize = (auth.user?.role.priority ?? 0) >= 70;
+  const canCustomize = Math.max(0, ...(auth.user?.roles ?? [auth.user?.role].filter(Boolean)).map((r) => r?.priority ?? 0)) >= 60;
   const [pwdCurrent, setPwdCurrent] = useState("");
   const [pwdNew, setPwdNew] = useState("");
   const [pwdConfirm, setPwdConfirm] = useState("");
@@ -304,6 +305,7 @@ export default function Header() {
       setCustAvatarGlow(fx?.effectAvatarGlow ?? false);
       setCustVerified(fx?.effectVerifiedBadge ?? false);
       setCustAccent(fx?.accentColor || "");
+      setCustCanvasStyle(fx?.profileCanvasStyle || "");
       setCustSaveError(null);
       setCustSaveSuccess(false);
       setCustSaveFading(false);
@@ -353,6 +355,7 @@ export default function Header() {
       effectAvatarGlow: custAvatarGlow,
       effectVerifiedBadge: custVerified,
       accentColor: custAccent || "",
+      profileCanvasStyle: custCanvasStyle || "",
     });
     const elapsed = Date.now() - start;
     await new Promise((r) => setTimeout(r, Math.max(0, 500 - elapsed)));
@@ -579,7 +582,7 @@ export default function Header() {
     profile: { username: "Имя пользователя", avatar: "Аватар", bio: "О себе", customize: "Кастомизация профиля" },
     security: { password: "Пароль", twofa: "Двухфакторная аутентификация", sessions: "Активные сессии" },
     notifications: { push: "Push-уведомления", email: "Email-уведомления", releases: "Уведомления о релизах" },
-    appearance: { theme: "Тема", accent: "Акцентный цвет", font: "Размер шрифта" },
+    appearance: { theme: "Тема", accent: "Акцентный цвет", canvasStyle: "Стиль канваса" },
     general: { language: "Язык", quality: "Качество видео", autoplay: "Автовоспроизведение" },
   };
 
@@ -813,12 +816,6 @@ export default function Header() {
             >
               <Palette size={18} /> Внешний вид
             </button>
-            <button
-              className={`${styles.settingsItem} ${settingsTab === "general" ? styles.settingsItemActive : ""}`}
-              onClick={() => switchTab("general")}
-            >
-              <Settings size={18} /> Основные
-            </button>
 
           </div>
 
@@ -937,29 +934,34 @@ export default function Header() {
                 </>
               )}
               {!settingsSubTab && settingsTab === "notifications" && (
-                <>
-                  <div className={styles.settingsCard} onClick={() => openSubTab("push")}>
-                    <div className={styles.settingsCardInner}>
-                      <div><div className={styles.settingsCardTitle}>Push-уведомления</div>
-                      <div className={styles.settingsCardDesc}>Уведомления о новых эпизодах и обновлениях в браузере.</div></div>
-                      <ChevronRight size={16} className={styles.settingsCardChevron} />
+                <div style={{ position: "relative" }}>
+                  <div style={{ filter: "blur(4px)", pointerEvents: "none", opacity: 0.4 }}>
+                    <div className={styles.settingsCard}>
+                      <div className={styles.settingsCardInner}>
+                        <div><div className={styles.settingsCardTitle}>Push-уведомления</div>
+                        <div className={styles.settingsCardDesc}>Уведомления о новых эпизодах и обновлениях в браузере.</div></div>
+                        <ChevronRight size={16} className={styles.settingsCardChevron} />
+                      </div>
+                    </div>
+                    <div className={styles.settingsCard}>
+                      <div className={styles.settingsCardInner}>
+                        <div><div className={styles.settingsCardTitle}>Email-уведомления</div>
+                        <div className={styles.settingsCardDesc}>Настройте, какие уведомления отправлять на вашу почту.</div></div>
+                        <ChevronRight size={16} className={styles.settingsCardChevron} />
+                      </div>
+                    </div>
+                    <div className={styles.settingsCard}>
+                      <div className={styles.settingsCardInner}>
+                        <div><div className={styles.settingsCardTitle}>Уведомления о релизах</div>
+                        <div className={styles.settingsCardDesc}>Уведомления при выходе новых эпизодов отслеживаемых аниме.</div></div>
+                        <ChevronRight size={16} className={styles.settingsCardChevron} />
+                      </div>
                     </div>
                   </div>
-                  <div className={styles.settingsCard} onClick={() => openSubTab("email")}>
-                    <div className={styles.settingsCardInner}>
-                      <div><div className={styles.settingsCardTitle}>Email-уведомления</div>
-                      <div className={styles.settingsCardDesc}>Настройте, какие уведомления отправлять на вашу почту.</div></div>
-                      <ChevronRight size={16} className={styles.settingsCardChevron} />
-                    </div>
+                  <div className={styles.settingsWip}>
+                    <span>В разработке</span>
                   </div>
-                  <div className={styles.settingsCard} onClick={() => openSubTab("releases")}>
-                    <div className={styles.settingsCardInner}>
-                      <div><div className={styles.settingsCardTitle}>Уведомления о релизах</div>
-                      <div className={styles.settingsCardDesc}>Уведомления при выходе новых эпизодов отслеживаемых аниме.</div></div>
-                      <ChevronRight size={16} className={styles.settingsCardChevron} />
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
               {!settingsSubTab && settingsTab === "appearance" && (
                 <>
@@ -977,12 +979,22 @@ export default function Header() {
                       <ChevronRight size={16} className={styles.settingsCardChevron} />
                     </div>
                   </div>
-                  <div className={styles.settingsCard} onClick={() => openSubTab("font")}>
-                    <div className={styles.settingsCardInner}>
-                      <div><div className={styles.settingsCardTitle}>Размер шрифта</div>
-                      <div className={styles.settingsCardDesc}>Измените размер текста для комфортного чтения.</div></div>
-                      <ChevronRight size={16} className={styles.settingsCardChevron} />
+                  <div style={{ marginTop: 12 }}>
+                    <div className={styles.settingsToggleRow}>
+                      <span>Анимированный канвас</span>
+                      <div className={`${styles.settingsToggle} ${appearance.canvasEnabled ? styles.settingsToggleOn : ""}`} onClick={() => appearance.setCanvasEnabled(!appearance.canvasEnabled)}>
+                        <div className={styles.settingsToggleKnob} />
+                      </div>
                     </div>
+                    {appearance.canvasEnabled && (
+                      <div className={styles.settingsCard} onClick={() => openSubTab("canvasStyle")} style={{ marginTop: 8 }}>
+                        <div className={styles.settingsCardInner}>
+                          <div><div className={styles.settingsCardTitle}>Изменить стиль канваса</div>
+                          <div className={styles.settingsCardDesc}>Выберите один из 5 визуальных стилей фоновой анимации.</div></div>
+                          <ChevronRight size={16} className={styles.settingsCardChevron} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -1157,6 +1169,27 @@ export default function Header() {
                       <div className={styles.settingsToggleKnob} />
                     </div>
                   </div>
+                  <p className={styles.settingsSubLabel} style={{ marginTop: 20 }}>Канвас профиля</p>
+                  <p className={styles.settingsSubHint}>Выберите стиль канваса для вашего профиля. Если не выбран — используется стандартный из настроек внешнего вида.</p>
+                  <div className={styles.canvasStyleGrid}>
+                    <button
+                      className={`${styles.canvasStyleCard} ${!custCanvasStyle ? styles.canvasStyleCardActive : ""}`}
+                      onClick={() => { setCustCanvasStyle(""); setCustDirty(true); }}
+                    >
+                      <span className={styles.canvasStyleName}>По умолчанию</span>
+                      <span className={styles.canvasStyleDesc}>Стандартный канвас сайта</span>
+                    </button>
+                    {PROFILE_CANVAS_STYLES.map((cs) => (
+                      <button
+                        key={cs.id}
+                        className={`${styles.canvasStyleCard} ${custCanvasStyle === cs.id ? styles.canvasStyleCardActive : ""}`}
+                        onClick={() => { setCustCanvasStyle(cs.id); setCustDirty(true); }}
+                      >
+                        <span className={styles.canvasStyleName}>{cs.name}</span>
+                        <span className={styles.canvasStyleDesc}>{cs.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                   <p className={styles.settingsSubLabel} style={{ marginTop: 20 }}>Акцентный цвет</p>
                   <p className={styles.settingsSubHint}>Установите цвет свечения профиля. Оставьте пустым для цвета по умолчанию.</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -1187,7 +1220,7 @@ export default function Header() {
                       </div>
                     )}
                     <div className={styles.settingsBtnRow}>
-                      <button className={styles.settingsBtnCancel} onClick={() => { if (auth.user) { const f = auth.user.effects; setCustShimmer(f?.effectShimmer ?? false); setCustBorderGlow(f?.effectBorderGlow ?? false); setCustAvatarGlow(f?.effectAvatarGlow ?? false); setCustVerified(f?.effectVerifiedBadge ?? false); setCustAccent(f?.accentColor || ""); setCustDirty(false); } }} disabled={custSaving}>Отменить</button>
+                      <button className={styles.settingsBtnCancel} onClick={() => { if (auth.user) { const f = auth.user.effects; setCustShimmer(f?.effectShimmer ?? false); setCustBorderGlow(f?.effectBorderGlow ?? false); setCustAvatarGlow(f?.effectAvatarGlow ?? false); setCustVerified(f?.effectVerifiedBadge ?? false); setCustAccent(f?.accentColor || ""); setCustCanvasStyle(f?.profileCanvasStyle || ""); setCustDirty(false); } }} disabled={custSaving}>Отменить</button>
                       <button
                         className={`${styles.settingsBtn} ${custSaving ? styles.settingsBtnLoading : ""}`}
                         onClick={handleCustSave}
@@ -1197,6 +1230,24 @@ export default function Header() {
                         {custSaving && <span className={styles.settingsBtnSpinner} />}
                       </button>
                     </div>
+                  </div>
+                </div>
+              )}
+              {settingsSubTab === "canvasStyle" && (
+                <div className={styles.settingsSubContent}>
+                  <p className={styles.settingsSubLabel}>Стиль фоновой анимации</p>
+                  <p className={styles.settingsSubHint}>Выберите визуальный стиль анимированного канваса.</p>
+                  <div className={styles.canvasStyleGrid}>
+                    {CANVAS_STYLES.map((cs) => (
+                      <button
+                        key={cs.id}
+                        className={`${styles.canvasStyleCard} ${appearance.canvasStyle === cs.id ? styles.canvasStyleCardActive : ""}`}
+                        onClick={() => appearance.setCanvasStyle(cs.id)}
+                      >
+                        <span className={styles.canvasStyleName}>{cs.name}</span>
+                        <span className={styles.canvasStyleDesc}>{cs.desc}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

@@ -4,6 +4,23 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 
 export type ThemeMode = "dark" | "light";
 export type FontSize = "small" | "medium" | "large";
+export type CanvasStyle = "network" | "bubbles" | "stars" | "snow" | "matrix" | "fireflies" | "waves" | "galaxy" | "rain" | "confetti";
+
+export const CANVAS_STYLES: { id: CanvasStyle; name: string; desc: string }[] = [
+  { id: "network", name: "Сеть", desc: "Частицы с линиями связи" },
+  { id: "bubbles", name: "Пузыри", desc: "Плавающие круги" },
+  { id: "stars", name: "Звёзды", desc: "Звёздное поле" },
+  { id: "snow", name: "Снег", desc: "Падающие снежинки" },
+  { id: "matrix", name: "Матрица", desc: "Цифровой дождь" },
+];
+
+export const PROFILE_CANVAS_STYLES: { id: CanvasStyle; name: string; desc: string }[] = [
+  { id: "fireflies", name: "Огоньки", desc: "Мерцающие светлячки" },
+  { id: "waves", name: "Волны", desc: "Плавные волновые линии" },
+  { id: "galaxy", name: "Галактика", desc: "Спиральное звёздное облако" },
+  { id: "rain", name: "Дождь", desc: "Падающие капли" },
+  { id: "confetti", name: "Конфетти", desc: "Летающие частицы" },
+];
 
 export interface AccentColor {
   name: string;
@@ -25,9 +42,19 @@ interface AppearanceState {
   theme: ThemeMode;
   accent: AccentColor;
   fontSize: FontSize;
+  canvasEnabled: boolean;
+  canvasStyle: CanvasStyle;
+  canvasStyleOverride: CanvasStyle | null;
+  canvasAccentOverride: string | null;
+  activeCanvasStyle: CanvasStyle;
+  activeCanvasAccent: string;
   setTheme: (t: ThemeMode) => void;
   setAccent: (a: AccentColor) => void;
   setFontSize: (f: FontSize) => void;
+  setCanvasEnabled: (v: boolean) => void;
+  setCanvasStyle: (s: CanvasStyle) => void;
+  setCanvasStyleOverride: (s: CanvasStyle | null) => void;
+  setCanvasAccentOverride: (c: string | null) => void;
 }
 
 const defaultAccent = ACCENT_COLORS[0];
@@ -36,9 +63,19 @@ const AppearanceContext = createContext<AppearanceState>({
   theme: "dark",
   accent: defaultAccent,
   fontSize: "medium",
+  canvasEnabled: true,
+  canvasStyle: "network",
+  canvasStyleOverride: null,
+  canvasAccentOverride: null,
+  activeCanvasStyle: "network",
+  activeCanvasAccent: defaultAccent.value,
   setTheme: () => {},
   setAccent: () => {},
   setFontSize: () => {},
+  setCanvasEnabled: () => {},
+  setCanvasStyle: () => {},
+  setCanvasStyleOverride: () => {},
+  setCanvasAccentOverride: () => {},
 });
 
 export function useAppearance() {
@@ -55,6 +92,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [accent, setAccentState] = useState<AccentColor>(defaultAccent);
   const [fontSize, setFontSizeState] = useState<FontSize>("medium");
+  const [canvasEnabled, setCanvasEnabledState] = useState(true);
+  const [canvasStyle, setCanvasStyleState] = useState<CanvasStyle>("network");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -68,6 +107,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
           if (found) setAccentState(found);
         }
         if (data.fontSize) setFontSizeState(data.fontSize);
+        if (data.canvasEnabled !== undefined) setCanvasEnabledState(data.canvasEnabled);
+        if (data.canvasStyle) setCanvasStyleState(data.canvasStyle);
       } catch {}
     }
     setMounted(true);
@@ -77,9 +118,9 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
     localStorage.setItem(
       "yumeko-appearance",
-      JSON.stringify({ theme, accentName: accent.name, fontSize })
+      JSON.stringify({ theme, accentName: accent.name, fontSize, canvasEnabled, canvasStyle })
     );
-  }, [theme, accent, fontSize, mounted]);
+  }, [theme, accent, fontSize, canvasEnabled, canvasStyle, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -131,9 +172,16 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const setTheme = (t: ThemeMode) => setThemeState(t);
   const setAccent = (a: AccentColor) => setAccentState(a);
   const setFontSize = (f: FontSize) => setFontSizeState(f);
+  const setCanvasEnabled = (v: boolean) => setCanvasEnabledState(v);
+  const setCanvasStyle = (s: CanvasStyle) => setCanvasStyleState(s);
+  const [canvasStyleOverride, setCanvasStyleOverride] = useState<CanvasStyle | null>(null);
+  const [canvasAccentOverride, setCanvasAccentOverride] = useState<string | null>(null);
+
+  const activeCanvasStyle = canvasStyleOverride ?? canvasStyle;
+  const activeCanvasAccent = canvasAccentOverride ?? accent.value;
 
   return (
-    <AppearanceContext.Provider value={{ theme, accent, fontSize, setTheme, setAccent, setFontSize }}>
+    <AppearanceContext.Provider value={{ theme, accent, fontSize, canvasEnabled, canvasStyle, canvasStyleOverride, canvasAccentOverride, activeCanvasStyle, activeCanvasAccent, setTheme, setAccent, setFontSize, setCanvasEnabled, setCanvasStyle, setCanvasStyleOverride, setCanvasAccentOverride }}>
       {children}
     </AppearanceContext.Provider>
   );

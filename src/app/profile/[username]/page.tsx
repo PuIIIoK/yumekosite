@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Sparkles, Crown, Star, Shield, ShieldCheck, BadgeCheck, UserPlus, UserCheck, UserX, Clock } from "lucide-react";
 import { useAuth, type User, type Role } from "@/context/AuthContext";
+import { useAppearance, type CanvasStyle } from "@/context/AppearanceContext";
 import Header from "@/components/Header/Header";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import styles from "./profile.module.scss";
@@ -52,6 +53,7 @@ function mapProfileUser(dto: any): User {
       effectAvatarGlow: dto.effectAvatarGlow ?? false,
       effectVerifiedBadge: dto.effectVerifiedBadge ?? false,
       accentColor: dto.accentColor ?? null,
+      profileCanvasStyle: dto.profileCanvasStyle ?? null,
     },
   };
 }
@@ -60,6 +62,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const params = useParams();
   const auth = useAuth();
+  const appearance = useAppearance();
   const username = (params?.username as string) ?? "";
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,6 +143,22 @@ export default function ProfilePage() {
     }
     if (username) fetchProfile();
   }, [username]);
+
+  useEffect(() => {
+    if (!profileUser) return;
+    const profileCanvas = profileUser.effects?.profileCanvasStyle;
+    const profileAccent = profileUser.effects?.accentColor;
+    if (profileCanvas) {
+      appearance.setCanvasStyleOverride(profileCanvas as CanvasStyle);
+    }
+    if (profileAccent) {
+      appearance.setCanvasAccentOverride(profileAccent);
+    }
+    return () => {
+      appearance.setCanvasStyleOverride(null);
+      appearance.setCanvasAccentOverride(null);
+    };
+  }, [profileUser]);
 
   useEffect(() => {
     if (!username) return;
@@ -408,8 +427,12 @@ export default function ProfilePage() {
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Роли</span>
-                  <span className={styles.infoValue}>
-                    {(profileUser.roles ?? [profileUser.role]).map(r => r.displayName).join(", ")}
+                  <span className={styles.infoRoles}>
+                    {(profileUser.roles ?? [profileUser.role]).map(r => (
+                      <span key={r.name} className={styles.infoRoleTag} style={{ borderColor: r.color, color: r.color }}>
+                        {r.displayName}
+                      </span>
+                    ))}
                   </span>
                 </div>
                 <div className={styles.infoRow}>

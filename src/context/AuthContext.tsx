@@ -18,6 +18,7 @@ export type ProfileEffects = {
   effectAvatarGlow: boolean;
   effectVerifiedBadge: boolean;
   accentColor: string | null;
+  profileCanvasStyle: string | null;
 };
 
 export type User = {
@@ -43,7 +44,7 @@ type AuthContextType = {
   mounted: boolean;
   login: (username: string, password: string) => Promise<AuthResult>;
   register: (username: string, password: string, confirmPassword: string) => Promise<AuthResult>;
-  updateProfile: (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string }) => Promise<UpdateResult>;
+  updateProfile: (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string; profileCanvasStyle?: string }) => Promise<UpdateResult>;
   uploadImage: (type: "avatar" | "banner", file: File) => Promise<UpdateResult>;
   refreshUser: () => Promise<void>;
   logout: () => void;
@@ -103,6 +104,7 @@ function mapUser(dto: any): User {
       effectAvatarGlow: dto.effectAvatarGlow ?? false,
       effectVerifiedBadge: dto.effectVerifiedBadge ?? false,
       accentColor: dto.accentColor ?? null,
+      profileCanvasStyle: dto.profileCanvasStyle ?? null,
     },
   };
 }
@@ -195,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string }): Promise<UpdateResult> => {
+  const updateProfile = async (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string; profileCanvasStyle?: string }): Promise<UpdateResult> => {
     if (!user) return { ok: false, error: "Не авторизован" };
     try {
       const res = await fetch(`${API_URL}/api/profile/${user.username}`, {
