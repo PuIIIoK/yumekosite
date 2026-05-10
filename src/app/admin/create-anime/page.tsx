@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
@@ -16,6 +16,10 @@ const EMPTY_ANIME = {
 };
 
 type AnimeForm = typeof EMPTY_ANIME;
+
+export default function CreateAnimePage() {
+  return <Suspense><CreateAnimeContent /></Suspense>;
+}
 
 const SEASONS = ["Зима", "Весна", "Лето", "Осень"];
 const FORMATS = ["ТВ", "Фильм", "OVA", "ONA", "Спешл"];
@@ -86,7 +90,7 @@ const RATING_COLORS: Record<string, string> = {
   "0+": "#22c55e", "6+": "#22c55e", "12+": "#2dd4bf", "16+": "#f97316", "18+": "#ef4444",
 };
 
-export default function CreateAnimePage() {
+function CreateAnimeContent() {
   const auth = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
