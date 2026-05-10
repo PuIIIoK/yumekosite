@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Search, X, Plus, Trash2, Loader2, Check, ChevronDown, Film, Play, AlertTriangle, Upload, Image, Maximize2 } from "lucide-react";
+import { Search, X, Plus, Trash2, Loader2, Check, ChevronDown, Film, Play, AlertTriangle, Upload, Image, Maximize2, Users, Mic } from "lucide-react";
 import Hls from "hls.js";
 import { API_URL } from "@/config/hosts";
 import type { AnimeDetails } from "@/data/anime";
@@ -25,6 +25,18 @@ interface EpisodeForm {
   number: string;
   title: string;
   studio: string;
+}
+
+interface VoiceCast {
+  id: number;
+  animeId: number;
+  studio: string;
+  actorName: string;
+  actorUsername?: string;
+  actorDisplayName?: string;
+  actorHasAvatar?: boolean;
+  actorRoleColor?: string;
+  characterName: string;
 }
 
 const DEFAULT_STUDIOS = ["YumekoStudio"];
@@ -98,6 +110,12 @@ export default function EpisodeManager() {
   const [modalEp, setModalEp] = useState<Episode | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [filterStudio, setFilterStudio] = useState<string | null>(null);
+  const [voiceCast, setVoiceCast] = useState<VoiceCast[]>([]);
+  const [vcStudio, setVcStudio] = useState<string | null>(null);
+  const [vcActor, setVcActor] = useState("");
+  const [vcUsername, setVcUsername] = useState("");
+  const [vcCharacter, setVcCharacter] = useState("");
+  const [vcSaving, setVcSaving] = useState(false);
   const [studios, setStudios] = useState<string[]>(DEFAULT_STUDIOS);
   const [addingStudio, setAddingStudio] = useState(false);
   const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
@@ -137,6 +155,40 @@ export default function EpisodeManager() {
     if (!silent) setEpisodesLoading(false);
   }, []);
 
+  const fetchVoiceCast = useCallback(async (animeId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/voice-cast/${animeId}`);
+      if (res.ok) setVoiceCast(await res.json());
+    } catch {}
+  }, []);
+
+  const addVoiceCast = async () => {
+    if (!selectedAnime || !vcStudio || !vcActor.trim() || !vcCharacter.trim()) return;
+    setVcSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/api/voice-cast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ animeId: selectedAnime.id, studio: vcStudio, actorName: vcActor.trim(), actorUsername: vcUsername.trim() || null, characterName: vcCharacter.trim() }),
+      });
+      if (res.ok) {
+        setVcActor("");
+        setVcUsername("");
+        setVcCharacter("");
+        await fetchVoiceCast(selectedAnime.id);
+      }
+    } catch {}
+    setVcSaving(false);
+  };
+
+  const deleteVoiceCast = async (id: number) => {
+    if (!selectedAnime) return;
+    try {
+      await fetch(`${API_URL}/api/voice-cast/${id}`, { method: "DELETE" });
+      await fetchVoiceCast(selectedAnime.id);
+    } catch {}
+  };
+
   // Poll for in-progress episodes (silent — no loading flash)
   useEffect(() => {
     if (!selectedAnime) return;
@@ -151,6 +203,7 @@ export default function EpisodeManager() {
   useEffect(() => {
     if (selectedAnime) {
       fetchEpisodes(selectedAnime.id);
+      fetchVoiceCast(selectedAnime.id);
       setForm({ ...emptyForm, number: String(episodes.length + 1) });
     }
   }, [selectedAnime]);
@@ -172,6 +225,15 @@ export default function EpisodeManager() {
   const episodeStudios = useMemo(() => {
     return [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort();
   }, [episodes]);
+
+  useEffect(() => {
+    if (episodeStudios.length > 0 && !vcStudio) setVcStudio(episodeStudios[0]);
+  }, [episodeStudios]);
+
+  const vcByStudio = useMemo(() => {
+    const active = vcStudio || episodeStudios[0] || "YumekoStudio";
+    return voiceCast.filter((vc) => vc.studio === active);
+  }, [voiceCast, vcStudio, episodeStudios]);
 
   const filteredEpisodes = useMemo(() => {
     let list = episodes;
@@ -721,6 +783,103 @@ export default function EpisodeManager() {
                     <button
                       className={styles.episodeDeleteBtn}
                       onClick={() => setDeleteTarget(ep)}
+                      title="Удалить"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Voice Cast / Работа над релизом ── */}
+          <div className={styles.episodeListSection}>
+            <div className={styles.episodeListHeader}>
+              <h3><Mic size={16} style={{ marginRight: 6, verticalAlign: -2 }} />Работа над релизом</h3>
+            </div>
+
+            {episodeStudios.length > 1 && (
+              <div className={styles.epStudioFilter}>
+                {episodeStudios.map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.epStudioFilterBtn} ${vcStudio === s ? styles.epStudioFilterBtnActive : ""}`}
+                    onClick={() => setVcStudio(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className={styles.episodeFormGrid} style={{ gridTemplateColumns: "1fr 1fr 1fr auto", marginBottom: 12 }}>
+              <div className={styles.episodeFormField}>
+                <label>Профиль (@username)</label>
+                <input
+                  value={vcUsername}
+                  onChange={(e) => setVcUsername(e.target.value.replace("@", ""))}
+                  placeholder="username"
+                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                />
+              </div>
+              <div className={styles.episodeFormField}>
+                <label>Имя актёра</label>
+                <input
+                  value={vcActor}
+                  onChange={(e) => setVcActor(e.target.value)}
+                  placeholder="Hirst"
+                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                />
+              </div>
+              <div className={styles.episodeFormField}>
+                <label>Персонаж</label>
+                <input
+                  value={vcCharacter}
+                  onChange={(e) => setVcCharacter(e.target.value)}
+                  placeholder="Ко Ямори"
+                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                />
+              </div>
+              <div className={styles.episodeFormField} style={{ display: "flex", alignItems: "flex-end" }}>
+                <button
+                  className={styles.epStudioAddBtn}
+                  onClick={addVoiceCast}
+                  disabled={vcSaving || !vcActor.trim() || !vcCharacter.trim()}
+                  title="Добавить"
+                  style={{ height: 36, width: 36 }}
+                >
+                  {vcSaving ? <Loader2 size={14} className={styles.saveSpin} /> : <Plus size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {vcByStudio.length === 0 ? (
+              <div className={styles.episodeEmpty}>Актёров озвучки пока нет</div>
+            ) : (
+              <div className={styles.episodeList}>
+                {vcByStudio.map((vc) => (
+                  <div key={vc.id} className={styles.episodeCard}>
+                    <div className={styles.episodeNumber} style={{ width: 32 }}>
+                      {vc.actorUsername && vc.actorHasAvatar ? (
+                        <img src={`${API_URL}/api/media/${vc.actorUsername}/avatar`} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: "cover", border: vc.actorRoleColor ? `2px solid ${vc.actorRoleColor}` : "2px solid rgba(255,255,255,0.1)" }} />
+                      ) : (
+                        <Users size={14} />
+                      )}
+                    </div>
+                    <div className={styles.episodeInfo}>
+                      <span className={styles.episodeCardTitle}>
+                        <span style={vc.actorRoleColor ? { color: vc.actorRoleColor } : undefined}>{vc.actorDisplayName || vc.actorName}</span>
+                        {vc.actorUsername && <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 4 }}>@{vc.actorUsername}</span>}
+                        <span className={styles.epStudioBadge}>{vc.studio}</span>
+                      </span>
+                      <span className={styles.episodeStatus} style={{ color: "var(--text-muted)" }}>
+                        → {vc.characterName}
+                      </span>
+                    </div>
+                    <button
+                      className={styles.episodeDeleteBtn}
+                      onClick={() => deleteVoiceCast(vc.id)}
                       title="Удалить"
                     >
                       <Trash2 size={14} />

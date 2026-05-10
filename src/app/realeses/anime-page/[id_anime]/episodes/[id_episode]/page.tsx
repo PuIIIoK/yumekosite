@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: EpisodePageProps): Promise<Me
 
   return {
     title: `${episodeTitle || "Эпизод"} — ${anime.title}`,
-    description: `Смотрите ${episodeTitle || "эпизод"} аниме ${anime.title} онлайн на YumekoStudio`,
+    description: `\u0421\u043c\u043e\u0442\u0440\u0438\u0442\u0435 ${episodeTitle || "\u044d\u043f\u0438\u0437\u043e\u0434"} \u0430\u043d\u0438\u043c\u0435 ${anime.title} \u043e\u043d\u043b\u0430\u0439\u043d \u043d\u0430 Yumeko`,
   };
 }
 

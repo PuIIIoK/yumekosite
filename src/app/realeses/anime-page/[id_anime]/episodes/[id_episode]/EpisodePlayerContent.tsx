@@ -114,7 +114,7 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
               episodes={playerEpisodes}
               currentEpisodeId={currentEp.id}
               onEpisodeChange={handlePlayerEpisodeChange}
-              accent={accent}
+              accent="var(--accent)"
               userId={user?.id}
             />
           ) : (
@@ -140,97 +140,114 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
               </p>
             </div>
 
-            <div className={styles.episodeNav}>
-              {prevEp ? (
-                <a
-                  href={`/realeses/anime-page/${anime.id}/episodes/${prevEp.id}`}
-                  className={styles.navBtn}
-                  onClick={(e) => handleNavClick(prevEp, e)}
-                >
-                  <ChevronLeft size={16} /> Пред.
-                </a>
-              ) : (
-                <span className={`${styles.navBtn} ${styles.navBtnDisabled}`}>
-                  <ChevronLeft size={16} /> Пред.
-                </span>
-              )}
-              {nextEp ? (
-                <a
-                  href={`/realeses/anime-page/${anime.id}/episodes/${nextEp.id}`}
-                  className={styles.navBtn}
-                  onClick={(e) => handleNavClick(nextEp, e)}
-                >
-                  След. <ChevronRight size={16} />
-                </a>
-              ) : (
-                <span className={`${styles.navBtn} ${styles.navBtnDisabled}`}>
-                  След. <ChevronRight size={16} />
-                </span>
-              )}
-            </div>
+            {(prevEp || nextEp) && (
+              <div className={styles.navCards}>
+                {prevEp ? (
+                  <a
+                    href={`/realeses/anime-page/${anime.id}/episodes/${prevEp.id}`}
+                    className={styles.navCard}
+                    onClick={(e) => handleNavClick(prevEp, e)}
+                  >
+                    <div className={styles.navCardPreview}>
+                      {prevEp.previewUrl ? (
+                        <img src={prevEp.previewUrl} alt="" className={styles.navCardImg} />
+                      ) : (
+                        <div className={styles.navCardPlaceholder}><Play size={20} /></div>
+                      )}
+                    </div>
+                    <div className={styles.navCardInfo}>
+                      <span className={styles.navCardLabel}><ChevronLeft size={14} /> Предыдущая серия</span>
+                      <span className={styles.navCardTitle}>{prevEp.title || `Эпизод ${prevEp.number}`}</span>
+                      <span className={styles.navCardNum}>Эпизод {prevEp.number}</span>
+                    </div>
+                  </a>
+                ) : (
+                  <div className={`${styles.navCard} ${styles.navCardDisabled}`} />
+                )}
+                {nextEp ? (
+                  <a
+                    href={`/realeses/anime-page/${anime.id}/episodes/${nextEp.id}`}
+                    className={`${styles.navCard} ${styles.navCardNext}`}
+                    onClick={(e) => handleNavClick(nextEp, e)}
+                  >
+                    <div className={styles.navCardPreview}>
+                      {nextEp.previewUrl ? (
+                        <img src={nextEp.previewUrl} alt="" className={styles.navCardImg} />
+                      ) : (
+                        <div className={styles.navCardPlaceholder}><Play size={20} /></div>
+                      )}
+                    </div>
+                    <div className={styles.navCardInfo}>
+                      <span className={styles.navCardLabel}>Следующая серия <ChevronRight size={14} /></span>
+                      <span className={styles.navCardTitle}>{nextEp.title || `Эпизод ${nextEp.number}`}</span>
+                      <span className={styles.navCardNum}>Эпизод {nextEp.number}</span>
+                    </div>
+                  </a>
+                ) : (
+                  <div className={`${styles.navCard} ${styles.navCardDisabled}`} />
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Sidebar with episode list */}
-        {sidebarOpen && (
-          <aside className={styles.sidebar}>
-            <div className={styles.sidebarHeader}>
-              <span>Эпизоды ({sorted.length})</span>
-              <button className={styles.sidebarClose} onClick={() => setSidebarOpen(false)}>
-                <ChevronRight size={16} />
-              </button>
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+          <div className={styles.sidebarHeader}>
+            <span>Эпизоды ({sorted.length})</span>
+            <button className={styles.sidebarClose} onClick={() => setSidebarOpen(false)}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          {studioList.length > 1 && (
+            <div className={styles.studioTabs}>
+              {studioList.map((s) => (
+                <button
+                  key={s}
+                  className={`${styles.studioTab} ${s === selectedStudio ? styles.studioTabActive : ""}`}
+                  onClick={() => setSelectedStudio(s)}
+                >
+                  {s}
+                </button>
+              ))}
             </div>
-            {studioList.length > 1 && (
-              <div className={styles.studioTabs}>
-                {studioList.map((s) => (
-                  <button
-                    key={s}
-                    className={`${styles.studioTab} ${s === selectedStudio ? styles.studioTabActive : ""}`}
-                    onClick={() => setSelectedStudio(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className={styles.sidebarList}>
-              {sorted.map((ep) => {
-                const wp = watchProgress[ep.id];
-                const pct = wp && wp.totalSeconds > 0 ? Math.round(wp.watchedSeconds / wp.totalSeconds * 100) : 0;
-                return (
-                  <a
-                    key={ep.id}
-                    href={`/realeses/anime-page/${anime.id}/episodes/${ep.id}`}
-                    className={`${styles.sidebarItem} ${ep.id === currentEp.id ? styles.sidebarItemActive : ""}`}
-                    onClick={(e) => handleSidebarClick(ep, e)}
-                  >
-                    <span className={styles.sidebarNum}>{ep.number}</span>
-                    <div className={styles.sidebarInfo}>
-                      <span className={styles.sidebarTitle}>{ep.title || `Эпизод ${ep.number}`}</span>
-                      {pct > 0 && !wp?.completed && (
-                        <div className={styles.sidebarProgress}>
-                          <div className={styles.sidebarProgressBar} style={{ width: `${pct}%` }} />
-                        </div>
-                      )}
-                    </div>
-                    {wp?.completed ? (
-                      <Check size={14} className={styles.sidebarCheck} />
-                    ) : ep.id === currentEp.id ? (
-                      <Play size={14} className={styles.sidebarPlay} />
-                    ) : null}
-                  </a>
-                );
-              })}
-            </div>
-          </aside>
-        )}
+          )}
+          <div className={styles.sidebarList}>
+            {sorted.map((ep) => {
+              const wp = watchProgress[ep.id];
+              const pct = wp && wp.totalSeconds > 0 ? Math.round(wp.watchedSeconds / wp.totalSeconds * 100) : 0;
+              return (
+                <a
+                  key={ep.id}
+                  href={`/realeses/anime-page/${anime.id}/episodes/${ep.id}`}
+                  className={`${styles.sidebarItem} ${ep.id === currentEp.id ? styles.sidebarItemActive : ""}`}
+                  onClick={(e) => handleSidebarClick(ep, e)}
+                >
+                  <span className={styles.sidebarNum}>{ep.number}</span>
+                  <div className={styles.sidebarInfo}>
+                    <span className={styles.sidebarTitle}>{ep.title || `Эпизод ${ep.number}`}</span>
+                    {pct > 0 && !wp?.completed && (
+                      <div className={styles.sidebarProgress}>
+                        <div className={styles.sidebarProgressBar} style={{ width: `${pct}%` }} />
+                      </div>
+                    )}
+                  </div>
+                  {wp?.completed ? (
+                    <Check size={14} className={styles.sidebarCheck} />
+                  ) : ep.id === currentEp.id ? (
+                    <Play size={14} className={styles.sidebarPlay} />
+                  ) : null}
+                </a>
+              );
+            })}
+          </div>
+          {!sidebarOpen && (
+            <button className={styles.sidebarToggle} onClick={() => setSidebarOpen(true)}>
+              <List size={16} />
+            </button>
+          )}
+        </aside>
       </div>
-
-      {!sidebarOpen && (
-        <button className={styles.sidebarToggle} onClick={() => setSidebarOpen(true)}>
-          <List size={16} />
-        </button>
-      )}
     </main>
   );
 }

@@ -79,24 +79,28 @@ export default function VideoPlayer({
   const [buffered, setBuffered] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Volume — load from localStorage
-  const [volume, setVolume] = useState(() => {
-    if (typeof window === "undefined") return 1;
-    const saved = localStorage.getItem(VOLUME_KEY);
-    return saved ? parseFloat(saved) : 1;
-  });
-  const [muted, setMuted] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(MUTED_KEY) === "true";
-  });
+  // Volume — defaults match server; hydrate from localStorage in effect
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const volumeInitRef = useRef(false);
+
+  useEffect(() => {
+    if (volumeInitRef.current) return;
+    volumeInitRef.current = true;
+    const savedVol = localStorage.getItem(VOLUME_KEY);
+    if (savedVol) setVolume(parseFloat(savedVol));
+    if (localStorage.getItem(MUTED_KEY) === "true") setMuted(true);
+  }, []);
 
   // Save volume to localStorage
   useEffect(() => {
+    if (!volumeInitRef.current) return;
     localStorage.setItem(VOLUME_KEY, String(volume));
   }, [volume]);
 
   useEffect(() => {
+    if (!volumeInitRef.current) return;
     localStorage.setItem(MUTED_KEY, String(muted));
   }, [muted]);
 

@@ -41,17 +41,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     return {
       title: titleName,
-      description: bio || `Профиль ${titleName} на YumekoStudio`,
+      description: bio || `Профиль ${titleName} на Yumeko`,
       openGraph: {
-        title: `${titleName} | YumekoStudio`,
-        description: bio || `Профиль ${titleName} на YumekoStudio`,
+        title: `${titleName} | Yumeko`,
+        description: bio || `Профиль ${titleName} на Yumeko`,
         images: ogImage ? [{ url: ogImage, alt: titleName }] : [],
         type: "profile",
       },
       twitter: {
         card: bannerUrl ? "summary_large_image" : "summary",
-        title: `${titleName} | YumekoStudio`,
-        description: bio || `Профиль ${titleName} на YumekoStudio`,
+        title: `${titleName} | Yumeko`,
+        description: bio || `Профиль ${titleName} на Yumeko`,
         images: ogImage ? [ogImage] : [],
       },
     };

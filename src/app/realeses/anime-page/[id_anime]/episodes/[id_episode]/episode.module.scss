@@ -6,7 +6,7 @@
 
 .playerLayout {
   display: flex;
-  height: calc(100vh - var(--header-height, 90px));
+  min-height: calc(100vh - var(--header-height, 90px));
 }
 
 // ── Main ──
@@ -44,8 +44,12 @@
     gap: 12px;
   }
 
-  .episodeNav {
-    align-self: flex-start;
+  .navCards {
+    flex-direction: row;
+  }
+
+  .navCardPreview {
+    width: 90px;
   }
 }
 
@@ -67,9 +71,8 @@
     font-size: 12px;
   }
 
-  .navBtn {
-    padding: 6px 10px;
-    font-size: 12px;
+  .navCardPreview {
+    width: 70px;
   }
 
   .sidebar {
@@ -91,7 +94,7 @@
   align-items: center;
   gap: 6px;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-muted);
 
   a {
@@ -118,6 +121,7 @@
 .playerWrap {
   width: 100%;
   aspect-ratio: 16 / 9;
+  max-height: 71vh;
   background: #000;
   border-radius: 14px;
   overflow: hidden;
@@ -151,10 +155,10 @@
 
 .episodeInfo {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .episodeMeta {
@@ -162,14 +166,14 @@
 }
 
 .episodeTitle {
-  font-size: 20px;
+  font-size: 26px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 4px;
 }
 
 .episodeSub {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   margin: 0;
 }
@@ -201,22 +205,143 @@
   }
 }
 
-.navBtnDisabled {
-  opacity: 0.3;
+// ── Nav Cards ──
+
+.navCards {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.navCard {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+
+    .navCardImg {
+      transform: scale(1.05);
+    }
+  }
+}
+
+.navCardNext {
+  flex-direction: row-reverse;
+  text-align: right;
+
+  .navCardLabel {
+    justify-content: flex-end;
+  }
+}
+
+.navCardDisabled {
+  opacity: 0;
   pointer-events: none;
-  cursor: default;
+}
+
+.navCardPreview {
+  width: 120px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.navCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s;
+}
+
+.navCardPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.navCardInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.navCardLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.navCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.navCardNum {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 // ── Sidebar ──
 
 .sidebar {
-  width: 340px;
+  position: relative;
+  z-index: 1;
   flex-shrink: 0;
-  border-left: 1px solid var(--border);
+  margin: 12px 12px 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: var(--bg-card);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width 0.3s ease, opacity 0.3s ease, margin 0.3s ease, border-color 0.3s ease;
+}
+
+.sidebarOpen {
+  width: 260px;
+  opacity: 1;
+}
+
+.sidebarClosed {
+  width: 0;
+  margin: 12px 0 12px 0;
+  border-color: transparent;
+  background: transparent;
+  overflow: visible;
+
+  .sidebarHeader,
+  .sidebarList,
+  .studioTabs {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .sidebarHeader {
@@ -342,9 +467,9 @@
 }
 
 .sidebarToggle {
-  position: fixed;
-  right: 16px;
-  top: calc(var(--header-height, 90px) + 16px);
+  position: absolute;
+  top: -5px;
+  right: 26px;
   width: 40px;
   height: 40px;
   border-radius: 10px;
@@ -356,10 +481,11 @@
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 
   &:hover {
     border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
   }
 }
 

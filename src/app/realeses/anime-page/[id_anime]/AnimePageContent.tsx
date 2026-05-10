@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Play, Heart, BookMarked, ChevronRight, ChevronDown, Clock, List, LayoutGrid, Eye, CalendarClock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
+import { Play, Heart, BookMarked, ChevronRight, ChevronDown, Clock, List, LayoutGrid, Eye, CalendarClock, CheckCircle2, PauseCircle, XCircle, Mic } from "lucide-react";
 import { getAccent, type AnimeDetails } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
@@ -57,6 +57,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
   const genreTags = anime.genres.split(" • ");
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
+  const [voiceCast, setVoiceCast] = useState<{ id: number; studio: string; actorName: string; actorUsername?: string; actorDisplayName?: string; actorHasAvatar?: boolean; actorRoleColor?: string; characterName: string }[]>([]);
 
   const fetchStatuses = useCallback(async () => {
     if (!auth.user) return;
@@ -105,6 +106,13 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
       )
     ).then((items) => setRelatedItems(items.filter(Boolean)));
   }, [anime.relatedIds]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/voice-cast/${anime.id}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setVoiceCast(data))
+      .catch(() => {});
+  }, [anime.id]);
 
   const readyEpisodes = dbEpisodes.filter((db) => db.status === "ready");
   const studioSet = [...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio"))];
@@ -263,6 +271,12 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               <dt>Длительность</dt>
               <dd>{anime.duration} / эп.</dd>
             </div>
+            {studioList.length > 0 && (
+              <div className={styles.infoRow}>
+                <dt>Озвучено</dt>
+                <dd>{studioList.join(", ")}</dd>
+              </div>
+            )}
           </dl>
 
           <div className={styles.actions}>
@@ -469,6 +483,47 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
           })}
         </div>
       )}
+
+      {/* ── Voice Cast ── */}
+      {tab === "episodes" && voiceCast.length > 0 && (() => {
+        const castStudios = [...new Set(voiceCast.map((vc) => vc.studio))];
+        const showStudio = activeStudio && castStudios.includes(activeStudio) ? activeStudio : castStudios[0];
+        const filtered = voiceCast.filter((vc) => vc.studio === showStudio);
+        if (filtered.length === 0) return null;
+        return (
+          <div className={styles.voiceCastSection}>
+            <h3 className={styles.voiceCastTitle}>
+              <Mic size={15} />
+              Озвучка — {showStudio}
+            </h3>
+            <div className={styles.voiceCastGrid}>
+              {filtered.map((vc) => {
+                const inner = (
+                  <>
+                    {vc.actorUsername && vc.actorHasAvatar ? (
+                      <img src={`${API_URL}/api/media/${vc.actorUsername}/avatar`} alt="" className={styles.voiceCastAvatar} style={vc.actorRoleColor ? { borderColor: vc.actorRoleColor } : undefined} />
+                    ) : (
+                      <div className={styles.voiceCastAvatarEmpty} />
+                    )}
+                    <div className={styles.voiceCastInfo}>
+                      <div className={styles.voiceCastActorRow}>
+                        <span className={styles.voiceCastActor} style={vc.actorRoleColor ? { color: vc.actorRoleColor } : undefined}>{vc.actorDisplayName || vc.actorName}</span>
+                        {vc.actorUsername && <span className={styles.voiceCastHandle}>@{vc.actorUsername}</span>}
+                      </div>
+                      <span className={styles.voiceCastCharacter}>→ {vc.characterName}</span>
+                    </div>
+                  </>
+                );
+                return vc.actorUsername ? (
+                  <Link key={vc.id} href={`/profile/${vc.actorUsername}`} className={styles.voiceCastItem}>{inner}</Link>
+                ) : (
+                  <div key={vc.id} className={styles.voiceCastItem}>{inner}</div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {tab === "related" && (
         <div className={styles.relatedTimeline}>
