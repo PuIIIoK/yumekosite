@@ -189,16 +189,31 @@ function CreateAnimeContent() {
     setUploading(false);
   };
 
+  const ALLOWED_POSTER_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/svg+xml"];
+
+  const validateImageFile = (file: File): boolean => {
+    if (!ALLOWED_POSTER_TYPES.includes(file.type)) {
+      setError("Не-не-не, только расширение картинок :) Допустимые форматы: JPG, PNG, WebP, BMP, SVG");
+      return false;
+    }
+    return true;
+  };
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith("image/")) uploadFile(file);
+    if (!file) return;
+    if (!ALLOWED_POSTER_TYPES.includes(file.type)) {
+      setError("Не-не-не, только расширение картинок :) Допустимые форматы: JPG, PNG, WebP, BMP, SVG");
+      return;
+    }
+    uploadFile(file);
   }, [uploadFile]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) uploadFile(file);
+    if (file && validateImageFile(file)) uploadFile(file);
     e.target.value = "";
   };
 
