@@ -257,6 +257,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
   };
 
+  // Check for role updates periodically
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/profile/${user.username}`, { cache: "no-store" });
+        const hex = await res.text();
+        const json = JSON.parse(parseHexDump(hex));
+        if (json.ok && json.user) {
+          const u = mapUser(json.user);
+          // Update if roles changed
+          const currentRoles = user.roles?.map(r => r.name).sort().join(",") || "";
+          const newRoles = u.roles?.map(r => r.name).sort().join(",") || "";
+          if (currentRoles !== newRoles) {
+            u.imageVersion = Date.now();
+            setUser(u);
+          }
+        }
+      } catch {}
+    }, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, [user?.username, user?.roles]);
+
   const logout = () => setUser(null);
 
   return (
