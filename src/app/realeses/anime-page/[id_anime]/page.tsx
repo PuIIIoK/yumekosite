@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
 import { fetchAnimeCatalog, fetchAnimeById, getAccent } from "@/data/anime";
-import { fetchReleaseByAlias, posterUrl } from "@/data/anilibria-api";
-import AnimePageContent, { type ApiEpisode } from "./AnimePageContent";
+import AnimePageContent, { type DbEpisode } from "./AnimePageContent";
+import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
 function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
@@ -145,28 +145,18 @@ export default async function AnimePage({ params }: AnimePageProps) {
 
   const accent = getAccent(anime.rating);
 
-  let apiEpisodes: ApiEpisode[] = [];
+  let dbEpisodes: DbEpisode[] = [];
   let glowA = "30,30,40";
   let glowB = "20,20,30";
 
-  if (anime.anilibriaAlias) {
-    try {
-      const release = await fetchReleaseByAlias(anime.anilibriaAlias);
-      apiEpisodes = release.episodes
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((ep) => ({
-          ordinal: ep.ordinal,
-          name: ep.name,
-          duration: ep.duration,
-          preview: ep.preview?.optimized?.src
-            ? posterUrl(ep.preview.optimized.src)
-            : ep.preview?.src
-              ? posterUrl(ep.preview.src)
-              : null,
-        }));
-    } catch (e) {
-      console.error("[AnimePage] Failed to fetch AniLibria episodes:", e);
+  // Fetch episodes from our backend
+  try {
+    const epRes = await fetch(`${API_URL}/api/episodes/${anime.id}`, { cache: "no-store" });
+    if (epRes.ok) {
+      dbEpisodes = await epRes.json();
     }
+  } catch (e) {
+    console.error("[AnimePage] Failed to fetch DB episodes:", e);
   }
 
   if (anime.poster) {
@@ -186,7 +176,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
         } as React.CSSProperties}
       >
         <div className={styles.container}>
-          <AnimePageContent anime={anime} accent={accent} apiEpisodes={apiEpisodes} />
+          <AnimePageContent anime={anime} accent={accent} dbEpisodes={dbEpisodes} />
         </div>
       </main>
     </>

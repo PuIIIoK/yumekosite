@@ -10,17 +10,22 @@ import styles from "./page.module.scss";
 
 type Tab = "episodes" | "related" | "comments";
 
-export interface ApiEpisode {
-  ordinal: number;
-  name: string | null;
-  duration: number;
-  preview: string | null;
+export interface DbEpisode {
+  id: number;
+  animeId: number;
+  number: number;
+  title: string | null;
+  hlsUrl: string | null;
+  previewUrl: string | null;
+  duration: string | null;
+  status: string;
+  createdAt: string;
 }
 
 interface Props {
   anime: AnimeDetails;
   accent: string;
-  apiEpisodes?: ApiEpisode[];
+  dbEpisodes?: DbEpisode[];
 }
 
 function parseEpisodeCount(str: string): number {
@@ -33,12 +38,6 @@ function parseDurationMinutes(str: string): number {
   return m ? parseInt(m[0]) : 0;
 }
 
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 const COLLECTION_ITEMS = [
   { key: "watching", label: "Смотрю", icon: Eye },
   { key: "planned", label: "Запланировано", icon: CalendarClock },
@@ -47,7 +46,7 @@ const COLLECTION_ITEMS = [
   { key: "dropped", label: "Брошено", icon: XCircle },
 ] as const;
 
-export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Props) {
+export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Props) {
   const auth = useAuth();
   const [tab, setTab] = useState<Tab>("episodes");
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -55,8 +54,6 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
   const [epView, setEpView] = useState<"list" | "grid">("grid");
   const genreTags = anime.genres.split(" • ");
-  const epCount = parseEpisodeCount(anime.episodes);
-  const currentEp = parseInt(anime.ep.match(/\d+/)?.[0] ?? "1");
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
 
   const fetchStatuses = useCallback(async () => {
@@ -107,31 +104,23 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
     ).then((items) => setRelatedItems(items.filter(Boolean)));
   }, [anime.relatedIds]);
 
-  const hasApi = apiEpisodes.length > 0;
-  const episodeCount = hasApi ? apiEpisodes.length : epCount;
-
-  const episodes = Array.from({ length: episodeCount }, (_, i) => {
-    const num = i + 1;
-    const api = hasApi ? apiEpisodes[i] : null;
-    let watched = false;
-    let current = false;
-    let progress = 0;
-    if (num === 1) { watched = true; progress = 0; }
-    else if (num === 2) { watched = false; current = false; progress = 8; }
-    else if (num === 3) { watched = false; current = false; progress = 50; }
-    else if (num === 4) { watched = false; current = true; progress = 35; }
-    else if (num <= currentEp - 1) { watched = false; progress = 0; }
-    else if (num === currentEp) { watched = false; current = false; progress = 0; }
-    return {
-      num,
-      watched,
-      current,
-      progress,
-      name: api?.name ?? null,
-      durationFormatted: api ? formatDuration(api.duration) : anime.duration,
-      preview: api?.preview ?? null,
-    };
-  });
+  const episodes = dbEpisodes
+    .filter((db) => db.status === "ready")
+    .sort((a, b) => a.number - b.number)
+    .map((db) => {
+      const num = db.number;
+      return {
+        num,
+        watched: false,
+        current: false,
+        progress: 0,
+        name: db.title,
+        durationFormatted: db.duration ?? anime.duration,
+        preview: db.previewUrl,
+        dbId: db.id,
+        hlsUrl: db.hlsUrl,
+      };
+    });
 
   const relatedChronology = [anime, ...relatedItems]
     .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
@@ -321,43 +310,57 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
       {/* ── Tab: Episodes ── */}
       {tab === "episodes" && epView === "list" && (
         <div className={styles.episodesList}>
-          {episodes.map((ep) => (
-            <div
-              key={ep.num}
-              className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-              style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
-            >
-              <span className={styles.epNumber}>{ep.num}</span>
-              <div className={styles.epRowInfo}>
-                <span className={styles.epRowTitle}>{ep.name || `${ep.num} эпизод`}</span>
-                <span className={styles.epRowDuration}>{ep.durationFormatted}</span>
-              </div>
-              <div className={styles.epRowRight}>
-                {ep.watched && <span className={styles.epRowWatched}>Просмотрено</span>}
-                {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
-                <Play size={16} className={styles.epRowPlay} />
-              </div>
-              {ep.progress > 0 && (
-                <div className={styles.epRowProgress}>
-                  <div
-                    className={styles.epRowProgressBar}
-                    style={{ width: `${ep.progress}%`, background: ep.watched ? 'var(--text-muted)' : 'var(--accent)' }}
-                  />
+          {episodes.map((ep) => {
+            const epHref = ep.dbId ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}` : undefined;
+            const rowContent = (
+              <>
+                <span className={styles.epNumber}>{ep.num}</span>
+                <div className={styles.epRowInfo}>
+                  <span className={styles.epRowTitle}>{ep.name || `${ep.num} эпизод`}</span>
+                  <span className={styles.epRowDuration}>{ep.durationFormatted}</span>
                 </div>
-              )}
-            </div>
-          ))}
+                <div className={styles.epRowRight}>
+                  {ep.watched && <span className={styles.epRowWatched}>Просмотрено</span>}
+                  {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
+                  <Play size={16} className={styles.epRowPlay} />
+                </div>
+                {ep.progress > 0 && (
+                  <div className={styles.epRowProgress}>
+                    <div
+                      className={styles.epRowProgressBar}
+                      style={{ width: `${ep.progress}%`, background: ep.watched ? 'var(--text-muted)' : 'var(--accent)' }}
+                    />
+                  </div>
+                )}
+              </>
+            );
+            return epHref ? (
+              <Link
+                key={ep.num}
+                href={epHref}
+                className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
+                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+              >
+                {rowContent}
+              </Link>
+            ) : (
+              <div
+                key={ep.num}
+                className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
+                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+              >
+                {rowContent}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {tab === "episodes" && epView === "grid" && (
         <div className={styles.episodesGrid}>
-          {episodes.map((ep) => (
-            <div
-              key={ep.num}
-              className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-              style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
-            >
+          {episodes.map((ep) => {
+            const epHref = ep.dbId ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}` : undefined;
+            const cardContent = (
               <div className={styles.epCardThumb}>
                 {ep.preview && (
                   <img
@@ -386,8 +389,26 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
                   </div>
                 )}
               </div>
-            </div>
-          ))}
+            );
+            return epHref ? (
+              <Link
+                key={ep.num}
+                href={epHref}
+                className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
+                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+              >
+                {cardContent}
+              </Link>
+            ) : (
+              <div
+                key={ep.num}
+                className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
+                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+              >
+                {cardContent}
+              </div>
+            );
+          })}
         </div>
       )}
 

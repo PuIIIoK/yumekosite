@@ -4,18 +4,21 @@ import { useEffect, useState, useRef, useLayoutEffect, useCallback } from "react
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
-import { Shield, Users, Film, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Shield, Users, Film, Play, PanelLeftClose, PanelLeft } from "lucide-react";
 import AnimeManager from "./AnimeManager";
 import UserManager from "./UserManager";
+import EpisodeManager from "./EpisodeManager";
 import styles from "./admin.module.scss";
 
 const ADMIN_SECTIONS = [
   { id: "anime", title: "Аниме каталог", icon: Film, color: "#a855f7" },
+  { id: "episodes", title: "Эпизоды", icon: Play, color: "#10b981" },
   { id: "users", title: "Пользователи", icon: Users, color: "#3b82f6" },
 ];
 
 function AdminContent({ section }: { section: string }) {
   if (section === "anime") return <AnimeManager />;
+  if (section === "episodes") return <EpisodeManager />;
   if (section === "users") return <UserManager />;
   const matched = ADMIN_SECTIONS.find((s) => s.id === section);
   if (!matched) return null;
