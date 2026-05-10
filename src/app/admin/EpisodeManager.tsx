@@ -15,16 +15,21 @@ interface Episode {
   hlsUrl: string | null;
   previewUrl: string | null;
   duration: string | null;
+  studio: string;
   status: string;
+  progress: number;
   createdAt: string;
 }
 
 interface EpisodeForm {
   number: string;
   title: string;
+  studio: string;
 }
 
-const emptyForm: EpisodeForm = { number: "", title: "" };
+const DEFAULT_STUDIOS = ["YumekoStudio"];
+const STUDIOS_KEY = "yumeko_studios";
+const emptyForm: EpisodeForm = { number: "", title: "", studio: "YumekoStudio" };
 
 function HlsModal({ episode, onClose }: { episode: Episode; onClose: () => void }) {
   const vRef = useRef<HTMLVideoElement>(null);
@@ -88,15 +93,27 @@ export default function EpisodeManager() {
   const [deleteTarget, setDeleteTarget] = useState<Episode | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
+  const [uploadPercent, setUploadPercent] = useState(0);
   const [previewUploading, setPreviewUploading] = useState<number | null>(null);
   const [modalEp, setModalEp] = useState<Episode | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [studios, setStudios] = useState<string[]>(DEFAULT_STUDIOS);
+  const [addingStudio, setAddingStudio] = useState(false);
+  const [newStudioName, setNewStudioName] = useState("");
+  const newStudioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STUDIOS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        const merged = [...new Set([...DEFAULT_STUDIOS, ...parsed])];
+        setStudios(merged);
+      }
+    } catch {}
     (async () => {
       try {
         const res = await fetch(`${API_URL}/api/anime`);
@@ -107,25 +124,25 @@ export default function EpisodeManager() {
     })();
   }, []);
 
-  const fetchEpisodes = useCallback(async (animeId: number) => {
-    setEpisodesLoading(true);
+  const fetchEpisodes = useCallback(async (animeId: number, silent = false) => {
+    if (!silent) setEpisodesLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/episodes/${animeId}`);
       if (res.ok) {
         setEpisodes(await res.json());
       }
     } catch {}
-    setEpisodesLoading(false);
+    if (!silent) setEpisodesLoading(false);
   }, []);
 
-  // Poll for processing episodes
+  // Poll for in-progress episodes (silent — no loading flash)
   useEffect(() => {
     if (!selectedAnime) return;
-    const hasProcessing = episodes.some((e) => e.status === "processing");
-    if (!hasProcessing) return;
+    const hasActive = episodes.some((e) => ["processing", "converting", "uploading", "finalizing"].includes(e.status));
+    if (!hasActive) return;
     const interval = setInterval(() => {
-      fetchEpisodes(selectedAnime.id);
-    }, 5000);
+      fetchEpisodes(selectedAnime.id, true);
+    }, 2000);
     return () => clearInterval(interval);
   }, [episodes, selectedAnime, fetchEpisodes]);
 
@@ -188,35 +205,52 @@ export default function EpisodeManager() {
       return;
     }
     setUploading(true);
-    setUploadProgress("Загрузка видео...");
+    setUploadPercent(0);
     setError(null);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("animeId", String(selectedAnime.id));
-      fd.append("number", String(num));
-      if (form.title.trim()) fd.append("title", form.title.trim());
 
-      const res = await fetch(`${API_URL}/api/episodes/upload`, {
-        method: "POST",
-        body: fd,
-      });
-      if (res.ok) {
-        setUploadProgress("");
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("animeId", String(selectedAnime.id));
+    fd.append("number", String(num));
+    if (form.title.trim()) fd.append("title", form.title.trim());
+    fd.append("studio", form.studio);
+
+    const animeId = selectedAnime.id;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_URL}/api/episodes/upload`);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        setUploadPercent(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    xhr.onload = async () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
         setForm(emptyForm);
-        await fetchEpisodes(selectedAnime.id);
+        await fetchEpisodes(animeId);
         setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
         setTimeout(() => setSuccess(null), 4000);
       } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Ошибка загрузки");
-        setUploadProgress("");
+        try {
+          const data = JSON.parse(xhr.responseText);
+          setError(data.error || "Ошибка загрузки");
+        } catch {
+          setError("Ошибка загрузки");
+        }
       }
-    } catch {
+      setUploading(false);
+      setUploadPercent(0);
+    };
+
+    xhr.onerror = () => {
       setError("Сетевая ошибка");
-      setUploadProgress("");
-    }
-    setUploading(false);
+      setUploading(false);
+      setUploadPercent(0);
+    };
+
+    xhr.send(fd);
   };
 
   const handleUploadEpisode = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,18 +309,25 @@ export default function EpisodeManager() {
   };
 
   const statusLabel = (s: string) => {
-    if (s === "processing") return "Конвертация...";
+    if (s === "processing") return "Подготовка...";
+    if (s === "converting") return "Конвертация";
+    if (s === "uploading") return "Загрузка на сервер";
+    if (s === "finalizing") return "Финализация...";
     if (s === "ready") return "Готов";
     if (s === "error") return "Ошибка";
     return s;
   };
 
   const statusColor = (s: string) => {
-    if (s === "processing") return "#f59e0b";
+    if (s === "processing" || s === "converting") return "#f59e0b";
+    if (s === "uploading") return "#3b82f6";
+    if (s === "finalizing") return "#8b5cf6";
     if (s === "ready") return "#10b981";
     if (s === "error") return "#ef4444";
     return "#888";
   };
+
+  const isActiveStatus = (s: string) => ["processing", "converting", "uploading", "finalizing"].includes(s);
 
   if (loading) {
     return <div className={styles.loader}>Загрузка...</div>;
@@ -363,7 +404,7 @@ export default function EpisodeManager() {
           {/* Upload episode form */}
           <div className={styles.episodeForm}>
             <h3 className={styles.episodeFormTitle}>Загрузить эпизод</h3>
-            <div className={styles.episodeFormGrid} style={{ gridTemplateColumns: "100px 1fr" }}>
+            <div className={styles.episodeFormGrid} style={{ gridTemplateColumns: "80px 1fr 260px" }}>
               <div className={styles.episodeFormField}>
                 <label>Номер</label>
                 <input
@@ -381,6 +422,82 @@ export default function EpisodeManager() {
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="Название эпизода"
                 />
+              </div>
+              <div className={styles.episodeFormField}>
+                <label>Студия</label>
+                {addingStudio ? (
+                  <div className={styles.epStudioRow}>
+                    <input
+                      ref={newStudioRef}
+                      value={newStudioName}
+                      onChange={(e) => setNewStudioName(e.target.value)}
+                      placeholder="Название студии"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newStudioName.trim()) {
+                          const trimmed = newStudioName.trim();
+                          if (!studios.includes(trimmed)) {
+                            const updated = [...studios, trimmed];
+                            setStudios(updated);
+                            localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                          }
+                          setForm({ ...form, studio: trimmed });
+                          setNewStudioName("");
+                          setAddingStudio(false);
+                        }
+                        if (e.key === "Escape") {
+                          setNewStudioName("");
+                          setAddingStudio(false);
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className={styles.epStudioAddBtn}
+                      onClick={() => {
+                        if (newStudioName.trim()) {
+                          const trimmed = newStudioName.trim();
+                          if (!studios.includes(trimmed)) {
+                            const updated = [...studios, trimmed];
+                            setStudios(updated);
+                            localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                          }
+                          setForm({ ...form, studio: trimmed });
+                        }
+                        setNewStudioName("");
+                        setAddingStudio(false);
+                      }}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.epStudioAddBtn}
+                      onClick={() => { setNewStudioName(""); setAddingStudio(false); }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.epStudioRow}>
+                    <select
+                      value={form.studio}
+                      onChange={(e) => setForm({ ...form, studio: e.target.value })}
+                    >
+                      {studios.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className={styles.epStudioAddBtn}
+                      title="Добавить студию"
+                      onClick={() => setAddingStudio(true)}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -412,8 +529,16 @@ export default function EpisodeManager() {
               />
               {uploading ? (
                 <>
-                  <Loader2 size={28} className={styles.saveSpin} />
-                  <span className={styles.epDropZoneText}>{uploadProgress || "Загрузка..."}</span>
+                  <div className={styles.epUploadProgress}>
+                    <div className={styles.epUploadProgressBar}>
+                      <div
+                        className={styles.epUploadProgressFill}
+                        style={{ width: `${uploadPercent}%` }}
+                      />
+                    </div>
+                    <span className={styles.epUploadPercent}>{uploadPercent}%</span>
+                  </div>
+                  <span className={styles.epDropZoneText}>Загрузка видео...</span>
                 </>
               ) : (
                 <>
@@ -466,13 +591,25 @@ export default function EpisodeManager() {
                     <div className={styles.episodeInfo}>
                       <span className={styles.episodeCardTitle}>
                         {ep.title || `Эпизод ${ep.number}`}
+                        <span className={styles.epStudioBadge}>{ep.studio}</span>
                       </span>
-                      {ep.status === "processing" ? (
+                      {isActiveStatus(ep.status) ? (
                         <div className={styles.epProcessing}>
                           <div className={styles.epProcessingBar}>
-                            <div className={styles.epProcessingFill} />
+                            <div
+                              className={styles.epProcessingFill}
+                              style={{
+                                width: ep.status === "finalizing" ? "100%" : `${ep.progress}%`,
+                                background: statusColor(ep.status),
+                                animation: ep.status === "finalizing" ? "none" : undefined,
+                              }}
+                            />
                           </div>
-                          <span className={styles.epProcessingLabel}>Конвертация{ep.duration ? ` · ${ep.duration}` : "..."}</span>
+                          <span className={styles.epProcessingLabel} style={{ color: statusColor(ep.status) }}>
+                            {statusLabel(ep.status)}
+                            {(ep.status === "converting" || ep.status === "uploading") && ` ${ep.progress}%`}
+                            {ep.duration && ` · ${ep.duration}`}
+                          </span>
                         </div>
                       ) : (
                         <span className={styles.episodeStatus} style={{ color: statusColor(ep.status) }}>

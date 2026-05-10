@@ -14,6 +14,7 @@ interface Episode {
   title: string | null;
   hlsUrl: string | null;
   previewUrl: string | null;
+  studio: string;
   status: string;
   createdAt: string;
 }
@@ -49,10 +50,18 @@ export default function EpisodePlayerContent({ anime, episode, episodes, accent 
     }
   }, [episode.hlsUrl]);
 
-  const sorted = [...episodes].sort((a, b) => a.number - b.number);
+  const studioList = [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort();
+  const [selectedStudio, setSelectedStudio] = useState<string>(
+    episode.studio || studioList[0] || "YumekoStudio"
+  );
+
+  const filtered = studioList.length > 1
+    ? episodes.filter((e) => (e.studio || "YumekoStudio") === selectedStudio)
+    : episodes;
+  const sorted = [...filtered].sort((a, b) => a.number - b.number);
   const currentIndex = sorted.findIndex((e) => e.id === episode.id);
   const prevEp = currentIndex > 0 ? sorted[currentIndex - 1] : null;
-  const nextEp = currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null;
+  const nextEp = currentIndex >= 0 && currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null;
 
   return (
     <main className={styles.playerPage}>
@@ -93,6 +102,9 @@ export default function EpisodePlayerContent({ anime, episode, episodes, accent 
               </h1>
               <p className={styles.episodeSub}>
                 {anime.title} · Эпизод {episode.number}
+                {episode.studio && (
+                  <span className={styles.studioBadge}>{episode.studio}</span>
+                )}
               </p>
             </div>
 
@@ -134,6 +146,19 @@ export default function EpisodePlayerContent({ anime, episode, episodes, accent 
                 <ChevronRight size={16} />
               </button>
             </div>
+            {studioList.length > 1 && (
+              <div className={styles.studioTabs}>
+                {studioList.map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.studioTab} ${s === selectedStudio ? styles.studioTabActive : ""}`}
+                    onClick={() => setSelectedStudio(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className={styles.sidebarList}>
               {sorted.map((ep) => (
                 <Link

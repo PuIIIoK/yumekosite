@@ -47,6 +47,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
     title: string | null;
     hlsUrl: string | null;
     previewUrl: string | null;
+    studio: string;
     status: string;
     createdAt: string;
   }[] = [];

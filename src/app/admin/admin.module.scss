@@ -1324,7 +1324,7 @@
     letter-spacing: 0.03em;
   }
 
-  input {
+  input, select {
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid var(--border);
@@ -1340,6 +1340,21 @@
 
     &::placeholder {
       color: var(--text-muted);
+    }
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+
+    option {
+      background: var(--bg-card, #1a1a1a);
+      color: var(--text-primary, #e5e5e5);
+      padding: 6px 10px;
     }
   }
 }
@@ -1582,6 +1597,54 @@
   }
 }
 
+// ── Studio Row ──
+
+.epStudioRow {
+  display: flex;
+  gap: 6px;
+
+  select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.epStudioAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-width: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+}
+
+// ── Studio Badge ──
+
+.epStudioBadge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
 // ── Drop Zone ──
 
 .epDropZone {
@@ -1628,6 +1691,41 @@
   opacity: 0.5;
 }
 
+// ── Upload Progress ──
+
+.epUploadProgress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.epUploadProgressBar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.epUploadProgressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #fff));
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.epUploadPercent {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 // ── Processing Animation ──
 
 .epProcessing {
@@ -1647,16 +1745,8 @@
 
 .epProcessingFill {
   height: 100%;
-  width: 40%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
-  animation: epProcessingSlide 1.5s ease-in-out infinite;
-}
-
-@keyframes epProcessingSlide {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(200%); }
-  100% { transform: translateX(-100%); }
+  transition: width 0.5s ease, background 0.3s ease;
 }
 
 .epProcessingLabel {

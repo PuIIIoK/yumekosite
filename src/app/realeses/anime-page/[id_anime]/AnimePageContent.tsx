@@ -18,6 +18,7 @@ export interface DbEpisode {
   hlsUrl: string | null;
   previewUrl: string | null;
   duration: string | null;
+  studio: string;
   status: string;
   createdAt: string;
 }
@@ -53,6 +54,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   const collectionRef = useRef<HTMLDivElement>(null);
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
   const [epView, setEpView] = useState<"list" | "grid">("grid");
+  const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
   const genreTags = anime.genres.split(" • ");
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
 
@@ -104,8 +106,12 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
     ).then((items) => setRelatedItems(items.filter(Boolean)));
   }, [anime.relatedIds]);
 
-  const episodes = dbEpisodes
-    .filter((db) => db.status === "ready")
+  const readyEpisodes = dbEpisodes.filter((db) => db.status === "ready");
+  const studioList = [...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio"))].sort();
+  const activeStudio = selectedStudio ?? studioList[0] ?? null;
+
+  const episodes = readyEpisodes
+    .filter((db) => studioList.length <= 1 || (db.studio || "YumekoStudio") === activeStudio)
     .sort((a, b) => a.number - b.number)
     .map((db) => {
       const num = db.number;
@@ -119,6 +125,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
         preview: db.previewUrl,
         dbId: db.id,
         hlsUrl: db.hlsUrl,
+        studio: db.studio,
       };
     });
 
@@ -307,6 +314,21 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
         )}
       </div>
 
+      {/* ── Studio tabs ── */}
+      {tab === "episodes" && studioList.length > 1 && (
+        <div className={styles.studioTabs}>
+          {studioList.map((s) => (
+            <button
+              key={s}
+              className={`${styles.studioTab} ${s === activeStudio ? styles.studioTabActive : ""}`}
+              onClick={() => setSelectedStudio(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Tab: Episodes ── */}
       {tab === "episodes" && epView === "list" && (
         <div className={styles.episodesList}>
@@ -336,7 +358,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
             );
             return epHref ? (
               <Link
-                key={ep.num}
+                key={ep.dbId}
                 href={epHref}
                 className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
                 style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
@@ -345,7 +367,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               </Link>
             ) : (
               <div
-                key={ep.num}
+                key={ep.dbId}
                 className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
                 style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
               >
@@ -392,7 +414,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
             );
             return epHref ? (
               <Link
-                key={ep.num}
+                key={ep.dbId}
                 href={epHref}
                 className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
                 style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
@@ -401,7 +423,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               </Link>
             ) : (
               <div
-                key={ep.num}
+                key={ep.dbId}
                 className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
                 style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
               >
