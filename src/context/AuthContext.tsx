@@ -39,6 +39,7 @@ type UpdateResult = { ok: true; user: User } | { ok: false; error: string };
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
+  mounted: boolean;
   login: (username: string, password: string) => Promise<AuthResult>;
   register: (username: string, password: string, confirmPassword: string) => Promise<AuthResult>;
   updateProfile: (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string }) => Promise<UpdateResult>;
@@ -257,7 +258,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => setUser(null);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, register, updateProfile, uploadImage, refreshUser, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, mounted, login, register, updateProfile, uploadImage, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

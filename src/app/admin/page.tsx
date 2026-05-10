@@ -65,6 +65,7 @@ export default function AdminPage() {
   useLayoutEffect(() => { updateIndicator(); }, [visualSection, sidebarOpen, updateIndicator]);
 
   useEffect(() => {
+    if (!auth.mounted) return;
     if (!auth.isAuthenticated) {
       router.replace("/");
       return;
@@ -80,7 +81,7 @@ export default function AdminPage() {
       setVisualSection(hash);
     }
     setLoading(false);
-  }, [auth.isAuthenticated, auth.user, router]);
+  }, [auth.mounted, auth.isAuthenticated, auth.user, router]);
 
   if (loading || !auth.user) {
     return (

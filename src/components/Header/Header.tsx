@@ -76,6 +76,12 @@ export default function Header() {
   const [custSaveError, setCustSaveError] = useState<string | null>(null);
   const [custDirty, setCustDirty] = useState(false);
   const canCustomize = (auth.user?.role.priority ?? 0) >= 70;
+  const [pwdCurrent, setPwdCurrent] = useState("");
+  const [pwdNew, setPwdNew] = useState("");
+  const [pwdConfirm, setPwdConfirm] = useState("");
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdConfirmLogout, setPwdConfirmLogout] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [friendsClosing, setFriendsClosing] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
@@ -354,6 +360,29 @@ export default function Header() {
     setProfileDirty(false);
   };
 
+  const handlePasswordChange = async () => {
+    if (!auth.user) return;
+    if (!pwdCurrent || !pwdNew || !pwdConfirm) { setPwdError("Заполните все поля"); return; }
+    if (pwdNew.length < 6) { setPwdError("Пароль должен быть не менее 6 символов"); return; }
+    if (pwdNew !== pwdConfirm) { setPwdError("Пароли не совпадают"); return; }
+    if (!pwdConfirmLogout) { setPwdConfirmLogout(true); return; }
+    setPwdSaving(true);
+    setPwdError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/profile/${auth.user.username}/password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: pwdCurrent, newPassword: pwdNew }),
+      });
+      const hex = await res.text();
+      const json = parseHex(hex);
+      if (!json.ok) { setPwdError(json.error || "Ошибка"); setPwdSaving(false); setPwdConfirmLogout(false); return; }
+      auth.logout();
+      router.replace("/");
+    } catch { setPwdError("Сетевая ошибка"); setPwdConfirmLogout(false); }
+    setPwdSaving(false);
+  };
+
   useEffect(() => {
     setAuthError(null);
   }, [authMode, authOpen]);
@@ -519,6 +548,7 @@ export default function Header() {
   const closeSubTab = () => {
     if (settingsAnimating) return;
     setSettingsAnimating(true);
+    setPwdCurrent(""); setPwdNew(""); setPwdConfirm(""); setPwdError(null); setPwdConfirmLogout(false);
     setTimeout(() => {
       setSettingsSubTab(null);
       setSettingsAnimating(false);
@@ -1161,7 +1191,41 @@ export default function Header() {
                   </div>
                 </div>
               )}
-              {settingsSubTab === "password" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Текущий пароль</p><input className={styles.settingsInput} type="password" placeholder="Введите текущий пароль" /><p className={styles.settingsSubLabel}>Новый пароль</p><input className={styles.settingsInput} type="password" placeholder="Введите новый пароль" /><p className={styles.settingsSubLabel}>Подтвердите пароль</p><input className={styles.settingsInput} type="password" placeholder="Повторите новый пароль" /><button className={styles.settingsBtn}>Сохранить</button></div>}
+              {settingsSubTab === "password" && (
+                <div className={styles.settingsSubContent}>
+                  {pwdConfirmLogout ? (
+                    <>
+                      <p className={styles.settingsSubLabel} style={{ color: "var(--text-primary)", fontWeight: 600 }}>Смена пароля</p>
+                      <p className={styles.settingsSubHint}>После смены пароля вы будете разлогинены и вам потребуется войти заново с новым паролем.</p>
+                      {pwdError && <div className={styles.settingsSaveError}>{pwdError}</div>}
+                      <div className={styles.settingsBtnRow}>
+                        <button className={styles.settingsBtnCancel} onClick={() => setPwdConfirmLogout(false)} disabled={pwdSaving}>Отмена</button>
+                        <button className={`${styles.settingsBtn} ${pwdSaving ? styles.settingsBtnLoading : ""}`} onClick={handlePasswordChange} disabled={pwdSaving}>
+                          <span style={pwdSaving ? { visibility: "hidden" } : undefined}>Продолжить</span>
+                          {pwdSaving && <span className={styles.settingsBtnSpinner} />}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className={styles.settingsSubLabel}>Текущий пароль</p>
+                      <input className={styles.settingsInput} type="password" placeholder="Введите текущий пароль" value={pwdCurrent} onChange={(e) => { setPwdCurrent(e.target.value); setPwdError(null); }} />
+                      <p className={styles.settingsSubLabel}>Новый пароль</p>
+                      <input className={styles.settingsInput} type="password" placeholder="Введите новый пароль" value={pwdNew} onChange={(e) => { setPwdNew(e.target.value); setPwdError(null); }} />
+                      <p className={styles.settingsSubLabel}>Подтвердите пароль</p>
+                      <input className={styles.settingsInput} type="password" placeholder="Повторите новый пароль" value={pwdConfirm} onChange={(e) => { setPwdConfirm(e.target.value); setPwdError(null); }} />
+                      {pwdError && <div className={styles.settingsSaveError}>{pwdError}</div>}
+                      <div className={styles.settingsBtnRow} style={{ marginTop: 12 }}>
+                        <button className={styles.settingsBtnCancel} onClick={() => { setPwdCurrent(""); setPwdNew(""); setPwdConfirm(""); setPwdError(null); }}>Очистить</button>
+                        <button className={`${styles.settingsBtn} ${pwdSaving ? styles.settingsBtnLoading : ""}`} onClick={handlePasswordChange} disabled={pwdSaving || !pwdCurrent || !pwdNew || !pwdConfirm}>
+                          <span style={pwdSaving ? { visibility: "hidden" } : undefined}>Сохранить</span>
+                          {pwdSaving && <span className={styles.settingsBtnSpinner} />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               {settingsSubTab === "twofa" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Двухфакторная аутентификация</p><p className={styles.settingsSubHint}>Защитите свой аккаунт с помощью приложения-аутентификатора.</p><button className={styles.settingsBtn}>Включить 2FA</button></div>}
               {settingsSubTab === "sessions" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Активные сессии</p><div className={styles.settingsCard}><div className={styles.settingsCardTitle}>Windows · Chrome</div><div className={styles.settingsCardDesc}>Текущая сессия · Москва, Россия</div></div><p className={styles.settingsSubHint}>Завершите сессии на устройствах, которым вы не доверяете.</p></div>}
               {settingsSubTab === "push" && <div className={styles.settingsSubContent}><p className={styles.settingsSubLabel}>Push-уведомления в браузере</p><div className={styles.settingsToggleRow}><span>Новые эпизоды</span><div className={styles.settingsToggle}><div className={styles.settingsToggleKnob} /></div></div><div className={styles.settingsToggleRow}><span>Обновления платформы</span><div className={styles.settingsToggle}><div className={styles.settingsToggleKnob} /></div></div></div>}

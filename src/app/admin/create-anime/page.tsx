@@ -296,7 +296,7 @@ function CreateAnimeContent() {
                   </div>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleFileSelect} />
+              <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/bmp,image/svg+xml" hidden onChange={handleFileSelect} />
 
               {form.poster && (
                 <button className={styles.posterChangeBtn} onClick={() => fileInputRef.current?.click()}>

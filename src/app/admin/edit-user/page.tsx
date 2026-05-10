@@ -59,6 +59,7 @@ function EditUserContent() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState<string | null>(null);
 
   const goBack = () => {
     if (leaving) return;
@@ -109,6 +110,7 @@ function EditUserContent() {
   };
 
   useEffect(() => {
+    if (!auth.mounted) return;
     if (!auth.isAuthenticated || (auth.user?.role?.priority ?? 0) < 80) {
       router.replace("/");
       return;
@@ -140,12 +142,21 @@ function EditUserContent() {
       }
       setLoading(false);
     })();
-  }, [auth, router, userId]);
+  }, [auth.mounted, auth.isAuthenticated, auth.user, router, userId]);
+
+  const isSelf = auth.user && user && String(auth.user.id) === String(user.id);
+  const usernameChanged = user ? form.username.trim().toLowerCase() !== user.username.toLowerCase() : false;
+  const passwordChanged = !!form.password.trim();
 
   const handleSave = async () => {
     if (!user) return;
+    if (isSelf && (usernameChanged || passwordChanged) && !logoutConfirm) {
+      setLogoutConfirm(usernameChanged && passwordChanged ? "username_password" : usernameChanged ? "username" : "password");
+      return;
+    }
     setSaving(true);
     setError(null);
+    setLogoutConfirm(null);
     try {
       const body: Record<string, unknown> = {
         displayName: form.displayName,
@@ -170,7 +181,12 @@ function EditUserContent() {
         setSaving(false);
         return;
       }
-      if (auth.user && String(auth.user.id) === String(user.id)) {
+      if (isSelf && (usernameChanged || passwordChanged)) {
+        auth.logout();
+        router.replace("/");
+        return;
+      }
+      if (isSelf) {
         await auth.refreshUser();
       }
       setSaving(false);
@@ -388,6 +404,28 @@ function EditUserContent() {
             </>
           )}
         </div>
+
+        {logoutConfirm && (
+          <div className={styles.confirmOverlay}>
+            <div className={styles.confirmModal}>
+              <h3 className={styles.confirmTitle}>
+                {logoutConfirm === "username_password" ? "Смена username и пароля" : logoutConfirm === "username" ? "Смена username" : "Смена пароля"}
+              </h3>
+              <p className={styles.confirmText}>
+                {logoutConfirm === "username_password"
+                  ? "Вы меняете username и пароль своего аккаунта. После сохранения вы будете разлогинены и вам потребуется войти заново."
+                  : logoutConfirm === "username"
+                  ? "Вы меняете username своего аккаунта. После сохранения вы будете разлогинены и вам потребуется войти заново с новым username."
+                  : "Вы меняете пароль своего аккаунта. После сохранения вы будете разлогинены и вам потребуется войти заново с новым паролем."
+                }
+              </p>
+              <div className={styles.confirmActions}>
+                <button className={styles.cancelBtn} onClick={() => setLogoutConfirm(null)}>Отмена</button>
+                <button className={styles.saveBtn} onClick={handleSave}>Продолжить</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
