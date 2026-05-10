@@ -22,6 +22,7 @@ interface UserData {
   effectAvatarGlow: boolean;
   accentColor: string | null;
   role: { name: string; displayName: string; color: string; priority: number };
+  roles?: { name: string; displayName: string; color: string; priority: number }[];
   createdAt: string | null;
 }
 
@@ -239,12 +240,17 @@ function EditUserContent() {
                     {user.email && <span>{user.email}</span>}
                   </div>
                 </div>
-                <span
-                  className={styles.userHeaderRole}
-                  style={{ borderColor: user.role.color, color: user.role.color }}
-                >
-                  <Shield size={11} /> {user.role.displayName}
-                </span>
+                <div className={styles.userHeaderRoles}>
+                  {(user.roles ?? [user.role]).map((r) => (
+                    <span
+                      key={r.name}
+                      className={styles.userHeaderRole}
+                      style={{ borderColor: r.color, color: r.color }}
+                    >
+                      <Shield size={11} /> {r.displayName}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div className={styles.section}>

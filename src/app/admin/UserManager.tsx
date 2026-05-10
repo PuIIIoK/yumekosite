@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, ChevronLeft, ChevronRight, Shield, User as UserIcon, Pencil, ExternalLink, Trash2, AlertTriangle } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight, Shield, User as UserIcon, Pencil, ExternalLink, Trash2, AlertTriangle, Check } from "lucide-react";
 import { API_URL } from "@/config/hosts";
 import styles from "./admin.module.scss";
 
@@ -13,6 +13,7 @@ interface AdminUser {
   bio: string | null;
   email: string | null;
   role: { name: string; displayName: string; color: string; priority: number };
+  roles?: { name: string; displayName: string; color: string; priority: number }[];
   createdAt: string | null;
   avatarUrl: string | null;
 }
@@ -84,15 +85,14 @@ export default function UserManager() {
 
   useEffect(() => { setPage(1); }, [search]);
 
-  const assignRole = async (username: string, roleName: string) => {
+  const toggleRole = async (username: string, roleName: string) => {
     setAssigning(true);
     try {
       await fetch(`${API_URL}/api/roles/assign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, role: roleName }),
+        body: JSON.stringify({ username, role: roleName, action: "toggle" }),
       });
-      setRoleDropdown(null);
       await fetchData();
     } catch {
       setError("Ошибка назначения роли");
@@ -206,25 +206,28 @@ export default function UserManager() {
             <div className={styles.userCardRole} style={{ position: "relative" }}>
               <button
                 className={styles.userRoleBtn}
-                style={{ borderColor: user.role.color, color: user.role.color }}
                 onClick={() => setRoleDropdown(roleDropdown === user.id ? null : user.id)}
               >
-                <Shield size={12} /> {user.role.displayName}
+                <Shield size={12} /> Роли
               </button>
               {roleDropdown === user.id && (
                 <div className={styles.roleDropdown}>
-                  {roles.map((r) => (
-                    <button
-                      key={r.id}
-                      className={`${styles.roleDropdownItem} ${r.name === user.role.name ? styles.roleDropdownItemActive : ""}`}
-                      style={{ "--role-color": r.color } as React.CSSProperties}
-                      onClick={() => assignRole(user.username, r.name)}
-                      disabled={assigning || r.name === user.role.name}
-                    >
-                      <span className={styles.roleDropdownDot} style={{ background: r.color }} />
-                      {r.displayName}
-                    </button>
-                  ))}
+                  {roles.map((r) => {
+                    const hasRole = (user.roles ?? [user.role]).some(ur => ur.name === r.name);
+                    return (
+                      <button
+                        key={r.id}
+                        className={`${styles.roleDropdownItem} ${hasRole ? styles.roleDropdownItemActive : ""}`}
+                        style={{ "--role-color": r.color } as React.CSSProperties}
+                        onClick={() => toggleRole(user.username, r.name)}
+                        disabled={assigning}
+                      >
+                        <span className={styles.roleDropdownDot} style={{ background: r.color }} />
+                        {r.displayName}
+                        {hasRole && <Check size={13} style={{ marginLeft: "auto", opacity: 0.7 }} />}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>

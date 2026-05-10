@@ -29,6 +29,7 @@ export type User = {
   hasAvatar: boolean;
   hasBanner: boolean;
   role: Role;
+  roles?: Role[];
   imageVersion: number;
   effects: ProfileEffects;
 };
@@ -94,6 +95,7 @@ function mapUser(dto: any): User {
     hasAvatar: dto.hasAvatar ?? false,
     hasBanner: dto.hasBanner ?? false,
     role: dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 },
+    roles: dto.roles || [dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 }],
     imageVersion: dto.imageVersion ?? Date.now(),
     effects: {
       effectShimmer: dto.effectShimmer ?? false,

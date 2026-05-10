@@ -44,6 +44,7 @@ function mapProfileUser(dto: any): User {
     hasAvatar: dto.hasAvatar ?? false,
     hasBanner: dto.hasBanner ?? false,
     role: dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 },
+    roles: dto.roles || [dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 }],
     imageVersion: Date.now(),
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
@@ -265,14 +266,16 @@ export default function ProfilePage() {
                   <BadgeCheck size={13} strokeWidth={2.5} />
                 </span>
               )}
-              <span className={`${styles.roleBadge}${hasAnyEffect ? ` ${styles.roleBadgeGlow}` : ""}`} style={{ borderColor: profileUser.role.color, color: profileUser.role.color }}>
-                {profileUser.role.name === "ADMIN" && <Crown size={11} strokeWidth={2.5} />}
-                {profileUser.role.name === "PRE_ADMIN" && <Shield size={11} strokeWidth={2.5} />}
-                {profileUser.role.name === "ST_MODERATOR" && <ShieldCheck size={11} strokeWidth={2.5} />}
-                {profileUser.role.name === "MODERATOR" && <Shield size={11} strokeWidth={2.5} />}
-                {profileUser.role.name === "USER" && <Star size={11} strokeWidth={2.5} />}
-                {profileUser.role.displayName}
-              </span>
+              {(profileUser.roles ?? [profileUser.role]).map((r) => (
+                <span key={r.name} className={`${styles.roleBadge}${hasAnyEffect ? ` ${styles.roleBadgeGlow}` : ""}`} style={{ borderColor: r.color, color: r.color }}>
+                  {r.name === "ADMIN" && <Crown size={11} strokeWidth={2.5} />}
+                  {r.name === "PRE_ADMIN" && <Shield size={11} strokeWidth={2.5} />}
+                  {r.name === "ST_MODERATOR" && <ShieldCheck size={11} strokeWidth={2.5} />}
+                  {r.name === "MODERATOR" && <Shield size={11} strokeWidth={2.5} />}
+                  {r.name === "USER" && <Star size={11} strokeWidth={2.5} />}
+                  {r.displayName}
+                </span>
+              ))}
             </div>
             {!isOwner && auth.isAuthenticated && (
               <button
@@ -386,23 +389,28 @@ export default function ProfilePage() {
                   <span className={styles.infoValue}>01</span>
                 </div>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Роль</span>
-                  <span className={styles.infoValue}>{profileUser.role.displayName}</span>
+                  <span className={styles.infoLabel}>Роли</span>
+                  <span className={styles.infoValue}>
+                    {(profileUser.roles ?? [profileUser.role]).map(r => r.displayName).join(", ")}
+                  </span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Бейджи</span>
                   <span className={styles.profileBadges}>
-                    <span
-                      className={styles.profileBadge}
-                      style={{ color: profileUser.role.color }}
-                      title={profileUser.role.displayName}
-                    >
-                      {profileUser.role.name === "ADMIN" && <Crown size={15} strokeWidth={2.4} />}
-                      {profileUser.role.name === "PRE_ADMIN" && <Shield size={15} strokeWidth={2.4} />}
-                      {profileUser.role.name === "ST_MODERATOR" && <ShieldCheck size={15} strokeWidth={2.4} />}
-                      {profileUser.role.name === "MODERATOR" && <Shield size={15} strokeWidth={2.4} />}
-                      {profileUser.role.name === "USER" && <Star size={15} strokeWidth={2.4} />}
-                    </span>
+                    {(profileUser.roles ?? [profileUser.role]).map((r) => (
+                      <span
+                        key={r.name}
+                        className={styles.profileBadge}
+                        style={{ color: r.color }}
+                        title={r.displayName}
+                      >
+                        {r.name === "ADMIN" && <Crown size={15} strokeWidth={2.4} />}
+                        {r.name === "PRE_ADMIN" && <Shield size={15} strokeWidth={2.4} />}
+                        {r.name === "ST_MODERATOR" && <ShieldCheck size={15} strokeWidth={2.4} />}
+                        {r.name === "MODERATOR" && <Shield size={15} strokeWidth={2.4} />}
+                        {r.name === "USER" && <Star size={15} strokeWidth={2.4} />}
+                      </span>
+                    ))}
                   </span>
                 </div>
                 <div className={styles.infoRow}>

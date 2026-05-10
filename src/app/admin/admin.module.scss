@@ -1031,14 +1031,34 @@
   flex-shrink: 0;
 }
 
+.userRoleTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.userRoleTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .userRoleBtn {
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 5px 12px;
   border-radius: 6px;
-  border: 1px solid;
+  border: 1px solid var(--border);
   background: transparent;
+  color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

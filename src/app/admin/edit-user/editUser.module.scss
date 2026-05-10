@@ -175,6 +175,12 @@
   color: var(--text-secondary);
 }
 
+.userHeaderRoles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .userHeaderRole {
   display: inline-flex;
   align-items: center;
