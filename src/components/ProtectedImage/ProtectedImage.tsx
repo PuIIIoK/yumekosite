@@ -20,7 +20,7 @@ export default function ProtectedImage({ src, alt, className, style, fallback }:
 
     let cancelled = false;
 
-    fetch(src)
+    fetch(src, { cache: "no-store" })
       .then((res) => {
         if (!res.ok) throw new Error("Failed");
         return res.blob();

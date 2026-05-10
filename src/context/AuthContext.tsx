@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_URL}/api/profile/${user.username}`);
+      const res = await fetch(`${API_URL}/api/profile/${user.username}`, { cache: "no-store" });
       const hex = await res.text();
       const json = JSON.parse(parseHexDump(hex));
       if (json.ok && json.user) {
