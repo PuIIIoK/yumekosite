@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,7 +15,8 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Header from "@/components/Header/Header";
-import { newEpisodes as animePreviewEpisodes } from "@/data/anime";
+import { type AnimePreview, getAccent as getAccentFn } from "@/data/anime";
+import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
 // ── Banner Slides ──────────────────────────────────
@@ -51,16 +52,7 @@ const bannerSlides = [
   },
 ];
 
-// ── Episodes Data ──────────────────────────────────
-const newEpisodes = animePreviewEpisodes;
-
-// Accent colour keyed to age rating
-const ratingAccent: Record<string, string> = {
-  "12+": "#2dd4bf",
-  "16+": "#f97316",
-  "18+": "#ef4444",
-};
-const getAccent = (rating: string) => ratingAccent[rating] ?? "#f97316";
+const getAccent = getAccentFn;
 
 // ── Schedule Data ──────────────────────────────────
 interface ScheduleItem {
@@ -97,6 +89,14 @@ const scheduleData: Record<string, ScheduleItem[]> = {
 export default function Home() {
   const [slide, setSlide] = useState(0);
   const [activeDay, setActiveDay] = useState("today");
+  const [newEpisodes, setNewEpisodes] = useState<AnimePreview[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/anime`)
+      .then((r) => r.json())
+      .then((data: AnimePreview[]) => setNewEpisodes(data))
+      .catch(() => {});
+  }, []);
 
   const prevSlide = () => setSlide((s) => (s === 0 ? bannerSlides.length - 1 : s - 1));
   const nextSlide = () => setSlide((s) => (s === bannerSlides.length - 1 ? 0 : s + 1));

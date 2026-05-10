@@ -1,0 +1,1106 @@
+.adminWrap {
+  display: flex;
+  min-height: 100vh;
+  padding-top: var(--header-height, 90px);
+}
+
+.loader {
+  color: var(--text-secondary);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+// ── Sidebar ──
+
+.sidebar {
+  position: fixed;
+  top: var(--header-height, 90px);
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  transition: width 0.2s ease;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.sidebarOpen {
+  width: 240px;
+}
+
+.sidebarClosed {
+  width: 56px;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 12px 12px;
+  gap: 8px;
+  min-height: 56px;
+}
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebarBrandIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sidebarToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    color: var(--text-primary);
+  }
+}
+
+.sidebarNav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 8px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.sidebarIndicator {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--indicator-color, var(--accent)) 12%, transparent);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease, opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sidebarItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.25s ease, background 0.12s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
+    color: var(--text-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.sidebarItemActive {
+  background: transparent;
+  color: var(--item-color, var(--accent));
+
+  &:hover {
+    background: transparent;
+    color: var(--item-color, var(--accent));
+  }
+}
+
+.sidebarFooter {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarUser {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarRole {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+// ── Content ──
+
+.content {
+  flex: 1;
+  min-height: calc(100vh - var(--header-height, 90px));
+  transition: margin-left 0.2s ease;
+  padding: 32px;
+}
+
+.contentShifted {
+  margin-left: 240px;
+}
+
+.contentFull {
+  margin-left: 56px;
+}
+
+.tabContent {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tabContentIn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tabContentOut {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.contentPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 60vh;
+  color: var(--text-secondary);
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  p {
+    font-size: 13px;
+    margin: 0;
+    opacity: 0.6;
+  }
+}
+
+// ── Anime Manager ──
+
+.animeManager {
+  max-width: 100%;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.animeManagerOut {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.animeManagerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.animeManagerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.animeAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  min-width: 130px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) { opacity: 0.85; }
+  &:disabled { cursor: not-allowed; }
+}
+
+.animeAddBtnLoading {
+  opacity: 0.75;
+}
+
+@keyframes addBtnSpin {
+  to { transform: rotate(360deg); }
+}
+
+.animeAddSpin {
+  animation: addBtnSpin 0.8s linear infinite;
+}
+
+.animeError {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+// Form
+.animeForm {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.animeFormHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+}
+
+.animeFormClose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover { color: var(--text-primary); }
+}
+
+.animeFormGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.animeFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select, textarea {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-body, #0a0a0c);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: var(--accent);
+    }
+
+    &::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+}
+
+.animeFormActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.animeSaveBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover:not(:disabled) { opacity: 0.85; }
+}
+
+.animeCancelBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+}
+
+// ── Search & Toolbar ──
+
+.animeToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.animeSearchWrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.animeSearchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.animeSearchInput {
+  width: 100%;
+  padding: 9px 36px 9px 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--text-secondary); opacity: 0.4; }
+}
+
+.animeSearchClear {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0.5;
+
+  &:hover { opacity: 1; }
+}
+
+.animeCount {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ── Pagination ──
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.paginationBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover:not(:disabled) { background: color-mix(in srgb, var(--text-secondary) 10%, transparent); color: var(--text-primary); }
+  &:disabled { opacity: 0.25; cursor: not-allowed; }
+}
+
+.paginationNum {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover { background: color-mix(in srgb, var(--text-secondary) 8%, transparent); color: var(--text-primary); }
+}
+
+.paginationNumActive {
+  background: var(--accent);
+  color: #fff;
+
+  &:hover { background: var(--accent); color: #fff; }
+}
+
+// Card Grid
+.animeGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.animeCard {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.animeCardPoster {
+  width: 72px;
+  min-height: 96px;
+  flex-shrink: 0;
+  position: relative;
+  background: color-mix(in srgb, var(--text-secondary) 6%, transparent);
+}
+
+.animeCardPosterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.animeCardPosterEmpty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0.3;
+}
+
+.animeCardRating {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.animeCardBody {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.animeCardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.animeCardId {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.7;
+  letter-spacing: 0.3px;
+}
+
+.animeCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animeCardAlt {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animeCardMeta {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.animeCardTag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.animeCardGenres {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animeCardActions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 10px;
+  flex-shrink: 0;
+}
+
+.animeEditBtn, .animeDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    color: var(--text-primary);
+  }
+}
+
+.animeDeleteBtn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.animeTableEmpty {
+  padding: 60px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+// ── Delete Modal ──
+
+.deleteOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  padding-top: 15vh;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.deleteModal {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 32px 24px;
+  width: 380px;
+  max-width: 90vw;
+  text-align: center;
+  align-self: flex-start;
+  animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.deleteModalClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    color: var(--text-primary);
+  }
+}
+
+.deleteModalIcon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: #ef4444;
+  opacity: 0.8;
+}
+
+.deleteModalTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.deleteModalText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+  line-height: 1.5;
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.deleteModalActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.deleteModalCancel {
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.deleteModalConfirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.12s;
+
+  &:hover { opacity: 0.85; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── Create/Edit Anime Page ──
+
+.createAnimePage {
+  min-height: 100vh;
+  padding: calc(var(--header-height, 90px) + 24px) 32px 40px;
+}
+
+.createAnimeContainer {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.createAnimeTopBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.createAnimeBack {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+}
+
+.createAnimeTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.createAnimeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.createAnimePosterPreview {
+  margin-bottom: 16px;
+
+  img {
+    width: 120px;
+    height: 170px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+  }
+}
+
+.createAnimeActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+// ── User Manager ──
+
+.userGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-secondary) 30%, var(--border));
+  }
+}
+
+.userCardAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.userCardAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userCardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.userCardTop {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.userCardId {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.userCardName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userCardUsername {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.userCardInfo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.userCardEmail {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.userCardDate {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.userCardActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.userActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    color: var(--text-primary);
+  }
+}
+
+.userActionBtnEdit {
+  color: #3b82f6;
+  &:hover { background: rgba(59, 130, 246, 0.1); }
+}
+
+.userActionBtnDanger {
+  color: #ef4444;
+  &:hover { background: rgba(239, 68, 68, 0.1); }
+}
+
+.userCardRole {
+  flex-shrink: 0;
+}
+
+.userRoleBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.roleDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  min-width: 160px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  z-index: 50;
+  animation: roleDropIn 0.15s ease;
+}
+
+@keyframes roleDropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.roleDropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--role-color, var(--text-secondary)) 10%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.roleDropdownItemActive {
+  font-weight: 700;
+}
+
+.roleDropdownDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BookMarked, Search, Settings, Heart, X, User, Users, Bell, Palette, Shield, LogOut, ChevronRight, ArrowLeft, Mail, Lock, Eye, EyeOff, Bookmark, ShieldCheck, Sparkles, Crown, Star } from "lucide-react";
-import { animeCatalog, getAccent } from "@/data/anime";
+import { type AnimeDetails, getAccent } from "@/data/anime";
 import { useAppearance, ACCENT_COLORS, type ThemeMode, type FontSize } from "@/context/AppearanceContext";
 import { useAuth } from "@/context/AuthContext";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
@@ -25,7 +25,15 @@ export default function Header() {
   const [settingsAnimating, setSettingsAnimating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState(animeCatalog.slice(0, 0));
+  const [searchResults, setSearchResults] = useState<AnimeDetails[]>([]);
+  const [animeCatalog, setAnimeCatalog] = useState<AnimeDetails[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/anime`)
+      .then((r) => r.json())
+      .then((data: AnimeDetails[]) => setAnimeCatalog(data))
+      .catch(() => {});
+  }, []);
   const [userResults, setUserResults] = useState<any[]>([]);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -470,8 +478,8 @@ export default function Header() {
       const results = animeCatalog.filter(
         (a) =>
           a.title.toLowerCase().includes(q) ||
-          a.altTitle.toLowerCase().includes(q) ||
-          a.genres.toLowerCase().includes(q)
+          (a.altTitle && a.altTitle.toLowerCase().includes(q)) ||
+          (a.genres && a.genres.toLowerCase().includes(q))
       );
       setSearchResults(results);
 
@@ -691,6 +699,20 @@ export default function Header() {
                       <span>Настройки</span>
                     </button>
                   </div>
+
+                  {(auth.user?.role?.priority ?? 0) >= 80 && (
+                    <button
+                      className={styles.profileMenuItem}
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        router.push("/admin");
+                      }}
+                      role="menuitem"
+                    >
+                      <Shield size={16} />
+                      <span>Админ панель</span>
+                    </button>
+                  )}
 
                   <div className={styles.profileMenuDivider} />
 
@@ -1093,12 +1115,6 @@ export default function Header() {
                   <div className={styles.settingsToggleRow}>
                     <span>Свечение аватара</span>
                     <div className={`${styles.settingsToggle} ${custAvatarGlow ? styles.settingsToggleOn : ""}`} onClick={() => { setCustAvatarGlow(!custAvatarGlow); setCustDirty(true); }}>
-                      <div className={styles.settingsToggleKnob} />
-                    </div>
-                  </div>
-                  <div className={styles.settingsToggleRow}>
-                    <span>Бейдж верификации</span>
-                    <div className={`${styles.settingsToggle} ${custVerified ? styles.settingsToggleOn : ""}`} onClick={() => { setCustVerified(!custVerified); setCustDirty(true); }}>
                       <div className={styles.settingsToggleKnob} />
                     </div>
                   </div>

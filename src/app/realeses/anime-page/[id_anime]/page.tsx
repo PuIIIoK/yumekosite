@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
-import { animeCatalog, getAccent, getAnimeById } from "@/data/anime";
+import { fetchAnimeCatalog, fetchAnimeById, getAccent } from "@/data/anime";
 import { fetchReleaseByAlias, posterUrl } from "@/data/anilibria-api";
 import AnimePageContent, { type ApiEpisode } from "./AnimePageContent";
 import styles from "./page.module.scss";
@@ -100,13 +100,8 @@ async function extractPosterColors(url: string, title: string): Promise<[string,
   }
 }
 
-export const dynamic = "force-static";
-
-export async function generateStaticParams() {
-  return animeCatalog.map((anime) => ({
-    id_anime: String(anime.id),
-  }));
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type AnimePageProps = {
   params: Promise<{
@@ -116,7 +111,7 @@ type AnimePageProps = {
 
 export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
   const { id_anime } = await params;
-  const anime = getAnimeById(id_anime);
+  const anime = await fetchAnimeById(id_anime);
   if (!anime) return { title: "Релиз не найден" };
   const ogImage = `/og/${anime.id}.jpg`;
   return {
@@ -142,7 +137,7 @@ export async function generateMetadata({ params }: AnimePageProps): Promise<Meta
 
 export default async function AnimePage({ params }: AnimePageProps) {
   const { id_anime } = await params;
-  const anime = getAnimeById(id_anime);
+  const anime = await fetchAnimeById(id_anime);
 
   if (!anime) {
     notFound();

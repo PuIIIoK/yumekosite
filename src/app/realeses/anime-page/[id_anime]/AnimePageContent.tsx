@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Play, Heart, BookMarked, ChevronRight, ChevronDown, Clock, List, LayoutGrid, Eye, CalendarClock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
-import { animeCatalog, getAccent, type AnimeDetails } from "@/data/anime";
+import { getAccent, type AnimeDetails } from "@/data/anime";
+import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
 type Tab = "episodes" | "related" | "comments";
@@ -44,9 +45,16 @@ export default function AnimePageContent({ anime, accent, apiEpisodes = [] }: Pr
   const genreTags = anime.genres.split(" • ");
   const epCount = parseEpisodeCount(anime.episodes);
   const currentEp = parseInt(anime.ep.match(/\d+/)?.[0] ?? "1");
-  const relatedItems = anime.relatedIds
-    .map((id) => animeCatalog.find((item) => item.id === id))
-    .filter((item): item is AnimeDetails => item !== undefined);
+  const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
+
+  useEffect(() => {
+    if (anime.relatedIds.length === 0) return;
+    Promise.all(
+      anime.relatedIds.map((id) =>
+        fetch(`${API_URL}/api/anime/${id}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      )
+    ).then((items) => setRelatedItems(items.filter(Boolean)));
+  }, [anime.relatedIds]);
 
   const hasApi = apiEpisodes.length > 0;
   const episodeCount = hasApi ? apiEpisodes.length : epCount;

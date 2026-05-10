@@ -1,0 +1,398 @@
+.page {
+  min-height: 100vh;
+  padding: calc(var(--header-height, 90px) + 20px) 24px 60px;
+}
+
+.container {
+  max-width: 1060px;
+  margin: 0 auto;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.containerOut {
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+}
+
+// ── Top Bar ──
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.12s;
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.topBarRight {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover:not(:disabled) { opacity: 0.85; }
+}
+
+.saveBtnDone {
+  background: #22c55e;
+  opacity: 1 !important;
+}
+
+@keyframes saveSpin {
+  to { transform: rotate(360deg); }
+}
+
+.saveSpin {
+  animation: saveSpin 0.8s linear infinite;
+}
+
+.cancelBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+}
+
+// ── Error ──
+
+.errorBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 20px;
+
+  button {
+    display: flex;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.6;
+    &:hover { opacity: 1; }
+  }
+}
+
+// ── Layout ──
+
+.layout {
+  display: flex;
+  gap: 28px;
+}
+
+.posterCol {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: calc(var(--header-height, 90px) + 20px);
+  align-self: flex-start;
+}
+
+.fieldsCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// ── Poster Card ──
+
+.posterCard {
+  width: 200px;
+  height: 284px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px dashed var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--text-secondary);
+  }
+}
+
+.posterCardDragOver {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.posterImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.posterPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  opacity: 0.4;
+
+  span {
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    padding: 0 12px;
+  }
+}
+
+.posterChangeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 7px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+  }
+}
+
+.urlRow {
+  display: flex;
+  gap: 6px;
+}
+
+.urlBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.12s;
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:hover:not(:disabled) { opacity: 0.85; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+// ── Sections ──
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
+// ── Field Groups ──
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.fieldInput {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-body, #0a0a0c);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--text-secondary); opacity: 0.4; }
+}
+
+.fieldTextarea {
+  @extend .fieldInput;
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+
+.fieldHint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+// ── Row layouts ──
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.row3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+// ── Pill Select ──
+
+.pillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+  }
+}
+
+.pillActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+// ── Chip Select ──
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+
+  &:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+  }
+}
+
+.chipActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
