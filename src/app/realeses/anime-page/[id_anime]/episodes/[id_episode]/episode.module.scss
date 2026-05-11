@@ -538,6 +538,11 @@
   letter-spacing: 0.3px;
 }
 
+// ── Sidebar overlay (hidden on desktop) ──
+.sidebarOverlay {
+  display: none;
+}
+
 // ── Mobile action bar (hidden on desktop) ──
 .mobileActions {
   display: none;
@@ -653,6 +658,16 @@
     margin-left: 4px;
     font-size: 10px;
     padding: 2px 6px;
+  }
+
+  // ── Sidebar overlay — show on mobile ──
+  .sidebarOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    -webkit-tap-highlight-color: transparent;
   }
 
   // ── Mobile action bar — show on mobile ──

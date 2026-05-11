@@ -985,6 +985,8 @@ export default function VideoPlayer({
                   <ListVideo size={20} />
                 </button>
                 {showEpisodes && (
+                  <>
+                  <div className={styles.menuOverlay} onClick={() => setShowEpisodes(false)} />
                   <div className={styles.menu}>
                     <div className={styles.menuHeader}>Серии</div>
                     <div className={styles.menuScroll}>
@@ -1004,6 +1006,7 @@ export default function VideoPlayer({
                       ))}
                     </div>
                   </div>
+                  </>
                 )}
               </div>
             )}
@@ -1018,6 +1021,8 @@ export default function VideoPlayer({
                 <Settings size={18} />
               </button>
               {showSettings && (
+                <>
+                <div className={styles.menuOverlay} onClick={() => setShowSettings(false)} />
                 <div className={styles.settingsPanel}>
                   <div className={styles.settingsTabs}>
                     {([
@@ -1025,7 +1030,7 @@ export default function VideoPlayer({
                       { id: "speed" as SettingsTab, label: "Скорость", icon: <Gauge size={14} /> },
                       { id: "autoplay" as SettingsTab, label: "Авто", icon: <FastForward size={14} /> },
                       { id: "skip" as SettingsTab, label: "Опенинг/Эндинг", icon: <SkipIntro size={14} /> },
-                      { id: "shortcuts" as SettingsTab, label: "Шорткасты", icon: <Keyboard size={14} /> },
+                      ...(!isMobile ? [{ id: "shortcuts" as SettingsTab, label: "Шорткасты", icon: <Keyboard size={14} /> }] : []),
                     ] as const).map((tab) => (
                       <button
                         key={tab.id}
@@ -1166,6 +1171,7 @@ export default function VideoPlayer({
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
 

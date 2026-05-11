@@ -250,6 +250,9 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
           </div>
         </div>
 
+        {/* Sidebar overlay (mobile) */}
+        {sidebarOpen && <div className={styles.sidebarOverlay} onClick={() => setSidebarOpen(false)} />}
+
         {/* Sidebar with episode list */}
         <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
           <div className={styles.sidebarHeader}>
