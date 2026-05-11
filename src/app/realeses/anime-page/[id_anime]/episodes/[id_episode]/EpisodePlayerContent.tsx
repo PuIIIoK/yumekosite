@@ -16,6 +16,10 @@ interface Episode {
   title: string | null;
   hlsUrl: string | null;
   previewUrl: string | null;
+  introStart: number | null;
+  introEnd: number | null;
+  outroStart: number | null;
+  outroEnd: number | null;
   studio: string;
   status: string;
   createdAt: string;
@@ -92,6 +96,26 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
     switchEpisode(ep);
   }, [switchEpisode]);
 
+  const canEditMarkers = !!user?.roles?.some(
+    (r) => (r.priority ?? 0) >= 90
+  );
+
+  const currentMarkers = {
+    introStart: currentEp.introStart,
+    introEnd: currentEp.introEnd,
+    outroStart: currentEp.outroStart,
+    outroEnd: currentEp.outroEnd,
+  };
+
+  const handleSaveMarkers = useCallback(async (m: { introStart: number | null; introEnd: number | null; outroStart: number | null; outroEnd: number | null }) => {
+    await fetch(`${API_URL}/api/episodes/${currentEp.id}/markers`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(m),
+    });
+    setCurrentEp((prev) => ({ ...prev, ...m }));
+  }, [currentEp.id]);
+
   return (
     <main className={styles.playerPage}>
       <div className={styles.playerLayout}>
@@ -116,6 +140,9 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
               onEpisodeChange={handlePlayerEpisodeChange}
               accent="var(--accent)"
               userId={user?.id}
+              markers={currentMarkers}
+              canEditMarkers={canEditMarkers}
+              onSaveMarkers={handleSaveMarkers}
             />
           ) : (
             <div className={styles.playerWrap}>

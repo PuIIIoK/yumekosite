@@ -24,6 +24,10 @@ import {
   ChevronRight,
   ListVideo,
   Loader2,
+  Keyboard,
+  Gauge,
+  FastForward,
+  SkipForward as SkipIntro,
 } from "lucide-react";
 import styles from "./player.module.scss";
 
@@ -34,6 +38,13 @@ interface EpisodeInfo {
   hlsUrl: string | null;
 }
 
+interface Markers {
+  introStart: number | null;
+  introEnd: number | null;
+  outroStart: number | null;
+  outroEnd: number | null;
+}
+
 interface Props {
   src: string;
   episodes?: EpisodeInfo[];
@@ -42,10 +53,39 @@ interface Props {
   accent?: string;
   autoPlay?: boolean;
   userId?: number | null;
+  markers?: Markers;
+  canEditMarkers?: boolean;
+  onSaveMarkers?: (markers: Markers) => void;
 }
 
 const VOLUME_KEY = "yumeko_player_volume";
 const MUTED_KEY = "yumeko_player_muted";
+const SPEED_KEY = "yumeko_player_speed";
+const AUTOPLAY_KEY = "yumeko_player_autoplay";
+
+const RU_TO_EN: Record<string, string> = {
+  "й": "q", "ц": "w", "у": "e", "к": "r", "е": "t", "н": "y", "г": "u", "ш": "i", "щ": "o", "з": "p",
+  "ф": "a", "ы": "s", "в": "d", "а": "f", "п": "g", "р": "h", "о": "j", "л": "k", "д": "l",
+  "я": "z", "ч": "x", "с": "c", "м": "v", "и": "b", "т": "n", "ь": "m",
+};
+
+function normalizeKey(key: string): string {
+  const lower = key.toLowerCase();
+  return RU_TO_EN[lower] || lower;
+}
+
+type SettingsTab = "quality" | "speed" | "shortcuts" | "autoplay" | "skip";
+
+const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+const SHORTCUTS: { keys: string; desc: string }[] = [
+  { keys: "Пробел / K", desc: "Пауза / Воспроизведение" },
+  { keys: "F", desc: "Полный экран" },
+  { keys: "M", desc: "Вкл/Выкл звук" },
+  { keys: "\u2190 / \u2192", desc: "Перемотка \u00b15 сек" },
+  { keys: "\u2191 / \u2193", desc: "Громкость \u00b110%" },
+  { keys: "Escape", desc: "Закрыть меню" },
+];
 
 function formatTime(s: number): string {
   if (!isFinite(s) || s < 0) return "0:00";
@@ -64,6 +104,9 @@ export default function VideoPlayer({
   accent = "var(--accent)",
   autoPlay = true,
   userId,
+  markers,
+  canEditMarkers = false,
+  onSaveMarkers,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -71,6 +114,12 @@ export default function VideoPlayer({
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const progressSaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spaceHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mouseHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speedBeforeHold = useRef(1);
+  const spaceHeld = useRef(false);
+  const mouseHeld = useRef(false);
 
   // Playback state
   const [playing, setPlaying] = useState(false);
@@ -141,10 +190,80 @@ export default function VideoPlayer({
   const [hoverX, setHoverX] = useState(0);
 
   // Menus
-  const [showQuality, setShowQuality] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("quality");
   const [showEpisodes, setShowEpisodes] = useState(false);
   const [qualities, setQualities] = useState<{ index: number; label: string; height: number }[]>([]);
   const [currentQuality, setCurrentQuality] = useState(-1); // -1 = auto
+  const [speed, setSpeed] = useState(1);
+  const [autoplayNext, setAutoplayNext] = useState(true);
+  const autoplayNextRef = useRef(autoplayNext);
+  useEffect(() => { autoplayNextRef.current = autoplayNext; }, [autoplayNext]);
+  const [skipIntro, setSkipIntro] = useState(false);
+  const skipIntroRef = useRef(false);
+  useEffect(() => { skipIntroRef.current = skipIntro; }, [skipIntro]);
+  const [skipOutro, setSkipOutro] = useState(false);
+  const skipOutroRef = useRef(false);
+  useEffect(() => { skipOutroRef.current = skipOutro; }, [skipOutro]);
+
+  // Marker editing state
+  const [editMarkers, setEditMarkers] = useState<Markers>({
+    introStart: markers?.introStart ?? null,
+    introEnd: markers?.introEnd ?? null,
+    outroStart: markers?.outroStart ?? null,
+    outroEnd: markers?.outroEnd ?? null,
+  });
+  const [markersSaving, setMarkersSaving] = useState(false);
+
+  useEffect(() => {
+    setEditMarkers({
+      introStart: markers?.introStart ?? null,
+      introEnd: markers?.introEnd ?? null,
+      outroStart: markers?.outroStart ?? null,
+      outroEnd: markers?.outroEnd ?? null,
+    });
+  }, [markers]);
+
+  const setMarkerAtCurrentTime = (field: keyof Markers) => {
+    const v = videoRef.current;
+    if (!v) return;
+    setEditMarkers((prev) => ({ ...prev, [field]: Math.round(v.currentTime * 100) / 100 }));
+  };
+
+  const clearMarker = (field: keyof Markers) => {
+    setEditMarkers((prev) => ({ ...prev, [field]: null }));
+  };
+
+  const handleSaveMarkers = async () => {
+    if (!onSaveMarkers) return;
+    setMarkersSaving(true);
+    try {
+      await onSaveMarkers(editMarkers);
+    } finally {
+      setMarkersSaving(false);
+    }
+  };
+
+  // Load speed & autoplay from localStorage
+  useEffect(() => {
+    const savedSpeed = localStorage.getItem(SPEED_KEY);
+    if (savedSpeed) {
+      const s = parseFloat(savedSpeed);
+      setSpeed(s);
+      if (videoRef.current) videoRef.current.playbackRate = s;
+    }
+    const savedAuto = localStorage.getItem(AUTOPLAY_KEY);
+    if (savedAuto !== null) setAutoplayNext(savedAuto === "true");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(SPEED_KEY, String(speed));
+    if (videoRef.current) videoRef.current.playbackRate = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    localStorage.setItem(AUTOPLAY_KEY, String(autoplayNext));
+  }, [autoplayNext]);
 
   // Episodes
   const sorted = [...episodes].sort((a, b) => a.number - b.number);
@@ -232,6 +351,17 @@ export default function VideoPlayer({
     const onPause = () => setPlaying(false);
     const onTime = () => {
       if (!seeking) setCurrentTime(v.currentTime);
+      const t = v.currentTime;
+      if (skipIntroRef.current && markers?.introStart != null && markers?.introEnd != null) {
+        if (t >= markers.introStart && t < markers.introEnd - 0.5) {
+          v.currentTime = markers.introEnd;
+        }
+      }
+      if (skipOutroRef.current && markers?.outroStart != null && markers?.outroEnd != null) {
+        if (t >= markers.outroStart && t < markers.outroEnd - 0.5) {
+          v.currentTime = markers.outroEnd;
+        }
+      }
     };
     const onDuration = () => setDuration(v.duration);
     const onProgress = () => {
@@ -243,7 +373,7 @@ export default function VideoPlayer({
     const onCanPlay = () => setLoading(false);
     const onEnded = () => {
       setPlaying(false);
-      if (nextEp && onEpisodeChange) onEpisodeChange(nextEp);
+      if (autoplayNextRef.current && nextEp && onEpisodeChange) onEpisodeChange(nextEp);
     };
 
     v.addEventListener("play", onPlay);
@@ -310,30 +440,40 @@ export default function VideoPlayer({
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
-      switch (e.key) {
+      const nk = normalizeKey(e.key);
+      switch (nk) {
         case " ":
+          e.preventDefault();
+          if (e.repeat) return;
+          spaceHoldTimer.current = setTimeout(() => {
+            spaceHeld.current = true;
+            speedBeforeHold.current = v.playbackRate;
+            v.playbackRate = 2;
+            if (v.paused) v.play();
+          }, 750);
+          break;
         case "k":
           e.preventDefault();
           v.paused ? v.play() : v.pause();
           showControls();
           break;
-        case "ArrowLeft":
+        case "arrowleft":
           e.preventDefault();
           v.currentTime = Math.max(0, v.currentTime - 5);
           showControls();
           break;
-        case "ArrowRight":
+        case "arrowright":
           e.preventDefault();
           v.currentTime = Math.min(v.duration, v.currentTime + 5);
           showControls();
           break;
-        case "ArrowUp":
+        case "arrowup":
           e.preventDefault();
           setVolume((prev) => Math.min(1, prev + 0.1));
           setMuted(false);
           showControls();
           break;
-        case "ArrowDown":
+        case "arrowdown":
           e.preventDefault();
           setVolume((prev) => Math.max(0, prev - 0.1));
           showControls();
@@ -347,14 +487,38 @@ export default function VideoPlayer({
           setMuted((m) => !m);
           showControls();
           break;
-        case "Escape":
-          setShowQuality(false);
+        case "escape":
+          setShowSettings(false);
           setShowEpisodes(false);
           break;
       }
     };
+
+    const upHandler = (e: KeyboardEvent) => {
+      const v = videoRef.current;
+      if (!v) return;
+      const nk = normalizeKey(e.key);
+      if (nk === " ") {
+        if (spaceHoldTimer.current) {
+          clearTimeout(spaceHoldTimer.current);
+          spaceHoldTimer.current = null;
+        }
+        if (spaceHeld.current) {
+          spaceHeld.current = false;
+          v.playbackRate = speedBeforeHold.current;
+        } else {
+          v.paused ? v.play() : v.pause();
+          showControls();
+        }
+      }
+    };
+
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keyup", upHandler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("keyup", upHandler);
+    };
   }, [showControls]);
 
   // ── Actions ──
@@ -387,6 +551,8 @@ export default function VideoPlayer({
 
   const handleProgressMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setShowSettings(false);
+    setShowEpisodes(false);
     setSeeking(true);
     seekFromEvent(e.clientX);
 
@@ -429,7 +595,6 @@ export default function VideoPlayer({
       hls.currentLevel = index;
     }
     setCurrentQuality(index);
-    setShowQuality(false);
   };
 
   const currentQualityLabel = currentQuality === -1
@@ -454,7 +619,55 @@ export default function VideoPlayer({
       <video
         ref={videoRef}
         className={styles.video}
-        onClick={togglePlay}
+        onClick={(e) => {
+          e.preventDefault();
+          if (mouseHeld.current) return;
+          if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+            toggleFullscreen();
+          } else {
+            clickTimerRef.current = setTimeout(() => {
+              clickTimerRef.current = null;
+              togglePlay();
+              setShowSettings(false);
+              setShowEpisodes(false);
+            }, 100);
+          }
+        }}
+        onMouseDown={() => {
+          mouseHeld.current = false;
+          mouseHoldTimer.current = setTimeout(() => {
+            const v = videoRef.current;
+            if (!v) return;
+            mouseHeld.current = true;
+            speedBeforeHold.current = v.playbackRate;
+            v.playbackRate = 2;
+            if (v.paused) v.play();
+          }, 750);
+        }}
+        onMouseUp={() => {
+          if (mouseHoldTimer.current) {
+            clearTimeout(mouseHoldTimer.current);
+            mouseHoldTimer.current = null;
+          }
+          if (mouseHeld.current) {
+            mouseHeld.current = false;
+            const v = videoRef.current;
+            if (v) v.playbackRate = speedBeforeHold.current;
+          }
+        }}
+        onMouseLeave={() => {
+          if (mouseHoldTimer.current) {
+            clearTimeout(mouseHoldTimer.current);
+            mouseHoldTimer.current = null;
+          }
+          if (mouseHeld.current) {
+            mouseHeld.current = false;
+            const v = videoRef.current;
+            if (v) v.playbackRate = speedBeforeHold.current;
+          }
+        }}
         playsInline
       />
 
@@ -499,6 +712,26 @@ export default function VideoPlayer({
         >
           <div className={styles.progressTrack}>
             <div className={styles.progressBuffered} style={{ width: `${bufferedPct}%` }} />
+            {duration > 0 && markers?.introStart != null && markers?.introEnd != null && (
+              <div
+                className={styles.progressMarker}
+                style={{
+                  left: `${(markers.introStart / duration) * 100}%`,
+                  width: `${((markers.introEnd - markers.introStart) / duration) * 100}%`,
+                }}
+                title={`Опенинг: ${formatTime(markers.introStart)} → ${formatTime(markers.introEnd)}`}
+              />
+            )}
+            {duration > 0 && markers?.outroStart != null && markers?.outroEnd != null && (
+              <div
+                className={styles.progressMarker}
+                style={{
+                  left: `${(markers.outroStart / duration) * 100}%`,
+                  width: `${((markers.outroEnd - markers.outroStart) / duration) * 100}%`,
+                }}
+                title={`Эндинг: ${formatTime(markers.outroStart)} → ${formatTime(markers.outroEnd)}`}
+              />
+            )}
             <div className={styles.progressFill} style={{ width: `${progress}%` }}>
               <div className={styles.progressThumb} />
             </div>
@@ -585,7 +818,7 @@ export default function VideoPlayer({
               <div className={styles.menuWrap}>
                 <button
                   className={styles.controlBtn}
-                  onClick={() => { setShowEpisodes(!showEpisodes); setShowQuality(false); }}
+                  onClick={() => { setShowEpisodes(!showEpisodes); setShowSettings(false); }}
                   title="Список серий"
                 >
                   <ListVideo size={20} />
@@ -614,38 +847,166 @@ export default function VideoPlayer({
               </div>
             )}
 
-            {/* Quality */}
-            {qualities.length > 0 && (
-              <div className={styles.menuWrap}>
-                <button
-                  className={styles.controlBtn}
-                  onClick={() => { setShowQuality(!showQuality); setShowEpisodes(false); }}
-                  title="Качество"
-                >
-                  <Settings size={18} />
-                </button>
-                {showQuality && (
-                  <div className={styles.menu}>
-                    <div className={styles.menuHeader}>Качество</div>
-                    <button
-                      className={`${styles.menuItem} ${currentQuality === -1 ? styles.menuItemActive : ""}`}
-                      onClick={() => handleQualityChange(-1)}
-                    >
-                      Авто
-                    </button>
-                    {[...qualities].sort((a, b) => b.height - a.height).map((q) => (
+            {/* Settings */}
+            <div className={styles.menuWrap}>
+              <button
+                className={styles.controlBtn}
+                onClick={() => { setShowSettings(!showSettings); setShowEpisodes(false); }}
+                title="Настройки"
+              >
+                <Settings size={18} />
+              </button>
+              {showSettings && (
+                <div className={styles.settingsPanel}>
+                  <div className={styles.settingsTabs}>
+                    {([
+                      { id: "quality" as SettingsTab, label: "Качество", icon: <Settings size={14} /> },
+                      { id: "speed" as SettingsTab, label: "Скорость", icon: <Gauge size={14} /> },
+                      { id: "autoplay" as SettingsTab, label: "Авто", icon: <FastForward size={14} /> },
+                      { id: "skip" as SettingsTab, label: "Опенинг/Эндинг", icon: <SkipIntro size={14} /> },
+                      { id: "shortcuts" as SettingsTab, label: "Шорткасты", icon: <Keyboard size={14} /> },
+                    ] as const).map((tab) => (
                       <button
-                        key={q.index}
-                        className={`${styles.menuItem} ${currentQuality === q.index ? styles.menuItemActive : ""}`}
-                        onClick={() => handleQualityChange(q.index)}
+                        key={tab.id}
+                        className={`${styles.settingsTabBtn} ${settingsTab === tab.id ? styles.settingsTabActive : ""}`}
+                        onClick={() => setSettingsTab(tab.id)}
                       >
-                        {q.label}
+                        {tab.icon}
+                        <span>{tab.label}</span>
                       </button>
                     ))}
                   </div>
-                )}
-              </div>
-            )}
+                  <div className={styles.settingsBody}>
+                    {/* Quality */}
+                    <div className={`${styles.settingsPane} ${settingsTab === "quality" ? styles.settingsPaneActive : ""}`}>
+                      <button
+                        className={`${styles.menuItem} ${currentQuality === -1 ? styles.menuItemActive : ""}`}
+                        onClick={() => handleQualityChange(-1)}
+                      >
+                        Авто {currentQuality === -1 && hlsRef.current && hlsRef.current.currentLevel >= 0 && (
+                          <span className={styles.settingsBadge}>{qualities[hlsRef.current.currentLevel]?.label}</span>
+                        )}
+                      </button>
+                      {[...qualities].sort((a, b) => b.height - a.height).map((q) => (
+                        <button
+                          key={q.index}
+                          className={`${styles.menuItem} ${currentQuality === q.index ? styles.menuItemActive : ""}`}
+                          onClick={() => handleQualityChange(q.index)}
+                        >
+                          {q.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Speed */}
+                    <div className={`${styles.settingsPane} ${settingsTab === "speed" ? styles.settingsPaneActive : ""}`}>
+                      {SPEED_OPTIONS.map((s) => (
+                        <button
+                          key={s}
+                          className={`${styles.menuItem} ${speed === s ? styles.menuItemActive : ""}`}
+                          onClick={() => setSpeed(s)}
+                        >
+                          {s === 1 ? "Обычная" : `${s}x`}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Autoplay */}
+                    <div className={`${styles.settingsPane} ${settingsTab === "autoplay" ? styles.settingsPaneActive : ""}`}>
+                      <button
+                        className={styles.settingsToggleRow}
+                        onClick={() => setAutoplayNext((v) => !v)}
+                      >
+                        <span>Автовоспроизведение след. серии</span>
+                        <span className={`${styles.toggle} ${autoplayNext ? styles.toggleOn : styles.toggleOff}`} />
+                      </button>
+                    </div>
+
+                    {/* Skip Intro/Outro */}
+                    <div className={`${styles.settingsPane} ${settingsTab === "skip" ? styles.settingsPaneActive : ""}`}>
+                      <button
+                        className={styles.settingsToggleRow}
+                        onClick={() => setSkipIntro((v) => !v)}
+                      >
+                        <span>Пропуск опенинга</span>
+                        <span className={`${styles.toggle} ${skipIntro ? styles.toggleOn : styles.toggleOff}`} />
+                      </button>
+                      {canEditMarkers && markers?.introStart != null && markers?.introEnd != null && (
+                        <div className={styles.markerInfo}>
+                          {formatTime(markers.introStart)} → {formatTime(markers.introEnd)}
+                        </div>
+                      )}
+                      <button
+                        className={styles.settingsToggleRow}
+                        onClick={() => setSkipOutro((v) => !v)}
+                      >
+                        <span>Пропуск эндинга</span>
+                        <span className={`${styles.toggle} ${skipOutro ? styles.toggleOn : styles.toggleOff}`} />
+                      </button>
+                      {canEditMarkers && markers?.outroStart != null && markers?.outroEnd != null && (
+                        <div className={styles.markerInfo}>
+                          {formatTime(markers.outroStart)} → {formatTime(markers.outroEnd)}
+                        </div>
+                      )}
+
+                      {canEditMarkers && (
+                        <div className={styles.markerEditor}>
+                          <div className={styles.markerEditorTitle}>Редактор меток</div>
+                          <div className={styles.markerGroup}>
+                            <span className={styles.markerLabel}>Опенинг</span>
+                            <div className={styles.markerRow}>
+                              <button className={styles.markerBtn} onClick={() => setMarkerAtCurrentTime("introStart")} title="Начало опенинга = текущее время">
+                                Начало: {editMarkers.introStart != null ? formatTime(editMarkers.introStart) : "—"}
+                              </button>
+                              {editMarkers.introStart != null && <button className={styles.markerClear} onClick={() => clearMarker("introStart")}>✕</button>}
+                            </div>
+                            <div className={styles.markerRow}>
+                              <button className={styles.markerBtn} onClick={() => setMarkerAtCurrentTime("introEnd")} title="Конец опенинга = текущее время">
+                                Конец: {editMarkers.introEnd != null ? formatTime(editMarkers.introEnd) : "—"}
+                              </button>
+                              {editMarkers.introEnd != null && <button className={styles.markerClear} onClick={() => clearMarker("introEnd")}>✕</button>}
+                            </div>
+                          </div>
+                          <div className={styles.markerGroup}>
+                            <span className={styles.markerLabel}>Эндинг</span>
+                            <div className={styles.markerRow}>
+                              <button className={styles.markerBtn} onClick={() => setMarkerAtCurrentTime("outroStart")} title="Начало эндинга = текущее время">
+                                Начало: {editMarkers.outroStart != null ? formatTime(editMarkers.outroStart) : "—"}
+                              </button>
+                              {editMarkers.outroStart != null && <button className={styles.markerClear} onClick={() => clearMarker("outroStart")}>✕</button>}
+                            </div>
+                            <div className={styles.markerRow}>
+                              <button className={styles.markerBtn} onClick={() => setMarkerAtCurrentTime("outroEnd")} title="Конец эндинга = текущее время">
+                                Конец: {editMarkers.outroEnd != null ? formatTime(editMarkers.outroEnd) : "—"}
+                              </button>
+                              {editMarkers.outroEnd != null && <button className={styles.markerClear} onClick={() => clearMarker("outroEnd")}>✕</button>}
+                            </div>
+                          </div>
+                          <button
+                            className={styles.markerSave}
+                            onClick={handleSaveMarkers}
+                            disabled={markersSaving}
+                          >
+                            {markersSaving ? "Сохранение..." : "Сохранить метки"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Shortcuts */}
+                    <div className={`${styles.settingsPane} ${settingsTab === "shortcuts" ? styles.settingsPaneActive : ""}`}>
+                      {SHORTCUTS.map((sc, i) => (
+                        <div key={i} className={styles.shortcutRow}>
+                          <kbd className={styles.shortcutKey}>{sc.keys}</kbd>
+                          <span className={styles.shortcutDesc}>{sc.desc}</span>
+                        </div>
+                      ))}
+                      <div className={styles.shortcutNote}>Работает и на русской раскладке</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Fullscreen */}
             <button className={styles.controlBtn} onClick={toggleFullscreen} title={isFullscreen ? "Выход из полноэкранного" : "Полный экран"}>

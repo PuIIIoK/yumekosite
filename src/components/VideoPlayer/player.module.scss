@@ -165,6 +165,21 @@
   border-radius: 2px;
 }
 
+.progressMarker {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 200, 50, 0.45);
+  border-radius: 2px;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.2s;
+
+  .progressWrap:hover & {
+    background: rgba(255, 200, 50, 0.6);
+  }
+}
+
 .progressFill {
   position: absolute;
   top: 0;
@@ -410,6 +425,299 @@
   flex-shrink: 0;
 }
 
+// ── Settings Panel ──
+
+.settingsPanel {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
+  width: 400px;
+  max-height: 400px;
+  background: rgba(15, 15, 15, 0.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.settingsTabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.settingsTabBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.settingsTabActive {
+  color: var(--player-accent, #10b981);
+  border-bottom-color: var(--player-accent, #10b981);
+}
+
+.settingsBody {
+  position: relative;
+  overflow: hidden;
+}
+
+.settingsPane {
+  display: none;
+  opacity: 0;
+  animation: settingsFadeIn 0.2s ease forwards;
+  padding: 4px 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.settingsPaneActive {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes settingsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settingsBadge {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 4px;
+}
+
+.settingsToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.toggle {
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.25s ease;
+  cursor: pointer;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.toggleOn {
+  background: var(--player-accent, #10b981);
+
+  &::after {
+    transform: translateX(16px);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.toggleOff {
+  background: rgba(255, 255, 255, 0.2);
+
+  &::after {
+    transform: translateX(0);
+  }
+}
+
+.markerInfo {
+  padding: 2px 14px 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+}
+
+.markerEditor {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 14px;
+}
+
+.markerEditorTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.markerGroup {
+  margin-bottom: 8px;
+}
+
+.markerLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.markerRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.markerBtn {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--player-accent, #10b981);
+  }
+
+  &:active {
+    background: color-mix(in srgb, var(--player-accent, #10b981) 15%, transparent);
+  }
+}
+
+.markerClear {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 80, 80, 0.15);
+  color: rgba(255, 100, 100, 0.8);
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 80, 80, 0.3);
+  }
+}
+
+.markerSave {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: var(--player-accent, #10b981);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.shortcutRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  gap: 12px;
+}
+
+.shortcutKey {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+
+.shortcutDesc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: right;
+}
+
+.shortcutNote {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 // ── Responsive ──
 
 @media (max-width: 640px) {
@@ -438,5 +746,15 @@
   .menuItem {
     padding: 7px 10px;
     font-size: 12px;
+  }
+
+  .settingsPanel {
+    width: 280px;
+  }
+
+  .settingsTabBtn {
+    font-size: 10px;
+    padding: 6px 7px;
+    gap: 3px;
   }
 }
