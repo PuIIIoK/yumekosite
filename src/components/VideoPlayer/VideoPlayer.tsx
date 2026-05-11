@@ -665,9 +665,9 @@ export default function VideoPlayer({
       ref={containerRef}
       className={`${styles.player} ${controlsVisible ? styles.playerShowControls : ""} ${isFullscreen ? styles.playerFullscreen : ""} ${isMobile ? styles.playerMobile : ""}`}
       style={{ ["--player-accent" as string]: accent }}
-      onMouseMove={showControls}
+      onMouseMove={() => { if (!isMobile) showControls(); }}
       onMouseLeave={() => {
-        if (playing) setControlsVisible(false);
+        if (playing && !isMobile) setControlsVisible(false);
         setShowVolume(false);
       }}
     >
@@ -791,9 +791,15 @@ export default function VideoPlayer({
             lastTapSide.current = side;
             clickTimerRef.current = setTimeout(() => {
               clickTimerRef.current = null;
-              // Single tap → toggle play/pause
-              togglePlay();
-              showControls();
+              // Single tap → toggle controls visibility
+              if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
+              setControlsVisible((v) => {
+                const next = !v;
+                if (next && playing) {
+                  hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
+                }
+                return next;
+              });
               setShowSettings(false);
               setShowEpisodes(false);
             }, 300);
@@ -977,7 +983,7 @@ export default function VideoPlayer({
           </div>
 
           {/* Time — mobile only, outside controlsLeft for proper positioning */}
-          {isMobile && (
+          {isMobile && !showSettings && !showEpisodes && (
             <span className={styles.mobileTime}>
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
@@ -1195,7 +1201,7 @@ export default function VideoPlayer({
           </div>
 
           {/* Fullscreen — mobile: positioned independently */}
-          {isMobile && (
+          {isMobile && !showSettings && !showEpisodes && (
             <button className={styles.mobileFullscreen} onClick={toggleFullscreen} title={isFullscreen ? "Выход из полноэкранного" : "Полный экран"}>
               {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>

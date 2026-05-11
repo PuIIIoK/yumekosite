@@ -524,11 +524,12 @@ function drawConfetti(ctx: CanvasRenderingContext2D, pts: ConfettiP[], w: number
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { canvasEnabled, activeCanvasStyle, activeCanvasAccent } = useAppearance();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // default true to prevent canvas init on mobile
   const mouse = useRef({ x: -1000, y: -1000, active: false });
 
   useEffect(() => {
-    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    const mobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsMobile(mobile);
   }, []);
   const clickWaves = useRef<{ x: number; y: number; t: number }[]>([]);
   const particles = useRef<Particle[]>([]);
