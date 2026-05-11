@@ -147,3 +147,21 @@ img {
   background: var(--accent-soft);
   color: var(--text-primary);
 }
+
+// ---------- Mobile ----------
+@media (max-width: 768px) {
+  :root {
+    --header-height: 68px;
+    --container-padding: 16px;
+    --section-gap: 40px;
+  }
+
+  body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}

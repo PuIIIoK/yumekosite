@@ -906,3 +906,47 @@
     flex: 0 0 130px;
   }
 }
+
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .main { gap: 38px; padding-bottom: 56px; }
+  .container { padding: 0 18px; }
+  .hero { padding-top: 18px; }
+  .banner { height: min(450px, calc(100dvh - var(--header-height) - 44px)); min-height: 430px; border-radius: 18px; background-position: center; }
+  .bannerOverlay { background: linear-gradient(to top, rgba(8,8,10,.95) 0%, rgba(8,8,10,.56) 58%, rgba(8,8,10,.28) 100%); }
+  .bannerSlide { padding: 28px 28px 18px; gap: 10px; justify-content: center; }
+  .bannerTitle { font-size: clamp(24px, 7vw, 30px); line-height: 1.12; max-width: 92%; }
+  .bannerMeta, .bannerGenres { font-size: 14px; flex-wrap: wrap; }
+  .bannerText { font-size: 15px; line-height: 1.7; -webkit-line-clamp: 4; }
+  .bannerActions { gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .bannerPlayBtn { min-height: 48px; padding: 12px 22px; border-radius: 14px; font-size: 15px; }
+  .bannerIconBtn { width: 48px; height: 48px; border-radius: 14px; }
+  .bannerNav { padding: 10px 0 18px; gap: 14px; }
+  .bannerArrow { width: 42px; height: 42px; border-radius: 12px; }
+  .sectionHeader { align-items: center; margin-bottom: 18px; gap: 16px; }
+  .sectionTitle { font-size: 24px; line-height: 1.15; }
+  .sectionSubtitle { font-size: 15px; max-width: 270px; }
+  .scrollArrow { width: 40px; height: 40px; border-radius: 12px; }
+  .episodesRow { gap: 16px; padding-left: 2px; padding-right: 18px; scroll-padding-left: 18px; }
+  .episodeCard { flex: 0 0 150px; }
+  .episodeTitle { font-size: 14px; }
+  .episodeMeta, .episodeGenres { font-size: 12px; }
+  .supportBanner { flex-direction: column; align-items: flex-start; padding: 28px 22px; gap: 22px; }
+  .supportDeco { display: none; }
+  .supportTitle { font-size: 24px; }
+  .supportText { max-width: 100%; font-size: 15px; }
+  .supportBtn { width: 100%; justify-content: center; min-height: 48px; }
+  .scheduleHeader { align-items: flex-start; }
+  .scheduleTabs { width: 100%; overflow-x: auto; }
+  .scheduleTab, .scheduleTabActive { flex: 1; text-align: center; padding: 9px 12px; }
+  .scheduleItem { padding: 14px 14px; gap: 10px; }
+  .scheduleItemIdx, .scheduleItemActions { display: none; }
+  .scheduleItemTitle { font-size: 14px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
+
+@media (max-width: 420px) {
+  .container { padding: 0 14px; }
+  .banner { min-height: 420px; }
+  .bannerSlide { padding: 24px 28px 16px; }
+  .episodeCard { flex-basis: 145px; }
+}

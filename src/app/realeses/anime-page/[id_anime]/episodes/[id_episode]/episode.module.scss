@@ -537,3 +537,19 @@
   vertical-align: middle;
   letter-spacing: 0.3px;
 }
+
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .playerPage { padding-top: var(--header-height, 74px); }
+  .playerLayout { min-height: auto; }
+  .playerMain { padding: 10px 0 22px; }
+  .breadcrumb { padding: 0 14px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; }
+  .playerWrap { border-radius: 0; max-height: none; }
+  .episodeInfo { padding: 0 14px; align-items: flex-start; }
+  .episodeTitle { font-size: 20px; line-height: 1.2; }
+  .episodeSub { font-size: 13px; }
+  .episodeNav { width: 100%; }
+  .navBtn { flex: 1; justify-content: center; min-height: 42px; }
+  .navCards { width: 100%; padding: 0 14px; overflow-x: auto; }
+  .navCard { min-width: 260px; }
+}

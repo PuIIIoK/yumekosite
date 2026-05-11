@@ -80,3 +80,13 @@
     opacity: 0.9;
   }
 }
+
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .overlay { align-items: flex-end; }
+  .modal { width: 100%; max-width: 100%; max-height: 90dvh; border-radius: 20px 20px 0 0; padding: 20px 16px calc(18px + env(safe-area-inset-bottom)); overflow-y: auto; }
+  .cropArea { max-height: 58dvh; }
+  .cropArea img { max-height: 58dvh; }
+  .actions { flex-direction: column-reverse; }
+  .btnCancel, .btnApply { width: 100%; min-height: 46px; }
+}

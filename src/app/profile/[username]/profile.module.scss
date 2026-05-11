@@ -1490,3 +1490,78 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .profileWrap { width: 100%; max-width: 100%; padding: 18px 14px 72px; }
+  .metaBar { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px 14px; font-size: 10px; letter-spacing: .1em; }
+  .metaLeft, .metaRight { flex-wrap: wrap; gap: 8px; }
+  .hero, .heroPrivileged { grid-template-columns: 1fr; gap: 24px; padding: 28px 20px; margin-top: 12px; border-radius: 18px; box-shadow: none; animation: fadeUp .5s ease both; }
+  .heroShimmer, .heroBorderGlow { display: none; }
+  .displayName { font-size: clamp(32px, 11vw, 50px); line-height: .95; word-break: break-word; }
+  .displayNameSub { font-size: clamp(22px, 7vw, 34px); -webkit-text-stroke: 1px var(--text-primary); }
+  .handleLine { flex-wrap: wrap; gap: 8px; }
+  .handle { font-size: 13px; }
+  .heroSubRow { gap: 8px; }
+  .adminBadge, .roleBadge { font-size: 10px; padding: 3px 8px; }
+  .verifiedBadge { font-size: 10px; }
+  .bodyText { font-size: 14px; }
+  .heroRight { flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; }
+  .avatarFrame { width: 100px; height: 100px; border-radius: 18px; }
+  .avatarFrame::before { inset: 5px; border-radius: 14px; }
+  .avatarInitial { font-size: 48px; }
+  .editBtn { padding: 10px 14px; font-size: 11px; }
+  .addFriendBtn { padding: 8px 16px; font-size: 11px; margin-top: 10px; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .statCell { padding: 18px 14px; min-height: 100px; border-radius: 14px; }
+  .statValue { font-size: clamp(28px, 10vw, 44px); }
+  .statIndex { font-size: 9px; }
+  .statLabel { font-size: 10px; }
+  .contentGrid { grid-template-columns: 1fr; gap: 12px; }
+  .section { padding: 22px 18px; border-radius: 16px; }
+  .sectionHeader { gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sectionTitle { font-size: 16px; }
+  .sectionIndex { font-size: 10px; }
+  .activityItem { gap: 12px; padding: 12px 0; }
+  .activityPoster { width: 34px; height: 48px; }
+  .infoRow { align-items: flex-start; gap: 12px; }
+  .infoValue { text-align: right; }
+  .footerMark { flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 16px; font-size: 11px; }
+
+  // Modals — bottom sheet style
+  .bookmarksModal, .friendsModal {
+    top: auto; left: 0; right: 0; bottom: 0; transform: none;
+    width: 100%; max-width: 100%; height: 86dvh; max-height: 86dvh;
+    border-radius: 22px 22px 0 0;
+    animation: mobileSheetIn .35s cubic-bezier(.16,1,.3,1);
+  }
+  .bookmarksModalClosing, .friendsModalClosing {
+    animation: mobileSheetOut .25s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes mobileSheetIn { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes mobileSheetOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(28px); } }
+  .bookmarksHeader, .friendsHeader { padding: 16px; gap: 12px; }
+  .bookmarksBody, .friendsBody { padding: 16px; }
+  .bookmarksTabs { overflow-x: auto; scrollbar-width: none; }
+  .bookmarksTabs::-webkit-scrollbar { display: none; }
+  .bookmarksTabBtn { padding: 10px 14px; white-space: nowrap; font-size: 13px; }
+  .bookmarksGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .bookmarkCardTitle { font-size: 12px; }
+  .friendsGrid { grid-template-columns: 1fr; gap: 12px; }
+  .friendCardBanner { height: 96px; }
+  .friendCardBody { padding: 10px 12px; gap: 10px; }
+  .friendName { font-size: 14px; }
+  .friendHandle { font-size: 11px; }
+  .friendRoleBadge { font-size: 9px; padding: 2px 6px; }
+  .searchClose { width: 32px; height: 32px; }
+}
+
+@media (max-width: 420px) {
+  .profileWrap { padding-left: 10px; padding-right: 10px; }
+  .hero, .heroPrivileged { padding: 22px 16px; }
+  .statsGrid { grid-template-columns: 1fr; }
+  .heroRight { flex-direction: column; align-items: flex-start; }
+  .avatarFrame { width: 90px; height: 90px; }
+  .bookmarksGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .friendsTabBtn { font-size: 12px; padding: 6px 14px; }
+}

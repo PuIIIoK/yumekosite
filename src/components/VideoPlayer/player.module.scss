@@ -758,3 +758,21 @@
     gap: 3px;
   }
 }
+
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .player { border-radius: 0; max-height: none; }
+  .topBar { padding: 10px 12px; }
+  .topTitle { font-size: 12px; max-width: calc(100vw - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .controls { padding: 0 8px 8px; }
+  .progressWrap { padding: 12px 0; }
+  .progressTrack { height: 5px; }
+  .controlsRow { gap: 2px; }
+  .controlsLeft, .controlsRight { gap: 0; }
+  .controlBtn { width: 36px; height: 36px; border-radius: 10px; }
+  .time { font-size: 10px; padding: 0 3px; }
+  .volumeSlider { display: none; }
+  .settingsPanel { position: fixed; left: 10px; right: 10px; bottom: 72px; width: auto; max-height: 60dvh; overflow-y: auto; border-radius: 16px; }
+  .menu { right: 8px; bottom: 56px; min-width: 180px; max-width: calc(100vw - 16px); }
+  .settingsTabBtn { flex: 1; justify-content: center; font-size: 10px; }
+}

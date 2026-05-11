@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useAppearance, type CanvasStyle } from "@/context/AppearanceContext";
 
 interface Particle {
@@ -524,7 +524,15 @@ function drawConfetti(ctx: CanvasRenderingContext2D, pts: ConfettiP[], w: number
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { canvasEnabled, activeCanvasStyle, activeCanvasAccent } = useAppearance();
+  const [isMobile, setIsMobile] = useState(false);
   const mouse = useRef({ x: -1000, y: -1000, active: false });
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   const clickWaves = useRef<{ x: number; y: number; t: number }[]>([]);
   const particles = useRef<Particle[]>([]);
   const matrixCols = useRef<MatrixCol[]>([]);
@@ -608,7 +616,7 @@ export default function ParticleCanvas() {
     };
   }, [activeCanvasStyle, activeCanvasAccent, reinit]);
 
-  if (!canvasEnabled) return null;
+  if (!canvasEnabled || isMobile) return null;
 
   return (
     <canvas

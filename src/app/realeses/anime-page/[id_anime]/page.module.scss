@@ -980,6 +980,62 @@
   }
 }
 
+/* Mobile responsive pass */
+@media (max-width: 768px) {
+  .main { padding-top: calc(var(--header-height) + 14px); padding-bottom: 60px; }
+  .container { padding: 0 14px; }
+  .breadcrumb { margin-bottom: 18px; font-size: 12px; gap: 4px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .breadcrumb::-webkit-scrollbar { display: none; }
+  .breadcrumb span { max-width: 180px; }
+  .hero { grid-template-columns: 1fr; gap: 20px; }
+  .poster { max-width: 100%; min-height: 320px; border-radius: 14px; margin: 0 auto; width: 200px; }
+  .posterTop { top: 8px; left: 8px; right: 8px; }
+  .heroInfo { gap: 12px; }
+  .title { font-size: clamp(22px, 6vw, 30px); line-height: 1.15; }
+  .altTitle { font-size: 13px; }
+  .heroBadges { gap: 6px; flex-wrap: wrap; }
+  .statusBadge, .formatBadge { font-size: 11px; padding: 4px 12px; }
+  .infoRow { font-size: 12px; gap: 8px; padding: 4px 0; }
+  .infoRow dt { width: 90px; font-size: 11px; }
+  .actions { gap: 8px; flex-wrap: wrap; }
+  .collectionBtn { height: 44px; font-size: 14px; border-radius: 14px; flex: 1; justify-content: center; }
+  .collectionDropdown { position: fixed; top: auto; left: 12px; right: 12px; bottom: 12px; min-width: auto; border-radius: 18px; z-index: 1000; }
+  .iconBtn { width: 44px; height: 44px; }
+  .descBlock { padding-top: 20px; margin-top: 20px; }
+  .description { font-size: 14px; line-height: 1.75; }
+  .tabsRow { margin-top: 4px; margin-bottom: 18px; flex-wrap: wrap; gap: 8px; }
+  .tabs { overflow-x: auto; scrollbar-width: none; width: 100%; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab, .tabActive { padding: 10px 16px; font-size: 13px; white-space: nowrap; }
+  .viewToggle { display: none; }
+  .studioTabs { gap: 4px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .studioTabs::-webkit-scrollbar { display: none; }
+  .studioTab { padding: 6px 14px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .episodesList { border-radius: 12px; }
+  .epRow { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; }
+  .epNumber { font-size: 13px; }
+  .epRowTitle { font-size: 13px; }
+  .epRowDuration { font-size: 11px; }
+  .epRowWatched { display: none; }
+  .episodesGrid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .epCard { border-radius: 12px; }
+  .relatedTimeline { border-radius: 14px; }
+  .relatedTimelineRow { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .relatedTimelinePoster { width: 64px; }
+  .relatedTimelineIndex { display: none; }
+  .relatedTimelineName { font-size: 14px; }
+  .relatedTimelineAlt { font-size: 12px; }
+  .emptyTab { padding: 32px 16px; font-size: 13px; }
+  .voiceCastSection { padding: 16px; }
+  .voiceCastGrid { grid-template-columns: 1fr; }
+  .voiceCastItem { padding: 8px 10px; font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+  .poster { width: 180px; min-height: 280px; }
+  .episodesGrid { grid-template-columns: 1fr; }
+}
+
 // ── Voice Cast ──
 .voiceCastSection {
   margin-top: 24px;
