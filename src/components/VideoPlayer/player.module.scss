@@ -718,6 +718,89 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+// ── Mobile gesture overlays ──
+
+.doubleTapOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.doubleTapLeft {
+  left: 0;
+  border-radius: 0 50% 50% 0;
+  background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+}
+
+.doubleTapRight {
+  right: 0;
+  border-radius: 50% 0 0 50%;
+  background: radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+}
+
+.doubleTapRipple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: doubleTapPulse 0.5s ease-out;
+}
+
+.doubleTapIcon {
+  color: #fff;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
+.doubleTapText {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+}
+
+@keyframes doubleTapPulse {
+  0% { transform: scale(0.7); opacity: 0; }
+  40% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.longPressIndicator {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  z-index: 12;
+  pointer-events: none;
+  animation: longPressIn 0.2s ease-out;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+
+  svg {
+    color: var(--player-accent, #10b981);
+  }
+}
+
+@keyframes longPressIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
 // ── Responsive ──
 
 @media (max-width: 640px) {
@@ -759,20 +842,265 @@
   }
 }
 
-/* Mobile responsive pass */
+/* ═══════════════════════════════════════════
+   Mobile responsive — player
+   ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .player { border-radius: 0; max-height: none; }
-  .topBar { padding: 10px 12px; }
-  .topTitle { font-size: 12px; max-width: calc(100vw - 24px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .controls { padding: 0 8px 8px; }
-  .progressWrap { padding: 12px 0; }
-  .progressTrack { height: 5px; }
-  .controlsRow { gap: 2px; }
-  .controlsLeft, .controlsRight { gap: 0; }
-  .controlBtn { width: 36px; height: 36px; border-radius: 10px; }
-  .time { font-size: 10px; padding: 0 3px; }
-  .volumeSlider { display: none; }
-  .settingsPanel { position: fixed; left: 10px; right: 10px; bottom: 72px; width: auto; max-height: 60dvh; overflow-y: auto; border-radius: 16px; }
-  .menu { right: 8px; bottom: 56px; min-width: 180px; max-width: calc(100vw - 16px); }
-  .settingsTabBtn { flex: 1; justify-content: center; font-size: 10px; }
+  // ── Container ──
+  .player {
+    border-radius: 0;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  // ── Big play button — larger touch target ──
+  .bigPlay {
+    svg {
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  // ── Top bar ──
+  .topBar {
+    padding: 10px 14px;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), transparent 90%);
+  }
+
+  .topTitle {
+    font-size: 13px;
+    max-width: calc(100vw - 28px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ── Gradient ──
+  .gradient {
+    height: 120px;
+  }
+
+  // ── Controls ──
+  .controls {
+    padding: 0 10px 6px;
+  }
+
+  // ── Progress bar — larger touch area ──
+  .progressWrap {
+    padding: 14px 0 8px;
+  }
+
+  .progressTrack {
+    height: 5px;
+
+    .progressWrap:hover &,
+    .progressSeeking & {
+      height: 7px;
+    }
+  }
+
+  .progressThumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .progressTooltip {
+    bottom: 28px;
+    font-size: 13px;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  // ── Controls row ──
+  .controlsRow {
+    gap: 0;
+  }
+
+  .controlsLeft,
+  .controlsRight {
+    gap: 0;
+  }
+
+  // ── Buttons — 44px min touch target ──
+  .controlBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  // ── Time ──
+  .time {
+    font-size: 11px;
+    padding: 0 4px;
+  }
+
+  // ── Volume — hide slider, keep button ──
+  .volumeSlider {
+    display: none;
+  }
+
+  // ── Episode menu — bottom sheet ──
+  .menu {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-width: auto;
+    max-width: none;
+    max-height: 65dvh;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
+    animation: menuSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes menuSheetUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .menuHeader {
+    padding: 18px 16px 10px;
+    font-size: 12px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .menuScroll {
+    max-height: calc(65dvh - 56px);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menuItem {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 48px;
+    gap: 12px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .menuItemNum {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    font-size: 12px;
+  }
+
+  // ── Settings panel — bottom sheet ──
+  .settingsPanel {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 70dvh;
+    border-radius: 20px 20px 0 0;
+    border: none;
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: menuSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .settingsTabs {
+    padding: 14px 8px 0;
+    gap: 2px;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .settingsTabBtn {
+    flex: 1;
+    justify-content: center;
+    font-size: 11px;
+    padding: 10px 8px;
+    min-height: 42px;
+    gap: 4px;
+  }
+
+  .settingsPane {
+    max-height: calc(70dvh - 60px);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+
+  .settingsToggleRow {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 48px;
+  }
+
+  .toggle {
+    width: 44px;
+    height: 26px;
+    border-radius: 13px;
+
+    &::after {
+      width: 20px;
+      height: 20px;
+      top: 3px;
+      left: 3px;
+    }
+  }
+
+  .toggleOn::after {
+    transform: translateX(18px);
+  }
+
+  .markerBtn {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+
+  .markerSave {
+    padding: 12px 14px;
+    font-size: 14px;
+    min-height: 48px;
+    border-radius: 12px;
+  }
+
+  .shortcutRow {
+    padding: 10px 16px;
+  }
+
+  .shortcutKey {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .shortcutDesc {
+    font-size: 13px;
+  }
 }

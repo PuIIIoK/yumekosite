@@ -538,18 +538,303 @@
   letter-spacing: 0.3px;
 }
 
-/* Mobile responsive pass */
+// ── Mobile action bar (hidden on desktop) ──
+.mobileActions {
+  display: none;
+}
+
+.mobileActionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.mobileActionBtnDisabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   Mobile responsive — full rewrite
+   ═══════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .playerPage { padding-top: var(--header-height, 74px); }
-  .playerLayout { min-height: auto; }
-  .playerMain { padding: 10px 0 22px; }
-  .breadcrumb { padding: 0 14px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; }
-  .playerWrap { border-radius: 0; max-height: none; }
-  .episodeInfo { padding: 0 14px; align-items: flex-start; }
-  .episodeTitle { font-size: 20px; line-height: 1.2; }
-  .episodeSub { font-size: 13px; }
-  .episodeNav { width: 100%; }
-  .navBtn { flex: 1; justify-content: center; min-height: 42px; }
-  .navCards { width: 100%; padding: 0 14px; overflow-x: auto; }
-  .navCard { min-width: 260px; }
+  // ── Page shell ──
+  .playerPage {
+    padding-top: var(--header-height, 68px);
+    background: #0a0a0e;
+  }
+
+  .playerLayout {
+    flex-direction: column;
+    min-height: auto;
+    height: auto;
+  }
+
+  // ── Main ──
+  .playerMain {
+    padding: 0 0 24px;
+    overflow-y: visible;
+  }
+
+  // ── Breadcrumb ──
+  .breadcrumb {
+    padding: 10px 16px 6px;
+    margin-bottom: 0;
+    font-size: 13px;
+    gap: 5px;
+    overflow: hidden;
+
+    a {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100vw - 120px);
+    }
+  }
+
+  // ── Player — edge-to-edge, no rounding ──
+  .playerWrap {
+    border-radius: 0;
+    max-height: none;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+
+  // ── Episode info — below the player ──
+  .episodeInfo {
+    padding: 14px 16px 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .episodeMeta {
+    min-width: 0;
+  }
+
+  .episodeTitle {
+    font-size: 20px;
+    line-height: 1.25;
+    margin-bottom: 2px;
+  }
+
+  .episodeSub {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .studioBadge {
+    margin-left: 4px;
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  // ── Mobile action bar — show on mobile ──
+  .mobileActions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  // ── Nav cards — hide on mobile (replaced by mobileActions) ──
+  .navCards {
+    display: none;
+  }
+
+  .navCardLabel {
+    font-size: 10px;
+  }
+
+  .navCardTitle {
+    font-size: 13px;
+  }
+
+  .navCardNum {
+    font-size: 11px;
+  }
+
+  // ── Episode navigation buttons ──
+  .episodeNav {
+    width: 100%;
+    padding: 0 16px;
+  }
+
+  .navBtn {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  // ── Sidebar → bottom sheet on mobile ──
+  .sidebar {
+    position: fixed !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-height: 72dvh;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 20px 20px 0 0;
+    background: var(--bg-card, #141418);
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  }
+
+  .sidebarOpen {
+    width: 100% !important;
+    opacity: 1;
+    transform: translateY(0);
+    animation: sheetUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sidebarClosed {
+    width: 100% !important;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+
+    .sidebarHeader,
+    .sidebarList,
+    .studioTabs {
+      opacity: 0;
+    }
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .sidebarHeader {
+    padding: 16px 16px 12px;
+    font-size: 15px;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+
+    // drag handle
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .sidebarClose {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .sidebarList {
+    max-height: calc(72dvh - 60px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .sidebarItem {
+    padding: 12px 16px;
+    gap: 12px;
+    min-height: 52px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sidebarNum {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .sidebarTitle {
+    font-size: 14px;
+  }
+
+  .sidebarDuration {
+    font-size: 11px;
+  }
+
+  // ── Sidebar toggle → floating button ──
+  .sidebarToggle {
+    position: fixed;
+    top: auto;
+    right: 16px;
+    bottom: 20px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    background: var(--bg-card, #1a1a22);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 90;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  // ── Studio tabs inside sheet ──
+  .studioTabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    padding: 8px 16px;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .studioTab {
+    padding: 6px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .navCardPreview { width: 60px; }
+  .episodeTitle { font-size: 18px; }
+  .navCard { padding: 8px; }
 }

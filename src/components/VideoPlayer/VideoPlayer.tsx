@@ -123,6 +123,21 @@ export default function VideoPlayer({
   const spaceHeld = useRef(false);
   const mouseHeld = useRef(false);
 
+  // Mobile gesture state
+  const [isMobile, setIsMobile] = useState(false);
+  const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(null);
+  const [doubleTapCount, setDoubleTapCount] = useState(0);
+  const [longPressActive, setLongPressActive] = useState(false);
+  const lastTapTime = useRef(0);
+  const lastTapSide = useRef<"left" | "right" | null>(null);
+  const doubleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth <= 768 || "ontouchstart" in window);
+  }, []);
+
   // Playback state
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -590,6 +605,32 @@ export default function VideoPlayer({
     window.addEventListener("mouseup", onUp);
   };
 
+  const handleProgressTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setShowSettings(false);
+    setShowEpisodes(false);
+    setSeeking(true);
+    seekFromEvent(e.touches[0].clientX);
+  };
+
+  const handleProgressTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (seeking) seekFromEvent(e.touches[0].clientX);
+  };
+
+  const handleProgressTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    const bar = progressRef.current;
+    const v = videoRef.current;
+    if (bar && v && duration && e.changedTouches[0]) {
+      const rect = bar.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.changedTouches[0].clientX - rect.left) / rect.width));
+      v.currentTime = pct * duration;
+    }
+    setSeeking(false);
+    setHoverTime(null);
+  };
+
   const handleProgressHover = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (seeking) return;
     const bar = progressRef.current;
@@ -634,6 +675,7 @@ export default function VideoPlayer({
         ref={videoRef}
         className={styles.video}
         onClick={(e) => {
+          if (isMobile) return; // handled by touch
           e.preventDefault();
           if (mouseHeld.current) return;
           if (clickTimerRef.current) {
@@ -650,6 +692,7 @@ export default function VideoPlayer({
           }
         }}
         onMouseDown={() => {
+          if (isMobile) return;
           mouseHeld.current = false;
           mouseHoldTimer.current = setTimeout(() => {
             const v = videoRef.current;
@@ -682,8 +725,109 @@ export default function VideoPlayer({
             if (v) v.playbackRate = speedBeforeHold.current;
           }
         }}
+        onTouchStart={(e) => {
+          if (!isMobile) return;
+          const touch = e.touches[0];
+          touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+          // Long press → 2x speed
+          longPressTimer.current = setTimeout(() => {
+            const v = videoRef.current;
+            if (!v) return;
+            speedBeforeHold.current = v.playbackRate;
+            v.playbackRate = 2;
+            if (v.paused) v.play();
+            setLongPressActive(true);
+          }, 500);
+        }}
+        onTouchEnd={(e) => {
+          if (!isMobile) return;
+          // Cancel long press
+          if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+          }
+          if (longPressActive) {
+            setLongPressActive(false);
+            const v = videoRef.current;
+            if (v) v.playbackRate = speedBeforeHold.current;
+            return;
+          }
+          // Ignore if finger moved (scroll)
+          if (touchStartPos.current && e.changedTouches[0]) {
+            const dx = Math.abs(e.changedTouches[0].clientX - touchStartPos.current.x);
+            const dy = Math.abs(e.changedTouches[0].clientY - touchStartPos.current.y);
+            if (dx > 20 || dy > 20) return;
+          }
+          // Double tap detection
+          const container = containerRef.current;
+          if (!container) return;
+          const rect = container.getBoundingClientRect();
+          const tapX = e.changedTouches[0]?.clientX ?? 0;
+          const side: "left" | "right" = tapX < rect.left + rect.width / 2 ? "left" : "right";
+          const now = Date.now();
+          if (now - lastTapTime.current < 300 && lastTapSide.current === side) {
+            // Double tap!
+            if (clickTimerRef.current) {
+              clearTimeout(clickTimerRef.current);
+              clickTimerRef.current = null;
+            }
+            const v = videoRef.current;
+            if (v) {
+              const seekAmount = side === "left" ? -10 : 10;
+              v.currentTime = Math.max(0, Math.min(v.duration, v.currentTime + seekAmount));
+              setDoubleTapSide(side);
+              setDoubleTapCount((c) => c + 1);
+              if (doubleTapTimer.current) clearTimeout(doubleTapTimer.current);
+              doubleTapTimer.current = setTimeout(() => {
+                setDoubleTapSide(null);
+                setDoubleTapCount(0);
+              }, 600);
+            }
+            lastTapTime.current = 0;
+            lastTapSide.current = null;
+          } else {
+            // Single tap — wait to see if double
+            lastTapTime.current = now;
+            lastTapSide.current = side;
+            clickTimerRef.current = setTimeout(() => {
+              clickTimerRef.current = null;
+              // Single tap → toggle play/pause
+              togglePlay();
+              showControls();
+              setShowSettings(false);
+              setShowEpisodes(false);
+            }, 300);
+          }
+        }}
+        onTouchMove={() => {
+          // Cancel long press if finger moves
+          if (longPressTimer.current) {
+            clearTimeout(longPressTimer.current);
+            longPressTimer.current = null;
+          }
+        }}
         playsInline
       />
+
+      {/* Mobile: double-tap seek overlay */}
+      {doubleTapSide && (
+        <div className={`${styles.doubleTapOverlay} ${doubleTapSide === "left" ? styles.doubleTapLeft : styles.doubleTapRight}`}>
+          <div className={styles.doubleTapRipple} key={doubleTapCount}>
+            <div className={styles.doubleTapIcon}>
+              {doubleTapSide === "left" ? <SkipBack size={28} /> : <SkipForward size={28} />}
+            </div>
+            <span className={styles.doubleTapText}>{doubleTapSide === "left" ? "-10" : "+10"} сек</span>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile: long-press 2x indicator */}
+      {longPressActive && (
+        <div className={styles.longPressIndicator}>
+          <FastForward size={20} />
+          <span>2x</span>
+        </div>
+      )}
 
       {/* Loading spinner */}
       {loading && playing && (
@@ -723,6 +867,9 @@ export default function VideoPlayer({
           onMouseDown={handleProgressMouseDown}
           onMouseMove={handleProgressHover}
           onMouseLeave={() => { if (!seeking) setHoverTime(null); }}
+          onTouchStart={handleProgressTouchStart}
+          onTouchMove={handleProgressTouchMove}
+          onTouchEnd={handleProgressTouchEnd}
         >
           <div className={styles.progressTrack}>
             <div className={styles.progressBuffered} style={{ width: `${bufferedPct}%` }} />

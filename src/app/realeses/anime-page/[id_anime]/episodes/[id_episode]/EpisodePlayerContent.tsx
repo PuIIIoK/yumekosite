@@ -37,6 +37,10 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
   const [currentEp, setCurrentEp] = useState<Episode>(initialEpisode);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  useEffect(() => {
+    if (window.innerWidth <= 768) setSidebarOpen(false);
+  }, []);
+
   const studioList = [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort((a, b) => {
     if (a === "YumekoStudio") return -1;
     if (b === "YumekoStudio") return 1;
@@ -167,6 +171,34 @@ export default function EpisodePlayerContent({ anime, episode: initialEpisode, e
               </p>
             </div>
 
+            {/* Mobile action bar */}
+            <div className={styles.mobileActions}>
+              <button
+                className={`${styles.mobileActionBtn} ${!prevEp ? styles.mobileActionBtnDisabled : ""}`}
+                onClick={(e) => prevEp && handleNavClick(prevEp, e)}
+                disabled={!prevEp}
+              >
+                <ChevronLeft size={18} />
+                <span>Пред.</span>
+              </button>
+              <button
+                className={styles.mobileActionBtn}
+                onClick={() => setSidebarOpen(true)}
+              >
+                <List size={18} />
+                <span>Эпизоды ({sorted.length})</span>
+              </button>
+              <button
+                className={`${styles.mobileActionBtn} ${!nextEp ? styles.mobileActionBtnDisabled : ""}`}
+                onClick={(e) => nextEp && handleNavClick(nextEp, e)}
+                disabled={!nextEp}
+              >
+                <span>След.</span>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* Desktop nav cards */}
             {(prevEp || nextEp) && (
               <div className={styles.navCards}>
                 {prevEp ? (
