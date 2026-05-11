@@ -135,7 +135,7 @@ export default function VideoPlayer({
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    setIsMobile(window.innerWidth <= 768 || "ontouchstart" in window);
+    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
 
   // Playback state
@@ -663,7 +663,7 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={`${styles.player} ${controlsVisible ? styles.playerShowControls : ""} ${isFullscreen ? styles.playerFullscreen : ""}`}
+      className={`${styles.player} ${controlsVisible ? styles.playerShowControls : ""} ${isFullscreen ? styles.playerFullscreen : ""} ${isMobile ? styles.playerMobile : ""}`}
       style={{ ["--player-accent" as string]: accent }}
       onMouseMove={showControls}
       onMouseLeave={() => {
@@ -933,44 +933,55 @@ export default function VideoPlayer({
               <SkipForward size={18} />
             </button>
 
-            {/* Volume */}
-            <div
-              className={styles.volumeWrap}
-              onMouseEnter={() => setShowVolume(true)}
-              onMouseLeave={() => setShowVolume(false)}
-            >
-              <button
-                className={styles.controlBtn}
-                onClick={() => setMuted((m) => !m)}
-                title={muted ? "Включить звук" : "Выключить звук"}
+            {/* Volume — hidden on mobile */}
+            {!isMobile && (
+              <div
+                className={styles.volumeWrap}
+                onMouseEnter={() => setShowVolume(true)}
+                onMouseLeave={() => setShowVolume(false)}
               >
-                <VolumeIcon size={20} />
-              </button>
-              {showVolume && (
-                <div className={styles.volumeSlider}>
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={muted ? 0 : volume}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      setVolume(val);
-                      if (val > 0) setMuted(false);
-                    }}
-                    className={styles.volumeInput}
-                    style={{ ["--vol-pct" as string]: `${(muted ? 0 : volume) * 100}%` }}
-                  />
-                </div>
-              )}
-            </div>
+                <button
+                  className={styles.controlBtn}
+                  onClick={() => setMuted((m) => !m)}
+                  title={muted ? "Включить звук" : "Выключить звук"}
+                >
+                  <VolumeIcon size={20} />
+                </button>
+                {showVolume && (
+                  <div className={styles.volumeSlider}>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={muted ? 0 : volume}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setVolume(val);
+                        if (val > 0) setMuted(false);
+                      }}
+                      className={styles.volumeInput}
+                      style={{ ["--vol-pct" as string]: `${(muted ? 0 : volume) * 100}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Time */}
-            <span className={styles.time}>
+            {/* Time — desktop only, inside controlsLeft */}
+            {!isMobile && (
+              <span className={styles.time}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+            )}
+          </div>
+
+          {/* Time — mobile only, outside controlsLeft for proper positioning */}
+          {isMobile && (
+            <span className={styles.mobileTime}>
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
-          </div>
+          )}
 
           {/* Right */}
           <div className={styles.controlsRight}>
@@ -1175,11 +1186,20 @@ export default function VideoPlayer({
               )}
             </div>
 
-            {/* Fullscreen */}
-            <button className={styles.controlBtn} onClick={toggleFullscreen} title={isFullscreen ? "Выход из полноэкранного" : "Полный экран"}>
+            {/* Fullscreen — desktop only inside controlsRight */}
+            {!isMobile && (
+              <button className={styles.controlBtn} onClick={toggleFullscreen} title={isFullscreen ? "Выход из полноэкранного" : "Полный экран"}>
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+            )}
+          </div>
+
+          {/* Fullscreen — mobile: positioned independently */}
+          {isMobile && (
+            <button className={styles.mobileFullscreen} onClick={toggleFullscreen} title={isFullscreen ? "Выход из полноэкранного" : "Полный экран"}>
               {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

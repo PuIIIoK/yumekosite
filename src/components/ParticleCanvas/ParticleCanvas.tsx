@@ -528,10 +528,7 @@ export default function ParticleCanvas() {
   const mouse = useRef({ x: -1000, y: -1000, active: false });
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
   }, []);
   const clickWaves = useRef<{ x: number; y: number; t: number }[]>([]);
   const particles = useRef<Particle[]>([]);
