@@ -62,6 +62,8 @@ const VOLUME_KEY = "yumeko_player_volume";
 const MUTED_KEY = "yumeko_player_muted";
 const SPEED_KEY = "yumeko_player_speed";
 const AUTOPLAY_KEY = "yumeko_player_autoplay";
+const SKIP_INTRO_KEY = "yumeko_player_skip_intro";
+const SKIP_OUTRO_KEY = "yumeko_player_skip_outro";
 
 const RU_TO_EN: Record<string, string> = {
   "й": "q", "ц": "w", "у": "e", "к": "r", "е": "t", "н": "y", "г": "u", "ш": "i", "щ": "o", "з": "p",
@@ -254,6 +256,10 @@ export default function VideoPlayer({
     }
     const savedAuto = localStorage.getItem(AUTOPLAY_KEY);
     if (savedAuto !== null) setAutoplayNext(savedAuto === "true");
+    const savedSkipIntro = localStorage.getItem(SKIP_INTRO_KEY);
+    if (savedSkipIntro !== null) setSkipIntro(savedSkipIntro === "true");
+    const savedSkipOutro = localStorage.getItem(SKIP_OUTRO_KEY);
+    if (savedSkipOutro !== null) setSkipOutro(savedSkipOutro === "true");
   }, []);
 
   useEffect(() => {
@@ -264,6 +270,14 @@ export default function VideoPlayer({
   useEffect(() => {
     localStorage.setItem(AUTOPLAY_KEY, String(autoplayNext));
   }, [autoplayNext]);
+
+  useEffect(() => {
+    localStorage.setItem(SKIP_INTRO_KEY, String(skipIntro));
+  }, [skipIntro]);
+
+  useEffect(() => {
+    localStorage.setItem(SKIP_OUTRO_KEY, String(skipOutro));
+  }, [skipOutro]);
 
   // Episodes
   const sorted = [...episodes].sort((a, b) => a.number - b.number);

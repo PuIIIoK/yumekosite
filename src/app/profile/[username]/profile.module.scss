@@ -581,6 +581,10 @@
   }
 }
 
+.statCellClickable {
+  cursor: pointer;
+}
+
 .statIndex {
   font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 10px;
@@ -959,4 +963,530 @@
   .statCell {
     padding: 24px 18px;
   }
+}
+
+// ─── SHARED MODAL BASE ───
+.searchOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.searchClose {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+@keyframes settingsFadeIn {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(-20px); }
+  to { opacity: 1; transform: translate(-50%, -49%); }
+}
+
+@keyframes settingsFadeOut {
+  from { opacity: 1; transform: translate(-50%, -49%); }
+  to { opacity: 0; transform: translate(-50%, -49%) scale(0.97) translateY(10px); }
+}
+
+// ─── BOOKMARKS MODAL ───
+.bookmarksModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -49%);
+  width: 1450px;
+  max-width: 90vw;
+  height: 780px;
+  max-height: 80vh;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 16, 20, 0.98);
+  backdrop-filter: blur(24px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: settingsFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bookmarksModalClosing {
+  animation: settingsFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.bookmarksHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.bookmarksTabs {
+  display: flex;
+  gap: 0;
+  position: relative;
+}
+
+.bookmarksTabBtn {
+  background: none;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.25s ease;
+  position: relative;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.bookmarksTabBtnActive {
+  color: var(--accent);
+}
+
+.bmTabIndicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.bookmarksBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 32px;
+  animation: bookmarksFadeContent 0.3s ease;
+}
+
+@keyframes bookmarksFadeContent {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bookmarksEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+
+  svg { opacity: 0.3; margin-bottom: 6px; }
+  p { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin: 0; }
+  span { font-size: 13px; }
+}
+
+.bookmarksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 18px;
+}
+
+.bookmarkCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.22s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+
+    .bookmarkCardPoster {
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.bookmarkCardPoster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  background: #18181c;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 50%),
+      linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+.bookmarkCardImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.bookmarkCardAccent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  opacity: 0.9;
+}
+
+.bookmarkCardRating {
+  position: absolute;
+  top: 10px;
+  right: 8px;
+  z-index: 3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.bookmarkCardInfo {
+  padding: 0 2px;
+}
+
+.bookmarkCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--text-primary);
+}
+
+.bookmarkCardMeta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.bookmarkCardGenres {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+// ─── FRIENDS MODAL ───
+.friendsModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -49%);
+  width: 1450px;
+  max-width: 90vw;
+  height: 780px;
+  max-height: 80vh;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 16, 20, 0.98);
+  backdrop-filter: blur(24px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: settingsFadeIn 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.friendsModalClosing {
+  animation: settingsFadeOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.friendsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.friendsTabs {
+  display: flex;
+  gap: 4px;
+}
+
+.friendsTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.friendsTabBtnActive {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.friendsTabCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 50%;
+  line-height: 1;
+}
+
+.friendsBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.friendsEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text-muted);
+
+  svg { opacity: 0.3; margin-bottom: 8px; }
+  p { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin: 0; }
+  span { font-size: 13px; color: var(--text-muted); }
+}
+
+.friendsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.friendCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.friendCardPrivileged {
+  border-color: color-mix(in srgb, var(--fc-c1, transparent) 25%, rgba(255, 255, 255, 0.06));
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--fc-c1, transparent) 45%, rgba(255, 255, 255, 0.1));
+    box-shadow: 0 0 24px -8px color-mix(in srgb, var(--fc-c1, transparent) 25%, transparent);
+  }
+}
+
+.friendCardBanner {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.friendCardBannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.friendCardBannerFallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+}
+
+.friendCardBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--bg-card, #1a1a1e) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.friendCardShimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0%,
+      color-mix(in srgb, var(--fc-c1, #a78bfa) 12%, transparent) 25%,
+      transparent 50%,
+      color-mix(in srgb, var(--fc-c2, #f472b6) 10%, transparent) 75%,
+      transparent 100%
+    );
+    animation: friendShimmerSpin 5s linear infinite;
+  }
+}
+
+@keyframes friendShimmerSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.friendCardGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 20px -6px color-mix(in srgb, var(--fc-c1, #a78bfa) 20%, transparent),
+    inset 0 0 40px -10px color-mix(in srgb, var(--fc-c2, #f472b6) 12%, transparent);
+}
+
+.friendAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--bg-card, #1a1a1e);
+  border: 3px solid var(--bg-card, #1a1a1e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  span {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+}
+
+.friendAvatarGlow {
+  border-color: color-mix(in srgb, var(--fc-c1, #a78bfa) 50%, transparent);
+  box-shadow: 0 0 14px -3px color-mix(in srgb, var(--fc-c1, #a78bfa) 35%, transparent);
+}
+
+.friendAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friendCardBody {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.friendInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.friendName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+}
+
+.friendHandle {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  white-space: nowrap;
+}
+
+.friendRoleBadge {
+  display: inline-flex;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid;
+  border-radius: 5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }

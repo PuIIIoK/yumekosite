@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Sparkles, Crown, Star, Shield, ShieldCheck, BadgeCheck, UserPlus, UserCheck, UserX, Clock } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, Crown, Star, Shield, ShieldCheck, BadgeCheck, UserPlus, UserCheck, UserX, Clock, X, Users, Bookmark } from "lucide-react";
 import { useAuth, type User, type Role } from "@/context/AuthContext";
 import { useAppearance, type CanvasStyle } from "@/context/AppearanceContext";
 import Header from "@/components/Header/Header";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import styles from "./profile.module.scss";
 import { API_URL } from "@/config/hosts";
+import type { AnimeDetails } from "@/data/anime";
+import { getAccent } from "@/data/anime";
 
 const STATUS_LABELS: Record<string, string> = {
   watching: "Смотрю",
@@ -72,6 +75,85 @@ export default function ProfilePage() {
   const [friendLoading, setFriendLoading] = useState(false);
   const [collectionStats, setCollectionStats] = useState<{ inList: number; completed: number; favorites: number }>({ inList: 0, completed: 0, favorites: 0 });
   const [activities, setActivities] = useState<any[]>([]);
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
+
+  // Modal state
+  type ModalType = null | "collection" | "friends";
+  const [modal, setModal] = useState<ModalType>(null);
+  const [modalClosing, setModalClosing] = useState(false);
+  const [bookmarksTab, setBookmarksTab] = useState<string>("favorites");
+  const [bmIndicator, setBmIndicator] = useState({ left: 0, width: 0 });
+  const bmTabsRef = useRef<HTMLDivElement>(null);
+  const [collectionMap, setCollectionMap] = useState<Record<string, number[]>>({});
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+  const [animeCatalog, setAnimeCatalog] = useState<AnimeDetails[]>([]);
+  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [friendsListLoading, setFriendsListLoading] = useState(false);
+
+  const FRIEND_ROLE_COLORS: Record<string, { c1: string; c2: string }> = {
+    ADMIN: { c1: "#a78bfa", c2: "#f472b6" },
+    PRE_ADMIN: { c1: "#c084fc", c2: "#a78bfa" },
+    ST_MODERATOR: { c1: "#34d399", c2: "#2dd4bf" },
+    MODERATOR: { c1: "#38bdf8", c2: "#60a5fa" },
+  };
+
+  const getFriendCardStyle = (f: any): React.CSSProperties => {
+    const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+    if (!hasEffect) return {};
+    const rc = f.accentColor
+      ? { c1: f.accentColor, c2: f.accentColor }
+      : FRIEND_ROLE_COLORS[f.role?.name] || null;
+    if (!rc) return {};
+    return { "--fc-c1": rc.c1, "--fc-c2": rc.c2 } as React.CSSProperties;
+  };
+
+  const closeModal = () => {
+    if (modalClosing) return;
+    setModalClosing(true);
+    setTimeout(() => { setModal(null); setModalClosing(false); }, 350);
+  };
+
+  useEffect(() => {
+    if (!bmTabsRef.current) return;
+    const active = bmTabsRef.current.querySelector("[data-active='true']") as HTMLElement | null;
+    if (active) setBmIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+  }, [bookmarksTab, modal]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/anime`).then(r => r.json()).then((d: AnimeDetails[]) => setAnimeCatalog(d)).catch(() => {});
+  }, []);
+
+  const openCollectionModal = useCallback(async (tab = "favorites") => {
+    setModal("collection");
+    setBookmarksTab(tab);
+    if (Object.keys(collectionMap).length > 0) return;
+    setCollectionsLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/collections/${username.toLowerCase()}`);
+      if (res.ok) {
+        const items: { animeId: number; status: string }[] = await res.json();
+        const map: Record<string, number[]> = {};
+        for (const item of items) {
+          if (!map[item.status]) map[item.status] = [];
+          map[item.status].push(item.animeId);
+        }
+        setCollectionMap(map);
+      }
+    } catch {}
+    setCollectionsLoading(false);
+  }, [username, collectionMap]);
+
+  const openFriendsModal = useCallback(async () => {
+    setModal("friends");
+    if (friendsList.length > 0) return;
+    setFriendsListLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/friends/list/${username.toLowerCase()}`);
+      const data = parseHex(await res.text());
+      if (data.ok) setFriendsList(data.friends);
+    } catch {}
+    setFriendsListLoading(false);
+  }, [username, friendsList.length]);
 
   function parseHex(hexDump: string): any {
     const bytes: number[] = [];
@@ -133,6 +215,7 @@ export default function ProfilePage() {
         const data = JSON.parse(jsonStr);
         if (data.ok && data.user) {
           setProfileUser(mapProfileUser(data.user));
+          if (data.user.createdAt) setCreatedAt(data.user.createdAt);
         } else {
           setNotFound(true);
         }
@@ -323,22 +406,22 @@ export default function ProfilePage() {
 
         {/* Stats — oversized */}
         <section className={styles.statsGrid}>
-          <div className={styles.statCell}>
+          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("favorites")}>
             <span className={styles.statIndex}>02 / 01</span>
             <span className={styles.statValue}>{String(collectionStats.inList).padStart(2, "0")}</span>
             <span className={styles.statLabel}>в списке</span>
           </div>
-          <div className={styles.statCell}>
+          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("completed")}>
             <span className={styles.statIndex}>02 / 02</span>
             <span className={styles.statValue}>{String(collectionStats.completed).padStart(2, "0")}</span>
             <span className={styles.statLabel}>просмотрено</span>
           </div>
-          <div className={styles.statCell}>
+          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("favorites")}>
             <span className={styles.statIndex}>02 / 03</span>
             <span className={styles.statValue}>{String(collectionStats.favorites).padStart(2, "0")}</span>
             <span className={styles.statLabel}>избранное</span>
           </div>
-          <div className={styles.statCell}>
+          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openFriendsModal()}>
             <span className={styles.statIndex}>02 / 04</span>
             <span className={styles.statValue}>{String(friendCount).padStart(2, "0")}</span>
             <span className={styles.statLabel}>друзья</span>
@@ -418,8 +501,12 @@ export default function ProfilePage() {
               </div>
               <div className={styles.infoList}>
                 <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Создан</span>
-                  <span className={styles.infoValue}>сегодня</span>
+                  <span className={styles.infoLabel}>На сайте с</span>
+                  <span className={styles.infoValue}>
+                    {createdAt
+                      ? new Date(createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })
+                      : "—"}
+                  </span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Уровень</span>
@@ -454,10 +541,6 @@ export default function ProfilePage() {
                     ))}
                   </span>
                 </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Регион</span>
-                  <span className={styles.infoValue}>RU</span>
-                </div>
               </div>
             </div>
           </div>
@@ -472,7 +555,140 @@ export default function ProfilePage() {
           </span>
           <span>{hasAnyEffect ? "VERIFIED / PROFILE" : "END / OF / FILE"}</span>
         </section>
+
       </main>
+
+      {/* Collection Modal */}
+      {modal === "collection" && (
+        <>
+          <div className={styles.searchOverlay} onClick={closeModal} />
+          <div className={`${styles.bookmarksModal} ${modalClosing ? styles.bookmarksModalClosing : ""}`}>
+            <div className={styles.bookmarksHeader}>
+              <div className={styles.bookmarksTabs} ref={bmTabsRef}>
+                {[
+                  { key: "favorites", label: "Избранное" },
+                  { key: "watching", label: "Смотрю" },
+                  { key: "planned", label: "В планах" },
+                  { key: "completed", label: "Просмотренно" },
+                  { key: "onhold", label: "Отложенно" },
+                  { key: "dropped", label: "Брошенно" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    data-active={bookmarksTab === t.key}
+                    className={`${styles.bookmarksTabBtn} ${bookmarksTab === t.key ? styles.bookmarksTabBtnActive : ""}`}
+                    onClick={() => setBookmarksTab(t.key)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+                <div className={styles.bmTabIndicator} style={{ left: bmIndicator.left, width: bmIndicator.width }} />
+              </div>
+              <button className={styles.searchClose} onClick={closeModal}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.bookmarksBody} key={bookmarksTab}>
+              {(() => {
+                if (collectionsLoading) {
+                  return <div className={styles.bookmarksEmpty}><p>Загрузка...</p></div>;
+                }
+                const ids = collectionMap[bookmarksTab] || [];
+                const items = animeCatalog.filter((a) => ids.includes(a.id));
+                if (items.length === 0) {
+                  return (
+                    <div className={styles.bookmarksEmpty}>
+                      <Bookmark size={48} strokeWidth={1.2} />
+                      <p>Пока пусто</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className={styles.bookmarksGrid}>
+                    {items.map((item) => (
+                      <Link key={item.id} href={`/realeses/anime-page/${item.id}`} className={styles.bookmarkCard} onClick={closeModal}>
+                        <div className={styles.bookmarkCardPoster}>
+                          <img src={item.poster} alt={item.title} className={styles.bookmarkCardImg} />
+                          <div className={styles.bookmarkCardAccent} style={{ background: getAccent(item.rating) }} />
+                          <span className={styles.bookmarkCardRating}>{item.rating}</span>
+                        </div>
+                        <div className={styles.bookmarkCardInfo}>
+                          <span className={styles.bookmarkCardTitle}>{item.title}</span>
+                          <span className={styles.bookmarkCardMeta}>{item.meta}</span>
+                          <span className={styles.bookmarkCardGenres} style={{ color: getAccent(item.rating) }}>{item.genres}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Friends Modal */}
+      {modal === "friends" && (
+        <>
+          <div className={styles.searchOverlay} onClick={closeModal} />
+          <div className={`${styles.friendsModal} ${modalClosing ? styles.friendsModalClosing : ""}`}>
+            <div className={styles.friendsHeader}>
+              <div className={styles.friendsTabs}>
+                <button className={`${styles.friendsTabBtn} ${styles.friendsTabBtnActive}`}>
+                  Друзья{friendsList.length > 0 && <span className={styles.friendsTabCount}>{friendsList.length}</span>}
+                </button>
+              </div>
+              <button className={styles.searchClose} onClick={closeModal}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.friendsBody}>
+              {friendsListLoading ? (
+                <div className={styles.friendsEmpty}><p>Загрузка...</p></div>
+              ) : friendsList.length === 0 ? (
+                <div className={styles.friendsEmpty}>
+                  <Users size={48} strokeWidth={1.2} />
+                  <p>Список друзей пуст</p>
+                </div>
+              ) : (
+                <div className={styles.friendsGrid}>
+                  {friendsList.map((f: any) => {
+                    const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+                    return (
+                      <Link key={f.id} href={`/profile/${f.username}`} onClick={closeModal} className={`${styles.friendCard}${hasEffect ? ` ${styles.friendCardPrivileged}` : ""}`} style={getFriendCardStyle(f)}>
+                        <div className={styles.friendCardBanner}>
+                          {f.hasBanner ? (
+                            <ProtectedImage src={`${API_URL}/api/media/${f.username}/banner`} alt="" className={styles.friendCardBannerImg} />
+                          ) : (
+                            <div className={styles.friendCardBannerFallback} />
+                          )}
+                          <div className={styles.friendCardBannerOverlay} />
+                          {f.effectShimmer && <div className={styles.friendCardShimmer} />}
+                          {f.effectBorderGlow && <div className={styles.friendCardGlow} />}
+                        </div>
+                        <div className={styles.friendCardBody}>
+                          <div className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}>
+                            {f.hasAvatar ? (
+                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                            ) : (
+                              <span>{f.displayName.charAt(0)}</span>
+                            )}
+                          </div>
+                          <div className={styles.friendInfo}>
+                            <span className={styles.friendName}>{f.displayName}</span>
+                            <span className={styles.friendHandle}>@{f.username}</span>
+                            <span className={styles.friendRoleBadge} style={{ color: f.role?.color, borderColor: f.role?.color }}>{f.role?.displayName}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
