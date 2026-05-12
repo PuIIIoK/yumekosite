@@ -33,11 +33,13 @@ interface StatusContextType {
   isConnected: boolean;
   manualStatus: ManualStatus;
   setUserManualStatus: (status: ManualStatus) => Promise<void>;
+  fetchUserStatus: (userId: number) => Promise<void>;
 }
 
 const StatusContext = createContext<StatusContextType | undefined>(undefined);
 
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
+const AUTO_AWAY_TIMEOUT = 90 * 60 * 1000; // 1.5 часа без действия → автоматически переходим в Неактив
 const RECONNECT_DELAY = 3000;
 
 const MANUAL_STATUS_KEY = "yumeko-manual-status";
@@ -66,8 +68,10 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     })(),
   );
   const userManualOverridesRef = useRef<Map<number, ManualStatus>>(new Map());
-  // Время последнего локального изменения статуса (для защиты от перезаписи своим же ответом по WebSocket)
+  // Время последнего локального изменения статуса
   const lastLocalChangeRef = useRef<number>(0);
+  // Был ли статус Inactive выставлен автоматически (не вручную)
+  const wasAutoAwayRef = useRef<boolean>(false);
 
   useEffect(() => {
     userIdRef.current = user?.id ?? null;
@@ -331,6 +335,51 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Моментальная загрузка статуса пользователя через REST —
+  // чтобы при переходе на профиль статус отображался сразу, не жда WebSocket-пуша
+  const fetchUserStatus = useCallback(async (userId: number) => {
+    try {
+      const [sr, mr] = await Promise.all([
+        fetch(`${API_URL}/api/status/${userId}`),
+        fetch(`${API_URL}/api/status/manual/${userId}`),
+      ]);
+      const sd = await sr.json();
+      const md = await mr.json();
+
+      const serverStatus = (sd.status as UserStatus) ?? "OFFLINE";
+      const serverManual = md.manualStatus as ManualStatus | undefined;
+      const serverLastSeen: string | null = sd.lastSeen ?? null;
+
+      setStatuses((prev) => {
+        const copy = new Map(prev);
+        if (userId === userIdRef.current) {
+          // Свой профиль: не перезаписываем локальный manualStatus, но обновляем lastSeen
+          const existing = copy.get(userId);
+          copy.set(userId, {
+            userId,
+            status: existing?.status ?? serverStatus,
+            manualStatus: manualStatusRef.current,
+            lastSeen: serverLastSeen ?? existing?.lastSeen ?? null,
+          });
+        } else {
+          // Чужой профиль: полностью доверяем серверу
+          if (serverManual) {
+            userManualOverridesRef.current.set(userId, serverManual);
+          }
+          copy.set(userId, {
+            userId,
+            status: serverStatus,
+            manualStatus: serverManual,
+            lastSeen: serverLastSeen,
+          });
+        }
+        return copy;
+      });
+    } catch {
+      // Тихо игнорируем ошибку сети
+    }
+  }, []);
+
   const setUserManualStatus = useCallback(async (status: ManualStatus) => {
     const uid = userIdRef.current;
     if (!uid) return;
@@ -342,6 +391,8 @@ export function StatusProvider({ children }: { children: ReactNode }) {
           ? "OFFLINE"
           : "RECENTLY";
 
+    // Любое ручное действие отменяет авто-Трекинг
+    wasAutoAwayRef.current = false;
     // Обновляем ref синхронно ДО любого setState
     lastLocalChangeRef.current = Date.now(); // фиксируем время локального изменения
     manualStatusRef.current = status;
@@ -374,6 +425,41 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Авто-Неактив: если пользователь не делает ничего 1.5 часа — статус меняется на Неактив
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const onActivity = () => {
+      // Если был авто-авей — возвращаем в Сеть, как только пользователь вернулся
+      if (wasAutoAwayRef.current && manualStatusRef.current === "AWAY") {
+        wasAutoAwayRef.current = false;
+        setUserManualStatus("ONLINE");
+      }
+
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        // Ставим Неактив только если текущий статус ONLINE (не DND/INVISIBLE/ман. AWAY)
+        if (manualStatusRef.current === "ONLINE") {
+          wasAutoAwayRef.current = true;
+          setUserManualStatus("AWAY");
+        }
+      }, AUTO_AWAY_TIMEOUT);
+    };
+
+    const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
+    events.forEach((e) =>
+      window.addEventListener(e, onActivity, { passive: true }),
+    );
+    onActivity(); // запуск таймера сразу
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, onActivity));
+    };
+  }, [user?.id, setUserManualStatus]);
+
   const getStatus = useCallback(
     (userId: number) => {
       return statuses.get(userId);
@@ -405,6 +491,7 @@ export function StatusProvider({ children }: { children: ReactNode }) {
         isConnected,
         manualStatus,
         setUserManualStatus,
+        fetchUserStatus,
       }}
     >
       {children}

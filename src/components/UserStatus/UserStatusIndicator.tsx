@@ -18,12 +18,15 @@ export default function UserStatusIndicator({
   showLabel = false,
   dotOnly = false,
 }: UserStatusIndicatorProps) {
-  const { subscribeToUsers, unsubscribeFromUsers, getStatus } = useStatus();
+  const { subscribeToUsers, unsubscribeFromUsers, getStatus, fetchUserStatus } =
+    useStatus();
 
   useEffect(() => {
     subscribeToUsers([userId]);
+    // Моментальная загрузка через REST, не ждём WebSocket-пуша
+    fetchUserStatus(userId);
     return () => unsubscribeFromUsers([userId]);
-  }, [userId, subscribeToUsers, unsubscribeFromUsers]);
+  }, [userId, subscribeToUsers, unsubscribeFromUsers, fetchUserStatus]);
 
   const info = getStatus(userId);
   const status = info?.status ?? "OFFLINE";
@@ -70,8 +73,12 @@ export default function UserStatusIndicator({
     return `${Math.floor(diff / 86400)} д назад`;
   };
 
+  // ONLINE → время последней активности
+  // AWAY   → время последней активности
+  // DND    → фиксированная строка "Был недавно"
+  // INVISIBLE/OFFLINE → ничего
   const showTimeAgo =
-    status !== "ONLINE" && manual !== "AWAY" && manual !== "DND";
+    manual !== "DND" && manual !== "INVISIBLE" && status !== "OFFLINE";
 
   return (
     <div className={`${styles.statusIndicator} ${styles[size]}`}>
@@ -111,7 +118,10 @@ export default function UserStatusIndicator({
       {showLabel && (
         <span className={styles.label}>
           {getLabel()}
-          {info?.lastSeen && showTimeAgo && (
+          {manual === "DND" && (
+            <span className={styles.timeAgo}> • Был недавно</span>
+          )}
+          {manual !== "DND" && info?.lastSeen && showTimeAgo && (
             <span className={styles.timeAgo}> • {getTimeAgo()}</span>
           )}
         </span>
