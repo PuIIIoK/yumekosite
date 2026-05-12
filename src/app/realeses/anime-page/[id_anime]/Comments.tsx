@@ -11,6 +11,7 @@ import {
   Send,
   X,
   MessageSquare,
+  BadgeCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/config/hosts";
@@ -25,6 +26,9 @@ interface CommentDto {
   hasAvatar: boolean;
   imageVersion: number;
   roleColor: string;
+  effectVerifiedBadge: boolean;
+  effectAvatarGlow: boolean;
+  accentColor: string | null;
   text: string;
   parentId: number | null;
   replyToId: number | null;
@@ -55,6 +59,8 @@ function Avatar({
   imageVersion,
   size = "md",
   roleColor,
+  effectAvatarGlow,
+  accentColor,
 }: {
   username: string;
   displayName: string;
@@ -62,22 +68,32 @@ function Avatar({
   imageVersion: number;
   size?: "md" | "sm";
   roleColor?: string;
+  effectAvatarGlow?: boolean;
+  accentColor?: string | null;
 }) {
   const cls = size === "sm" ? s.commentAvatarSm : s.commentAvatar;
+  const glowColor = accentColor || roleColor || "var(--accent)";
+  const glowStyle: React.CSSProperties = effectAvatarGlow
+    ? {
+        boxShadow: `0 0 0 2px ${glowColor}55, 0 0 10px ${glowColor}66`,
+        borderColor: `${glowColor}88`,
+      }
+    : {};
+
   if (hasAvatar) {
     return (
       <img
         src={`${API_URL}/api/media/${username}/avatar?v=${imageVersion}`}
         alt={displayName}
         className={cls}
-        style={{ borderRadius: "50%", objectFit: "cover" }}
+        style={{ borderRadius: "50%", objectFit: "cover", ...glowStyle }}
       />
     );
   }
   return (
     <div
       className={cls}
-      style={{ color: roleColor || "var(--text-secondary)" }}
+      style={{ color: roleColor || "var(--text-secondary)", ...glowStyle }}
     >
       {displayName.charAt(0).toUpperCase()}
     </div>
@@ -334,6 +350,8 @@ export default function Comments({ animeId, accent }: Props) {
               imageVersion={c.imageVersion}
               size={parentId === null ? "md" : "sm"}
               roleColor={c.roleColor}
+              effectAvatarGlow={c.effectAvatarGlow}
+              accentColor={c.accentColor}
             />
           </Link>
           <div className={s.commentBody}>
@@ -345,6 +363,16 @@ export default function Comments({ animeId, accent }: Props) {
               >
                 {c.displayName}
               </Link>
+              {c.effectVerifiedBadge && (
+                <BadgeCheck
+                  size={14}
+                  strokeWidth={2.2}
+                  style={{
+                    color: c.accentColor || c.roleColor || "var(--accent)",
+                    flexShrink: 0,
+                  }}
+                />
+              )}
               <span className={s.commentTime}>{timeAgo(c.createdAt)}</span>
               {c.edited && <span className={s.editedBadge}>(ред.)</span>}
             </div>
