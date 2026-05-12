@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppearanceProvider } from "@/context/AppearanceContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { StatusProvider } from "@/context/StatusContext";
 import ParticleCanvas from "@/components/ParticleCanvas/ParticleCanvas";
 import "./globals.scss";
 
@@ -53,7 +54,11 @@ export default function RootLayout({
       <body>
         <AppearanceProvider>
           <ParticleCanvas />
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <StatusProvider>
+              {children}
+            </StatusProvider>
+          </AuthProvider>
         </AppearanceProvider>
       </body>
     </html>

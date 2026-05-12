@@ -3,11 +3,26 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Crown, Star, Shield, ShieldCheck, BadgeCheck, UserPlus, UserCheck, UserX, Clock, X, Users, Bookmark } from "lucide-react";
+import {
+  Sparkles,
+  Crown,
+  Star,
+  Shield,
+  ShieldCheck,
+  BadgeCheck,
+  UserPlus,
+  UserCheck,
+  UserX,
+  Clock,
+  X,
+  Users,
+  Bookmark,
+} from "lucide-react";
 import { useAuth, type User, type Role } from "@/context/AuthContext";
 import { useAppearance, type CanvasStyle } from "@/context/AppearanceContext";
 import Header from "@/components/Header/Header";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
+import UserStatusIndicator from "@/components/UserStatus/UserStatusIndicator";
 import styles from "./profile.module.scss";
 import { API_URL } from "@/config/hosts";
 import type { AnimeDetails } from "@/data/anime";
@@ -35,7 +50,11 @@ function formatTimeAgo(dateStr: string): string {
   if (diff < 3600) return `${Math.floor(diff / 60)} мин. назад`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} ч. назад`;
   if (diff < 604800) return `${Math.floor(diff / 86400)} дн. назад`;
-  return date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function mapProfileUser(dto: any): User {
@@ -47,8 +66,22 @@ function mapProfileUser(dto: any): User {
     bio: dto.bio,
     hasAvatar: dto.hasAvatar ?? false,
     hasBanner: dto.hasBanner ?? false,
-    role: dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 },
-    roles: dto.roles || [dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 }],
+    role: dto.role || {
+      id: 0,
+      name: "USER",
+      displayName: "User",
+      color: "#6b7280",
+      priority: 0,
+    },
+    roles: dto.roles || [
+      dto.role || {
+        id: 0,
+        name: "USER",
+        displayName: "User",
+        color: "#6b7280",
+        priority: 0,
+      },
+    ],
     imageVersion: Date.now(),
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
@@ -73,7 +106,11 @@ export default function ProfilePage() {
   const [friendStatus, setFriendStatus] = useState<string>("none");
   const [friendCount, setFriendCount] = useState(0);
   const [friendLoading, setFriendLoading] = useState(false);
-  const [collectionStats, setCollectionStats] = useState<{ inList: number; completed: number; favorites: number }>({ inList: 0, completed: 0, favorites: 0 });
+  const [collectionStats, setCollectionStats] = useState<{
+    inList: number;
+    completed: number;
+    favorites: number;
+  }>({ inList: 0, completed: 0, favorites: 0 });
   const [activities, setActivities] = useState<any[]>([]);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
 
@@ -84,7 +121,9 @@ export default function ProfilePage() {
   const [bookmarksTab, setBookmarksTab] = useState<string>("favorites");
   const [bmIndicator, setBmIndicator] = useState({ left: 0, width: 0 });
   const bmTabsRef = useRef<HTMLDivElement>(null);
-  const [collectionMap, setCollectionMap] = useState<Record<string, number[]>>({});
+  const [collectionMap, setCollectionMap] = useState<Record<string, number[]>>(
+    {},
+  );
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [animeCatalog, setAnimeCatalog] = useState<AnimeDetails[]>([]);
   const [friendsList, setFriendsList] = useState<any[]>([]);
@@ -98,7 +137,11 @@ export default function ProfilePage() {
   };
 
   const getFriendCardStyle = (f: any): React.CSSProperties => {
-    const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+    const hasEffect =
+      f.effectShimmer ||
+      f.effectBorderGlow ||
+      f.effectAvatarGlow ||
+      f.effectVerifiedBadge;
     if (!hasEffect) return {};
     const rc = f.accentColor
       ? { c1: f.accentColor, c2: f.accentColor }
@@ -110,45 +153,61 @@ export default function ProfilePage() {
   const closeModal = () => {
     if (modalClosing) return;
     setModalClosing(true);
-    setTimeout(() => { setModal(null); setModalClosing(false); }, 350);
+    setTimeout(() => {
+      setModal(null);
+      setModalClosing(false);
+    }, 350);
   };
 
   useEffect(() => {
     if (!bmTabsRef.current) return;
-    const active = bmTabsRef.current.querySelector("[data-active='true']") as HTMLElement | null;
-    if (active) setBmIndicator({ left: active.offsetLeft, width: active.offsetWidth });
+    const active = bmTabsRef.current.querySelector(
+      "[data-active='true']",
+    ) as HTMLElement | null;
+    if (active)
+      setBmIndicator({ left: active.offsetLeft, width: active.offsetWidth });
   }, [bookmarksTab, modal]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/anime`).then(r => r.json()).then((d: AnimeDetails[]) => setAnimeCatalog(d)).catch(() => {});
+    fetch(`${API_URL}/api/anime`)
+      .then((r) => r.json())
+      .then((d: AnimeDetails[]) => setAnimeCatalog(d))
+      .catch(() => {});
   }, []);
 
-  const openCollectionModal = useCallback(async (tab = "favorites") => {
-    setModal("collection");
-    setBookmarksTab(tab);
-    if (Object.keys(collectionMap).length > 0) return;
-    setCollectionsLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/collections/${username.toLowerCase()}`);
-      if (res.ok) {
-        const items: { animeId: number; status: string }[] = await res.json();
-        const map: Record<string, number[]> = {};
-        for (const item of items) {
-          if (!map[item.status]) map[item.status] = [];
-          map[item.status].push(item.animeId);
+  const openCollectionModal = useCallback(
+    async (tab = "favorites") => {
+      setModal("collection");
+      setBookmarksTab(tab);
+      if (Object.keys(collectionMap).length > 0) return;
+      setCollectionsLoading(true);
+      try {
+        const res = await fetch(
+          `${API_URL}/api/collections/${username.toLowerCase()}`,
+        );
+        if (res.ok) {
+          const items: { animeId: number; status: string }[] = await res.json();
+          const map: Record<string, number[]> = {};
+          for (const item of items) {
+            if (!map[item.status]) map[item.status] = [];
+            map[item.status].push(item.animeId);
+          }
+          setCollectionMap(map);
         }
-        setCollectionMap(map);
-      }
-    } catch {}
-    setCollectionsLoading(false);
-  }, [username, collectionMap]);
+      } catch {}
+      setCollectionsLoading(false);
+    },
+    [username, collectionMap],
+  );
 
   const openFriendsModal = useCallback(async () => {
     setModal("friends");
     if (friendsList.length > 0) return;
     setFriendsListLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/friends/list/${username.toLowerCase()}`);
+      const res = await fetch(
+        `${API_URL}/api/friends/list/${username.toLowerCase()}`,
+      );
       const data = parseHex(await res.text());
       if (data.ok) setFriendsList(data.friends);
     } catch {}
@@ -170,13 +229,23 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchCollectionStats() {
       try {
-        const res = await fetch(`${API_URL}/api/collections/${username.toLowerCase()}`);
+        const res = await fetch(
+          `${API_URL}/api/collections/${username.toLowerCase()}`,
+        );
         if (res.ok) {
           const items: { animeId: number; status: string }[] = await res.json();
-          const favCount = items.filter(i => i.status === "favorites").length;
-          const compCount = items.filter(i => i.status === "completed").length;
-          const listCount = new Set(items.filter(i => i.status !== "favorites").map(i => i.animeId)).size;
-          setCollectionStats({ inList: listCount, completed: compCount, favorites: favCount });
+          const favCount = items.filter((i) => i.status === "favorites").length;
+          const compCount = items.filter(
+            (i) => i.status === "completed",
+          ).length;
+          const listCount = new Set(
+            items.filter((i) => i.status !== "favorites").map((i) => i.animeId),
+          ).size;
+          setCollectionStats({
+            inList: listCount,
+            completed: compCount,
+            favorites: favCount,
+          });
         }
       } catch {}
     }
@@ -186,7 +255,9 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchActivity() {
       try {
-        const res = await fetch(`${API_URL}/api/activity/${username.toLowerCase()}`);
+        const res = await fetch(
+          `${API_URL}/api/activity/${username.toLowerCase()}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setActivities(data);
@@ -201,7 +272,9 @@ export default function ProfilePage() {
       setLoading(true);
       setNotFound(false);
       try {
-        const res = await fetch(`${API_URL}/api/profile/${username.toLowerCase()}`);
+        const res = await fetch(
+          `${API_URL}/api/profile/${username.toLowerCase()}`,
+        );
         const hexDump = await res.text();
         const bytes: number[] = [];
         for (const line of hexDump.split("\n")) {
@@ -246,13 +319,30 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!username) return;
     fetch(`${API_URL}/api/friends/count/${username.toLowerCase()}`)
-      .then(r => r.text()).then(t => { const d = parseHex(t); if (d.ok) setFriendCount(d.count); }).catch(() => {});
+      .then((r) => r.text())
+      .then((t) => {
+        const d = parseHex(t);
+        if (d.ok) setFriendCount(d.count);
+      })
+      .catch(() => {});
   }, [username]);
 
   useEffect(() => {
-    if (!username || !auth.user || auth.user.username.toLowerCase() === username.toLowerCase()) return;
-    fetch(`${API_URL}/api/friends/status/${username.toLowerCase()}?from=${auth.user.username}`)
-      .then(r => r.text()).then(t => { const d = parseHex(t); if (d.ok) setFriendStatus(d.status); }).catch(() => {});
+    if (
+      !username ||
+      !auth.user ||
+      auth.user.username.toLowerCase() === username.toLowerCase()
+    )
+      return;
+    fetch(
+      `${API_URL}/api/friends/status/${username.toLowerCase()}?from=${auth.user.username}`,
+    )
+      .then((r) => r.text())
+      .then((t) => {
+        const d = parseHex(t);
+        if (d.ok) setFriendStatus(d.status);
+      })
+      .catch(() => {});
   }, [username, auth.user]);
 
   const handleFriendAction = async () => {
@@ -260,17 +350,39 @@ export default function ProfilePage() {
     setFriendLoading(true);
     try {
       if (friendStatus === "none") {
-        const res = await fetch(`${API_URL}/api/friends/request/${username.toLowerCase()}?from=${auth.user.username}`, { method: "POST" });
+        const res = await fetch(
+          `${API_URL}/api/friends/request/${username.toLowerCase()}?from=${auth.user.username}`,
+          { method: "POST" },
+        );
         const d = parseHex(await res.text());
-        if (d.ok) { setFriendStatus(d.status === "accepted" ? "friends" : "pending_sent"); if (d.status === "accepted") setFriendCount(c => c + 1); }
+        if (d.ok) {
+          setFriendStatus(d.status === "accepted" ? "friends" : "pending_sent");
+          if (d.status === "accepted") setFriendCount((c) => c + 1);
+        }
       } else if (friendStatus === "pending_received") {
-        const res = await fetch(`${API_URL}/api/friends/accept/${username.toLowerCase()}?from=${auth.user.username}`, { method: "POST" });
+        const res = await fetch(
+          `${API_URL}/api/friends/accept/${username.toLowerCase()}?from=${auth.user.username}`,
+          { method: "POST" },
+        );
         const d = parseHex(await res.text());
-        if (d.ok) { setFriendStatus("friends"); setFriendCount(c => c + 1); }
-      } else if (friendStatus === "pending_sent" || friendStatus === "friends") {
-        const res = await fetch(`${API_URL}/api/friends/${username.toLowerCase()}?from=${auth.user.username}`, { method: "DELETE" });
+        if (d.ok) {
+          setFriendStatus("friends");
+          setFriendCount((c) => c + 1);
+        }
+      } else if (
+        friendStatus === "pending_sent" ||
+        friendStatus === "friends"
+      ) {
+        const res = await fetch(
+          `${API_URL}/api/friends/${username.toLowerCase()}?from=${auth.user.username}`,
+          { method: "DELETE" },
+        );
         const d = parseHex(await res.text());
-        if (d.ok) { const wasFriend = friendStatus === "friends"; setFriendStatus("none"); if (wasFriend) setFriendCount(c => Math.max(0, c - 1)); }
+        if (d.ok) {
+          const wasFriend = friendStatus === "friends";
+          setFriendStatus("none");
+          if (wasFriend) setFriendCount((c) => Math.max(0, c - 1));
+        }
       }
     } catch {}
     setFriendLoading(false);
@@ -305,15 +417,19 @@ export default function ProfilePage() {
   const nameRest = nameWords.slice(1).join(" ");
 
   const ROLE_COLORS: Record<string, { c1: string; c2: string; c3: string }> = {
-    ADMIN:        { c1: "#a78bfa", c2: "#f472b6", c3: "#818cf8" },
-    PRE_ADMIN:    { c1: "#c084fc", c2: "#a78bfa", c3: "#7c3aed" },
+    ADMIN: { c1: "#a78bfa", c2: "#f472b6", c3: "#818cf8" },
+    PRE_ADMIN: { c1: "#c084fc", c2: "#a78bfa", c3: "#7c3aed" },
     ST_MODERATOR: { c1: "#34d399", c2: "#2dd4bf", c3: "#06b6d4" },
-    MODERATOR:    { c1: "#38bdf8", c2: "#60a5fa", c3: "#818cf8" },
+    MODERATOR: { c1: "#38bdf8", c2: "#60a5fa", c3: "#818cf8" },
   };
 
   const roleName = profileUser.role.name;
   const fx = profileUser.effects;
-  const hasAnyEffect = fx.effectShimmer || fx.effectBorderGlow || fx.effectAvatarGlow || fx.effectVerifiedBadge;
+  const hasAnyEffect =
+    fx.effectShimmer ||
+    fx.effectBorderGlow ||
+    fx.effectAvatarGlow ||
+    fx.effectVerifiedBadge;
 
   // Build role colors: prefer custom accentColor, fallback to role defaults
   const defaultRc = ROLE_COLORS[roleName];
@@ -321,7 +437,11 @@ export default function ProfilePage() {
     ? { c1: fx.accentColor, c2: fx.accentColor, c3: fx.accentColor }
     : defaultRc || null;
   const roleVars = rc
-    ? ({ "--role-color-1": rc.c1, "--role-color-2": rc.c2, "--role-color-3": rc.c3 } as React.CSSProperties)
+    ? ({
+        "--role-color-1": rc.c1,
+        "--role-color-2": rc.c2,
+        "--role-color-3": rc.c3,
+      } as React.CSSProperties)
     : {};
 
   return (
@@ -338,10 +458,13 @@ export default function ProfilePage() {
             <span>{profileUser.handle.replace("@", "").toUpperCase()}</span>
           </div>
           <div className={styles.metaRight}>
-            <span className={styles.metaStatus}>
-              <span className={styles.metaStatusDot} />
-              ONLINE
-            </span>
+            {profileUser && (
+              <UserStatusIndicator
+                userId={profileUser.id}
+                size="sm"
+                showLabel
+              />
+            )}
             <span className={styles.metaDivider} />
             <span>v1.0.0</span>
           </div>
@@ -354,13 +477,22 @@ export default function ProfilePage() {
         >
           {fx.effectBorderGlow && <div className={styles.heroBorderGlow} />}
           {fx.effectShimmer && <div className={styles.heroShimmer} />}
-          {profileUser.hasBanner && <ProtectedImage src={`${API_URL}/api/media/${profileUser.username}/banner?v=${profileUser.imageVersion}`} alt="banner" className={styles.heroBannerImg} />}
+          {profileUser.hasBanner && (
+            <ProtectedImage
+              src={`${API_URL}/api/media/${profileUser.username}/banner?v=${profileUser.imageVersion}`}
+              alt="banner"
+              className={styles.heroBannerImg}
+            />
+          )}
           <div className={styles.heroLeft}>
             <span className={styles.heroIndex}>// 01 — IDENTITY</span>
             <h1 className={styles.displayName}>
               {nameFirstLine}
-              {nameRest && <span className={styles.displayNameSub}>{nameRest}</span>}
+              {nameRest && (
+                <span className={styles.displayNameSub}>{nameRest}</span>
+              )}
             </h1>
+            <UserStatusIndicator userId={profileUser.id} size="sm" showLabel />
             <div className={styles.heroSubRow}>
               <span className={styles.handle}>{profileUser.handle}</span>
               {fx.effectVerifiedBadge && (
@@ -369,11 +501,21 @@ export default function ProfilePage() {
                 </span>
               )}
               {(profileUser.roles ?? [profileUser.role]).map((r) => (
-                <span key={r.name} className={`${styles.roleBadge}${hasAnyEffect ? ` ${styles.roleBadgeGlow}` : ""}`} style={{ borderColor: r.color, color: r.color }}>
+                <span
+                  key={r.name}
+                  className={`${styles.roleBadge}${hasAnyEffect ? ` ${styles.roleBadgeGlow}` : ""}`}
+                  style={{ borderColor: r.color, color: r.color }}
+                >
                   {r.name === "ADMIN" && <Crown size={11} strokeWidth={2.5} />}
-                  {r.name === "PRE_ADMIN" && <Shield size={11} strokeWidth={2.5} />}
-                  {r.name === "ST_MODERATOR" && <ShieldCheck size={11} strokeWidth={2.5} />}
-                  {r.name === "MODERATOR" && <Shield size={11} strokeWidth={2.5} />}
+                  {r.name === "PRE_ADMIN" && (
+                    <Shield size={11} strokeWidth={2.5} />
+                  )}
+                  {r.name === "ST_MODERATOR" && (
+                    <ShieldCheck size={11} strokeWidth={2.5} />
+                  )}
+                  {r.name === "MODERATOR" && (
+                    <Shield size={11} strokeWidth={2.5} />
+                  )}
                   {r.name === "USER" && <Star size={11} strokeWidth={2.5} />}
                   {r.displayName}
                 </span>
@@ -385,45 +527,107 @@ export default function ProfilePage() {
                 onClick={handleFriendAction}
                 disabled={friendLoading}
               >
-                {friendStatus === "none" && <><UserPlus size={15} strokeWidth={2.2} />Добавить в друзья</>}
-                {friendStatus === "pending_sent" && <><Clock size={15} strokeWidth={2.2} />Запрос отправлен</>}
-                {friendStatus === "pending_received" && <><UserCheck size={15} strokeWidth={2.2} />Принять запрос</>}
-                {friendStatus === "friends" && <><UserX size={15} strokeWidth={2.2} />Удалить из друзей</>}
+                {friendStatus === "none" && (
+                  <>
+                    <UserPlus size={15} strokeWidth={2.2} />
+                    Добавить в друзья
+                  </>
+                )}
+                {friendStatus === "pending_sent" && (
+                  <>
+                    <Clock size={15} strokeWidth={2.2} />
+                    Запрос отправлен
+                  </>
+                )}
+                {friendStatus === "pending_received" && (
+                  <>
+                    <UserCheck size={15} strokeWidth={2.2} />
+                    Принять запрос
+                  </>
+                )}
+                {friendStatus === "friends" && (
+                  <>
+                    <UserX size={15} strokeWidth={2.2} />
+                    Удалить из друзей
+                  </>
+                )}
               </button>
             )}
           </div>
 
           <div className={styles.heroRight}>
-            <div className={`${styles.avatarFrame}${fx.effectAvatarGlow ? ` ${styles.avatarFramePrivileged}` : ""}`} style={{ "--profile-accent": fx.accentColor || "var(--accent)", "--avatar-c1": fx.accentColor || "var(--accent)", "--avatar-c2": fx.accentColor || "var(--accent)", "--avatar-c3": fx.accentColor || "var(--accent)" } as React.CSSProperties}>
+            <div
+              className={`${styles.avatarFrame}${fx.effectAvatarGlow ? ` ${styles.avatarFramePrivileged}` : ""}`}
+              style={
+                {
+                  "--profile-accent": fx.accentColor || "var(--accent)",
+                  "--avatar-c1": fx.accentColor || "var(--accent)",
+                  "--avatar-c2": fx.accentColor || "var(--accent)",
+                  "--avatar-c3": fx.accentColor || "var(--accent)",
+                } as React.CSSProperties
+              }
+            >
               {profileUser.hasAvatar ? (
-                <ProtectedImage src={`${API_URL}/api/media/${profileUser.username}/avatar?v=${profileUser.imageVersion}`} alt={profileUser.displayName} className={styles.avatarImg} />
+                <ProtectedImage
+                  src={`${API_URL}/api/media/${profileUser.username}/avatar?v=${profileUser.imageVersion}`}
+                  alt={profileUser.displayName}
+                  className={styles.avatarImg}
+                />
               ) : (
-                <span className={styles.avatarInitial}>{profileUser.displayName.charAt(0)}</span>
+                <span className={styles.avatarInitial}>
+                  {profileUser.displayName.charAt(0)}
+                </span>
               )}
+              <UserStatusIndicator
+                userId={profileUser.id}
+                size="lg"
+                showLabel={false}
+                dotOnly
+              />
             </div>
           </div>
         </section>
 
         {/* Stats — oversized */}
         <section className={styles.statsGrid}>
-          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("favorites")}>
+          <div
+            className={`${styles.statCell} ${styles.statCellClickable}`}
+            onClick={() => openCollectionModal("favorites")}
+          >
             <span className={styles.statIndex}>02 / 01</span>
-            <span className={styles.statValue}>{String(collectionStats.inList).padStart(2, "0")}</span>
+            <span className={styles.statValue}>
+              {String(collectionStats.inList).padStart(2, "0")}
+            </span>
             <span className={styles.statLabel}>в списке</span>
           </div>
-          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("completed")}>
+          <div
+            className={`${styles.statCell} ${styles.statCellClickable}`}
+            onClick={() => openCollectionModal("completed")}
+          >
             <span className={styles.statIndex}>02 / 02</span>
-            <span className={styles.statValue}>{String(collectionStats.completed).padStart(2, "0")}</span>
+            <span className={styles.statValue}>
+              {String(collectionStats.completed).padStart(2, "0")}
+            </span>
             <span className={styles.statLabel}>просмотрено</span>
           </div>
-          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openCollectionModal("favorites")}>
+          <div
+            className={`${styles.statCell} ${styles.statCellClickable}`}
+            onClick={() => openCollectionModal("favorites")}
+          >
             <span className={styles.statIndex}>02 / 03</span>
-            <span className={styles.statValue}>{String(collectionStats.favorites).padStart(2, "0")}</span>
+            <span className={styles.statValue}>
+              {String(collectionStats.favorites).padStart(2, "0")}
+            </span>
             <span className={styles.statLabel}>избранное</span>
           </div>
-          <div className={`${styles.statCell} ${styles.statCellClickable}`} onClick={() => openFriendsModal()}>
+          <div
+            className={`${styles.statCell} ${styles.statCellClickable}`}
+            onClick={() => openFriendsModal()}
+          >
             <span className={styles.statIndex}>02 / 04</span>
-            <span className={styles.statValue}>{String(friendCount).padStart(2, "0")}</span>
+            <span className={styles.statValue}>
+              {String(friendCount).padStart(2, "0")}
+            </span>
             <span className={styles.statLabel}>друзья</span>
           </div>
         </section>
@@ -438,7 +642,8 @@ export default function ProfilePage() {
                 <span className={styles.sectionLine} />
               </div>
               <p className={styles.bodyText}>
-                {profileUser.bio || "Расскажите немного о себе, своих любимых жанрах и тайтлах. Пока этот раздел пустует — самое время заполнить его."}
+                {profileUser.bio ||
+                  "Расскажите немного о себе, своих любимых жанрах и тайтлах. Пока этот раздел пустует — самое время заполнить его."}
               </p>
             </div>
 
@@ -454,36 +659,87 @@ export default function ProfilePage() {
                 <div className={styles.activityList}>
                   {activities.map((a) => {
                     const isEpWatch = a.type === "episode_watch";
-                    const epThumb = isEpWatch ? a.episodePreview : a.animePoster;
-                    const showStudio = isEpWatch && a.episodeStudio && a.episodeStudio !== "YumekoStudio" && a.episodeStudio !== "Yumeko Studio";
+                    const epThumb = isEpWatch
+                      ? a.episodePreview
+                      : a.animePoster;
+                    const showStudio =
+                      isEpWatch &&
+                      a.episodeStudio &&
+                      a.episodeStudio !== "YumekoStudio" &&
+                      a.episodeStudio !== "Yumeko Studio";
                     return (
                       <div key={a.id} className={styles.activityItem}>
                         {isEpWatch ? (
                           <div className={styles.activityEpThumb}>
                             {epThumb ? (
-                              <img src={epThumb} alt="" className={styles.activityEpThumbImg} />
+                              <img
+                                src={epThumb}
+                                alt=""
+                                className={styles.activityEpThumbImg}
+                              />
                             ) : (
                               <div className={styles.activityEpThumbEmpty} />
                             )}
                           </div>
                         ) : (
-                          a.animePoster && <img src={a.animePoster} alt="" className={styles.activityPoster} />
+                          a.animePoster && (
+                            <img
+                              src={a.animePoster}
+                              alt=""
+                              className={styles.activityPoster}
+                            />
+                          )
                         )}
                         <div className={styles.activityContent}>
                           <span className={styles.activityText}>
-                            {a.type === "collection_add" && <>{formatActivityStatus(a.statusTo)} — <strong>{a.animeTitle}</strong></>}
-                            {a.type === "collection_move" && <>Переместил(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)} в {formatActivityStatus(a.statusTo)}</>}
-                            {a.type === "collection_remove" && <>Убрал(а) <strong>{a.animeTitle}</strong> из {formatActivityStatus(a.statusFrom)}</>}
-                            {a.type === "favorite" && <>Добавил(а) <strong>{a.animeTitle}</strong> в избранное</>}
-                            {a.type === "unfavorite" && <>Убрал(а) <strong>{a.animeTitle}</strong> из избранного</>}
+                            {a.type === "collection_add" && (
+                              <>
+                                {formatActivityStatus(a.statusTo)} —{" "}
+                                <strong>{a.animeTitle}</strong>
+                              </>
+                            )}
+                            {a.type === "collection_move" && (
+                              <>
+                                Переместил(а) <strong>{a.animeTitle}</strong> из{" "}
+                                {formatActivityStatus(a.statusFrom)} в{" "}
+                                {formatActivityStatus(a.statusTo)}
+                              </>
+                            )}
+                            {a.type === "collection_remove" && (
+                              <>
+                                Убрал(а) <strong>{a.animeTitle}</strong> из{" "}
+                                {formatActivityStatus(a.statusFrom)}
+                              </>
+                            )}
+                            {a.type === "favorite" && (
+                              <>
+                                Добавил(а) <strong>{a.animeTitle}</strong> в
+                                избранное
+                              </>
+                            )}
+                            {a.type === "unfavorite" && (
+                              <>
+                                Убрал(а) <strong>{a.animeTitle}</strong> из
+                                избранного
+                              </>
+                            )}
                             {isEpWatch && (
                               <>
-                                Посмотрел(а) {a.episodeNumber} эпизод{a.episodeTitle ? ` «${a.episodeTitle}»` : ""} — <strong>{a.animeTitle}</strong>
-                                {showStudio && <span className={styles.activityStudio}>{a.episodeStudio}</span>}
+                                Посмотрел(а) {a.episodeNumber} эпизод
+                                {a.episodeTitle
+                                  ? ` «${a.episodeTitle}»`
+                                  : ""} — <strong>{a.animeTitle}</strong>
+                                {showStudio && (
+                                  <span className={styles.activityStudio}>
+                                    {a.episodeStudio}
+                                  </span>
+                                )}
                               </>
                             )}
                           </span>
-                          <span className={styles.activityTime}>{formatTimeAgo(a.createdAt)}</span>
+                          <span className={styles.activityTime}>
+                            {formatTimeAgo(a.createdAt)}
+                          </span>
                         </div>
                       </div>
                     );
@@ -504,7 +760,11 @@ export default function ProfilePage() {
                   <span className={styles.infoLabel}>На сайте с</span>
                   <span className={styles.infoValue}>
                     {createdAt
-                      ? new Date(createdAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })
+                      ? new Date(createdAt).toLocaleDateString("ru-RU", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
                       : "—"}
                   </span>
                 </div>
@@ -515,8 +775,12 @@ export default function ProfilePage() {
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Роли</span>
                   <span className={styles.infoRoles}>
-                    {(profileUser.roles ?? [profileUser.role]).map(r => (
-                      <span key={r.name} className={styles.infoRoleTag} style={{ borderColor: r.color, color: r.color }}>
+                    {(profileUser.roles ?? [profileUser.role]).map((r) => (
+                      <span
+                        key={r.name}
+                        className={styles.infoRoleTag}
+                        style={{ borderColor: r.color, color: r.color }}
+                      >
                         {r.displayName}
                       </span>
                     ))}
@@ -532,11 +796,21 @@ export default function ProfilePage() {
                         style={{ color: r.color }}
                         title={r.displayName}
                       >
-                        {r.name === "ADMIN" && <Crown size={15} strokeWidth={2.4} />}
-                        {r.name === "PRE_ADMIN" && <Shield size={15} strokeWidth={2.4} />}
-                        {r.name === "ST_MODERATOR" && <ShieldCheck size={15} strokeWidth={2.4} />}
-                        {r.name === "MODERATOR" && <Shield size={15} strokeWidth={2.4} />}
-                        {r.name === "USER" && <Star size={15} strokeWidth={2.4} />}
+                        {r.name === "ADMIN" && (
+                          <Crown size={15} strokeWidth={2.4} />
+                        )}
+                        {r.name === "PRE_ADMIN" && (
+                          <Shield size={15} strokeWidth={2.4} />
+                        )}
+                        {r.name === "ST_MODERATOR" && (
+                          <ShieldCheck size={15} strokeWidth={2.4} />
+                        )}
+                        {r.name === "MODERATOR" && (
+                          <Shield size={15} strokeWidth={2.4} />
+                        )}
+                        {r.name === "USER" && (
+                          <Star size={15} strokeWidth={2.4} />
+                        )}
                       </span>
                     ))}
                   </span>
@@ -547,7 +821,9 @@ export default function ProfilePage() {
         </section>
 
         {/* Footer mark */}
-        <section className={`${styles.footerMark}${hasAnyEffect ? ` ${styles.footerMarkPrivileged}` : ""}`}>
+        <section
+          className={`${styles.footerMark}${hasAnyEffect ? ` ${styles.footerMarkPrivileged}` : ""}`}
+        >
           <span>
             {hasAnyEffect
               ? `YUMEKO / ${roleName.replace("_", " ")} / ${profileUser.handle.replace("@", "").toUpperCase()}`
@@ -555,14 +831,15 @@ export default function ProfilePage() {
           </span>
           <span>{hasAnyEffect ? "VERIFIED / PROFILE" : "END / OF / FILE"}</span>
         </section>
-
       </main>
 
       {/* Collection Modal */}
       {modal === "collection" && (
         <>
           <div className={styles.searchOverlay} onClick={closeModal} />
-          <div className={`${styles.bookmarksModal} ${modalClosing ? styles.bookmarksModalClosing : ""}`}>
+          <div
+            className={`${styles.bookmarksModal} ${modalClosing ? styles.bookmarksModalClosing : ""}`}
+          >
             <div className={styles.bookmarksHeader}>
               <div className={styles.bookmarksTabs} ref={bmTabsRef}>
                 {[
@@ -582,7 +859,10 @@ export default function ProfilePage() {
                     {t.label}
                   </button>
                 ))}
-                <div className={styles.bmTabIndicator} style={{ left: bmIndicator.left, width: bmIndicator.width }} />
+                <div
+                  className={styles.bmTabIndicator}
+                  style={{ left: bmIndicator.left, width: bmIndicator.width }}
+                />
               </div>
               <button className={styles.searchClose} onClick={closeModal}>
                 <X size={20} />
@@ -591,7 +871,11 @@ export default function ProfilePage() {
             <div className={styles.bookmarksBody} key={bookmarksTab}>
               {(() => {
                 if (collectionsLoading) {
-                  return <div className={styles.bookmarksEmpty}><p>Загрузка...</p></div>;
+                  return (
+                    <div className={styles.bookmarksEmpty}>
+                      <p>Загрузка...</p>
+                    </div>
+                  );
                 }
                 const ids = collectionMap[bookmarksTab] || [];
                 const items = animeCatalog.filter((a) => ids.includes(a.id));
@@ -606,16 +890,39 @@ export default function ProfilePage() {
                 return (
                   <div className={styles.bookmarksGrid}>
                     {items.map((item) => (
-                      <Link key={item.id} href={`/realeses/anime-page/${item.id}`} className={styles.bookmarkCard} onClick={closeModal}>
+                      <Link
+                        key={item.id}
+                        href={`/realeses/anime-page/${item.id}`}
+                        className={styles.bookmarkCard}
+                        onClick={closeModal}
+                      >
                         <div className={styles.bookmarkCardPoster}>
-                          <img src={item.poster} alt={item.title} className={styles.bookmarkCardImg} />
-                          <div className={styles.bookmarkCardAccent} style={{ background: getAccent(item.rating) }} />
-                          <span className={styles.bookmarkCardRating}>{item.rating}</span>
+                          <img
+                            src={item.poster}
+                            alt={item.title}
+                            className={styles.bookmarkCardImg}
+                          />
+                          <div
+                            className={styles.bookmarkCardAccent}
+                            style={{ background: getAccent(item.rating) }}
+                          />
+                          <span className={styles.bookmarkCardRating}>
+                            {item.rating}
+                          </span>
                         </div>
                         <div className={styles.bookmarkCardInfo}>
-                          <span className={styles.bookmarkCardTitle}>{item.title}</span>
-                          <span className={styles.bookmarkCardMeta}>{item.meta}</span>
-                          <span className={styles.bookmarkCardGenres} style={{ color: getAccent(item.rating) }}>{item.genres}</span>
+                          <span className={styles.bookmarkCardTitle}>
+                            {item.title}
+                          </span>
+                          <span className={styles.bookmarkCardMeta}>
+                            {item.meta}
+                          </span>
+                          <span
+                            className={styles.bookmarkCardGenres}
+                            style={{ color: getAccent(item.rating) }}
+                          >
+                            {item.genres}
+                          </span>
                         </div>
                       </Link>
                     ))}
@@ -631,11 +938,20 @@ export default function ProfilePage() {
       {modal === "friends" && (
         <>
           <div className={styles.searchOverlay} onClick={closeModal} />
-          <div className={`${styles.friendsModal} ${modalClosing ? styles.friendsModalClosing : ""}`}>
+          <div
+            className={`${styles.friendsModal} ${modalClosing ? styles.friendsModalClosing : ""}`}
+          >
             <div className={styles.friendsHeader}>
               <div className={styles.friendsTabs}>
-                <button className={`${styles.friendsTabBtn} ${styles.friendsTabBtnActive}`}>
-                  Друзья{friendsList.length > 0 && <span className={styles.friendsTabCount}>{friendsList.length}</span>}
+                <button
+                  className={`${styles.friendsTabBtn} ${styles.friendsTabBtnActive}`}
+                >
+                  Друзья
+                  {friendsList.length > 0 && (
+                    <span className={styles.friendsTabCount}>
+                      {friendsList.length}
+                    </span>
+                  )}
                 </button>
               </div>
               <button className={styles.searchClose} onClick={closeModal}>
@@ -644,7 +960,9 @@ export default function ProfilePage() {
             </div>
             <div className={styles.friendsBody}>
               {friendsListLoading ? (
-                <div className={styles.friendsEmpty}><p>Загрузка...</p></div>
+                <div className={styles.friendsEmpty}>
+                  <p>Загрузка...</p>
+                </div>
               ) : friendsList.length === 0 ? (
                 <div className={styles.friendsEmpty}>
                   <Users size={48} strokeWidth={1.2} />
@@ -653,31 +971,67 @@ export default function ProfilePage() {
               ) : (
                 <div className={styles.friendsGrid}>
                   {friendsList.map((f: any) => {
-                    const hasEffect = f.effectShimmer || f.effectBorderGlow || f.effectAvatarGlow || f.effectVerifiedBadge;
+                    const hasEffect =
+                      f.effectShimmer ||
+                      f.effectBorderGlow ||
+                      f.effectAvatarGlow ||
+                      f.effectVerifiedBadge;
                     return (
-                      <Link key={f.id} href={`/profile/${f.username}`} onClick={closeModal} className={`${styles.friendCard}${hasEffect ? ` ${styles.friendCardPrivileged}` : ""}`} style={getFriendCardStyle(f)}>
+                      <Link
+                        key={f.id}
+                        href={`/profile/${f.username}`}
+                        onClick={closeModal}
+                        className={`${styles.friendCard}${hasEffect ? ` ${styles.friendCardPrivileged}` : ""}`}
+                        style={getFriendCardStyle(f)}
+                      >
                         <div className={styles.friendCardBanner}>
                           {f.hasBanner ? (
-                            <ProtectedImage src={`${API_URL}/api/media/${f.username}/banner`} alt="" className={styles.friendCardBannerImg} />
+                            <ProtectedImage
+                              src={`${API_URL}/api/media/${f.username}/banner`}
+                              alt=""
+                              className={styles.friendCardBannerImg}
+                            />
                           ) : (
                             <div className={styles.friendCardBannerFallback} />
                           )}
                           <div className={styles.friendCardBannerOverlay} />
-                          {f.effectShimmer && <div className={styles.friendCardShimmer} />}
-                          {f.effectBorderGlow && <div className={styles.friendCardGlow} />}
+                          {f.effectShimmer && (
+                            <div className={styles.friendCardShimmer} />
+                          )}
+                          {f.effectBorderGlow && (
+                            <div className={styles.friendCardGlow} />
+                          )}
                         </div>
                         <div className={styles.friendCardBody}>
-                          <div className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}>
+                          <div
+                            className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}
+                          >
                             {f.hasAvatar ? (
-                              <ProtectedImage src={`${API_URL}/api/media/${f.username}/avatar`} alt={f.displayName} className={styles.friendAvatarImg} />
+                              <ProtectedImage
+                                src={`${API_URL}/api/media/${f.username}/avatar`}
+                                alt={f.displayName}
+                                className={styles.friendAvatarImg}
+                              />
                             ) : (
                               <span>{f.displayName.charAt(0)}</span>
                             )}
                           </div>
                           <div className={styles.friendInfo}>
-                            <span className={styles.friendName}>{f.displayName}</span>
-                            <span className={styles.friendHandle}>@{f.username}</span>
-                            <span className={styles.friendRoleBadge} style={{ color: f.role?.color, borderColor: f.role?.color }}>{f.role?.displayName}</span>
+                            <span className={styles.friendName}>
+                              {f.displayName}
+                            </span>
+                            <span className={styles.friendHandle}>
+                              @{f.username}
+                            </span>
+                            <span
+                              className={styles.friendRoleBadge}
+                              style={{
+                                color: f.role?.color,
+                                borderColor: f.role?.color,
+                              }}
+                            >
+                              {f.role?.displayName}
+                            </span>
                           </div>
                         </div>
                       </Link>

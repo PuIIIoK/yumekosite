@@ -1,0 +1,197 @@
+.statusIndicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+
+    &.online {
+        background: #22c55e;
+        box-shadow: 0 0 6px #22c55e;
+        animation: pulse 2s infinite;
+    }
+
+    &.away {
+        background: transparent;
+    }
+
+    &.awayDot {
+        background: #18181c;
+        padding: 3px;
+        width: auto !important;
+        height: auto !important;
+        border-radius: 50%;
+        line-height: 0;
+        animation: awayBadgePulse 2s ease-in-out infinite;
+    }
+
+    &.dnd {
+        background: #ef4444;
+    }
+
+    &.dndDot {
+        background: #18181c;
+        padding: 3px;
+        width: auto !important;
+        height: auto !important;
+        border-radius: 50%;
+        line-height: 0;
+        animation: dndBadgePulse 2s ease-in-out infinite;
+    }
+
+    &.dndIcon {
+        background: transparent;
+        width: auto !important;
+        height: auto !important;
+        // Профиль: иконка без фона, но с пульсацией
+        .dotIcon {
+            animation: dndIconPulse 2s ease-in-out infinite;
+        }
+    }
+
+    &.away {
+        // Профиль: луна без фона, но с пульсацией
+        .dotIcon {
+            animation: awayIconPulse 2s ease-in-out infinite;
+        }
+    }
+
+    &.recently {
+        background: #f59e0b;
+    }
+
+    &.offline {
+        background: #6b7280;
+    }
+}
+
+.dotIcon {
+    display: block;
+    flex-shrink: 0;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+// Бейдж-пульс (тёмный кружок в хидере и мини-профиле)
+@keyframes awayBadgePulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0);
+    }
+}
+
+@keyframes dndBadgePulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+    }
+}
+
+// Профиль-пульс (иконка рядом с лейблом без фона)
+@keyframes awayIconPulse {
+    0%,
+    100% {
+        filter: drop-shadow(0 0 0px rgba(245, 158, 11, 0));
+    }
+    50% {
+        filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.9));
+    }
+}
+
+@keyframes dndIconPulse {
+    0%,
+    100% {
+        filter: drop-shadow(0 0 0px rgba(239, 68, 68, 0));
+    }
+    50% {
+        filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.9));
+    }
+}
+
+.label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+}
+
+.timeAgo {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+}
+
+// Sizes
+.sm {
+    .dot {
+        width: 8px;
+        height: 8px;
+        &.away,
+        &.dnd,
+        &.awayDot,
+        &.dndDot,
+        &.dndIcon {
+            width: auto;
+            height: auto;
+        }
+    }
+    .label {
+        font-size: 10px;
+    }
+}
+
+.md {
+    .dot {
+        width: 10px;
+        height: 10px;
+        &.away,
+        &.dnd,
+        &.awayDot,
+        &.dndDot,
+        &.dndIcon {
+            width: auto;
+            height: auto;
+        }
+    }
+}
+
+.lg {
+    .dot {
+        width: 13px;
+        height: 13px;
+        &.away,
+        &.dnd,
+        &.awayDot,
+        &.dndDot,
+        &.dndIcon {
+            width: auto;
+            height: auto;
+        }
+    }
+    .label {
+        font-size: 14px;
+    }
+}

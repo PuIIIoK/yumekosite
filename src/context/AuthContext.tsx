@@ -1,8 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { API_URL } from "@/config/hosts";
-const CRYPTO_SECRET = process.env.NEXT_PUBLIC_CRYPTO_SECRET || "Ym3k0Stud10_S3cR3t_K3y_2024!xQ9";
+const CRYPTO_SECRET =
+  process.env.NEXT_PUBLIC_CRYPTO_SECRET || "Ym3k0Stud10_S3cR3t_K3y_2024!xQ9";
 
 export type Role = {
   id: number;
@@ -33,6 +40,7 @@ export type User = {
   roles?: Role[];
   imageVersion: number;
   effects: ProfileEffects;
+  manualStatus?: string;
 };
 
 type AuthResult = { ok: true; user: User } | { ok: false; error: string };
@@ -43,8 +51,21 @@ type AuthContextType = {
   isAuthenticated: boolean;
   mounted: boolean;
   login: (username: string, password: string) => Promise<AuthResult>;
-  register: (username: string, password: string, confirmPassword: string) => Promise<AuthResult>;
-  updateProfile: (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string; profileCanvasStyle?: string }) => Promise<UpdateResult>;
+  register: (
+    username: string,
+    password: string,
+    confirmPassword: string,
+  ) => Promise<AuthResult>;
+  updateProfile: (data: {
+    displayName?: string;
+    bio?: string;
+    effectShimmer?: boolean;
+    effectBorderGlow?: boolean;
+    effectAvatarGlow?: boolean;
+    effectVerifiedBadge?: boolean;
+    accentColor?: string;
+    profileCanvasStyle?: string;
+  }) => Promise<UpdateResult>;
   uploadImage: (type: "avatar" | "banner", file: File) => Promise<UpdateResult>;
   refreshUser: () => Promise<void>;
   logout: () => void;
@@ -78,8 +99,20 @@ async function encryptText(plainText: string): Promise<string> {
   const keyBytes = new Uint8Array(32);
   keyBytes.set(secretBytes.slice(0, 32));
   const iv = crypto.getRandomValues(new Uint8Array(16));
-  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-CBC" }, false, ["encrypt"]);
-  const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-CBC", iv }, key, encoder.encode(plainText)));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-CBC" },
+    false,
+    ["encrypt"],
+  );
+  const encrypted = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-CBC", iv },
+      key,
+      encoder.encode(plainText),
+    ),
+  );
   const combined = new Uint8Array(iv.length + encrypted.length);
   combined.set(iv, 0);
   combined.set(encrypted, iv.length);
@@ -95,9 +128,24 @@ function mapUser(dto: any): User {
     bio: dto.bio,
     hasAvatar: dto.hasAvatar ?? false,
     hasBanner: dto.hasBanner ?? false,
-    role: dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 },
-    roles: dto.roles || [dto.role || { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 }],
+    role: dto.role || {
+      id: 0,
+      name: "USER",
+      displayName: "User",
+      color: "#6b7280",
+      priority: 0,
+    },
+    roles: dto.roles || [
+      dto.role || {
+        id: 0,
+        name: "USER",
+        displayName: "User",
+        color: "#6b7280",
+        priority: 0,
+      },
+    ],
     imageVersion: dto.imageVersion ?? Date.now(),
+    manualStatus: dto.manualStatus ?? "ONLINE",
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
       effectBorderGlow: dto.effectBorderGlow ?? false,
@@ -120,7 +168,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (!parsed.role || typeof parsed.role === "string") {
-          parsed.role = { id: 0, name: "USER", displayName: "User", color: "#6b7280", priority: 0 };
+          parsed.role = {
+            id: 0,
+            name: "USER",
+            displayName: "User",
+            color: "#6b7280",
+            priority: 0,
+          };
         }
         if (parsed.avatarUrl !== undefined) {
           parsed.hasAvatar = !!parsed.avatarUrl;
@@ -150,7 +204,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, mounted]);
 
-  const login = async (username: string, password: string): Promise<AuthResult> => {
+  const login = async (
+    username: string,
+    password: string,
+  ): Promise<AuthResult> => {
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
@@ -161,7 +218,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
 
       if (!data.ok) {
-        return { ok: false, error: data.message || "Неверный логин или пароль" };
+        return {
+          ok: false,
+          error: data.message || "Неверный логин или пароль",
+        };
       }
 
       const u = mapUser(data.user);
@@ -172,7 +232,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (username: string, password: string, confirmPassword: string): Promise<AuthResult> => {
+  const register = async (
+    username: string,
+    password: string,
+    confirmPassword: string,
+  ): Promise<AuthResult> => {
     try {
       const encryptedPassword = await encryptText(password);
       const encryptedConfirmPassword = await encryptText(confirmPassword);
@@ -180,7 +244,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password: encryptedPassword, confirmPassword: encryptedConfirmPassword }),
+        body: JSON.stringify({
+          username,
+          password: encryptedPassword,
+          confirmPassword: encryptedConfirmPassword,
+        }),
       });
 
       const data = await res.json();
@@ -197,7 +265,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateProfile = async (data: { displayName?: string; bio?: string; effectShimmer?: boolean; effectBorderGlow?: boolean; effectAvatarGlow?: boolean; effectVerifiedBadge?: boolean; accentColor?: string; profileCanvasStyle?: string }): Promise<UpdateResult> => {
+  const updateProfile = async (data: {
+    displayName?: string;
+    bio?: string;
+    effectShimmer?: boolean;
+    effectBorderGlow?: boolean;
+    effectAvatarGlow?: boolean;
+    effectVerifiedBadge?: boolean;
+    accentColor?: string;
+    profileCanvasStyle?: string;
+  }): Promise<UpdateResult> => {
     if (!user) return { ok: false, error: "Не авторизован" };
     try {
       const res = await fetch(`${API_URL}/api/profile/${user.username}`, {
@@ -221,16 +298,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const uploadImage = async (type: "avatar" | "banner", file: File): Promise<UpdateResult> => {
+  const uploadImage = async (
+    type: "avatar" | "banner",
+    file: File,
+  ): Promise<UpdateResult> => {
     if (!user) return { ok: false, error: "Не авторизован" };
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`${API_URL}/api/profile/${user.username}/${type}`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `${API_URL}/api/profile/${user.username}/${type}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
 
       const hexText = await res.text();
       const result = JSON.parse(parseHexDump(hexText));
@@ -251,7 +334,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`${API_URL}/api/profile/${user.username}`, { cache: "no-store" });
+      const res = await fetch(`${API_URL}/api/profile/${user.username}`, {
+        cache: "no-store",
+      });
       const hex = await res.text();
       const json = JSON.parse(parseHexDump(hex));
       if (json.ok && json.user) {
@@ -267,14 +352,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_URL}/api/profile/${user.username}`, { cache: "no-store" });
+        const res = await fetch(`${API_URL}/api/profile/${user.username}`, {
+          cache: "no-store",
+        });
         const hex = await res.text();
         const json = JSON.parse(parseHexDump(hex));
         if (json.ok && json.user) {
           const u = mapUser(json.user);
           // Update if roles changed
-          const currentRoles = user.roles?.map(r => r.name).sort().join(",") || "";
-          const newRoles = u.roles?.map(r => r.name).sort().join(",") || "";
+          const currentRoles =
+            user.roles
+              ?.map((r) => r.name)
+              .sort()
+              .join(",") || "";
+          const newRoles =
+            u.roles
+              ?.map((r) => r.name)
+              .sort()
+              .join(",") || "";
           if (currentRoles !== newRoles) {
             u.imageVersion = Date.now();
             setUser(u);
@@ -288,7 +383,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => setUser(null);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, mounted, login, register, updateProfile, uploadImage, refreshUser, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        mounted,
+        login,
+        register,
+        updateProfile,
+        uploadImage,
+        refreshUser,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
