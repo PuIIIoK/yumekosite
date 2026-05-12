@@ -52,16 +52,19 @@ export function StatusProvider({ children }: { children: ReactNode }) {
   const subscribedUsersRef = useRef<Set<number>>(new Set());
   const userIdRef = useRef<number | null>(null);
   // Единственный источник правды для manualStatus — ref, не state
-  const manualStatusRef = useRef<ManualStatus>(() => {
-    if (typeof window === "undefined") return "ONLINE";
-    const saved = localStorage.getItem(MANUAL_STATUS_KEY);
-    return saved === "ONLINE" ||
-      saved === "AWAY" ||
-      saved === "DND" ||
-      saved === "INVISIBLE"
-      ? (saved as ManualStatus)
-      : "ONLINE";
-  });
+  // useRef не поддерживает lazy-инициализатор, вычисляем значение сразу
+  const manualStatusRef = useRef<ManualStatus>(
+    (() => {
+      if (typeof window === "undefined") return "ONLINE";
+      const saved = localStorage.getItem(MANUAL_STATUS_KEY);
+      return saved === "ONLINE" ||
+        saved === "AWAY" ||
+        saved === "DND" ||
+        saved === "INVISIBLE"
+        ? (saved as ManualStatus)
+        : "ONLINE";
+    })(),
+  );
   const userManualOverridesRef = useRef<Map<number, ManualStatus>>(new Map());
 
   useEffect(() => {
