@@ -66,6 +66,8 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     })(),
   );
   const userManualOverridesRef = useRef<Map<number, ManualStatus>>(new Map());
+  // Время последнего локального изменения статуса (для защиты от перезаписи своим же ответом по WebSocket)
+  const lastLocalChangeRef = useRef<number>(0);
 
   useEffect(() => {
     userIdRef.current = user?.id ?? null;
@@ -231,6 +233,27 @@ export function StatusProvider({ children }: { children: ReactNode }) {
         // Загружаем статус с сервера и сразу применяем
         const uid = userIdRef.current;
         if (uid) {
+          // Подписка на личный канал обновлений manualStatus
+          // срабатывает, когда статус сменился с другой страницы или устройства
+          client.subscribe(
+            `/topic/manual-status/${uid}`,
+            (msg: { body: string }) => {
+              const data = JSON.parse(msg.body);
+              const ms = data?.manualStatus as string | undefined;
+              const valid = ["ONLINE", "AWAY", "DND", "INVISIBLE"];
+              if (!ms || !valid.includes(ms)) return;
+              const resolved = ms as ManualStatus;
+
+              // Игнорируем если: статус совпадает с локальным
+              if (resolved === manualStatusRef.current) return;
+              // Игнорируем если: мы сами только что меняли статус (защита от эхо-цикла)
+              if (Date.now() - lastLocalChangeRef.current < 3000) return;
+
+              // Применяем статус с другого устройства
+              applyStoredStatusRef.current(uid, client);
+            },
+          );
+
           applyStoredStatusRef.current(uid, client);
         }
       },
@@ -320,6 +343,7 @@ export function StatusProvider({ children }: { children: ReactNode }) {
           : "RECENTLY";
 
     // Обновляем ref синхронно ДО любого setState
+    lastLocalChangeRef.current = Date.now(); // фиксируем время локального изменения
     manualStatusRef.current = status;
     userManualOverridesRef.current.set(uid, status);
     if (typeof window !== "undefined") {
