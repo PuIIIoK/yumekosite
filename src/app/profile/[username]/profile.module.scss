@@ -1933,6 +1933,53 @@
     object-fit: cover;
 }
 
+.friendAvatarWrap {
+    position: relative;
+    flex-shrink: 0;
+
+    > div[class*="statusIndicator"] {
+        position: absolute;
+        bottom: -3px;
+        right: -3px;
+        z-index: 5;
+
+        span[class*="dot"] {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-card, #1a1a1e);
+
+            &[class*="online"] {
+                background: #2ee07a;
+                box-shadow: 0 0 5px rgba(46, 224, 122, 0.5);
+                animation: statusPulseAvatar 2.4s ease-out infinite;
+            }
+            &[class*="recently"] {
+                background: #f59e0b;
+            }
+            &[class*="offline"] {
+                background: #6b7280;
+            }
+            &[class*="awayDot"] {
+                padding: 2px !important;
+                width: auto !important;
+                height: auto !important;
+                border: none !important;
+            }
+            &[class*="dndDot"] {
+                padding: 2px !important;
+                width: auto !important;
+                height: auto !important;
+                border: none !important;
+            }
+        }
+
+        span[class*="label"] {
+            display: none;
+        }
+    }
+}
+
 .friendCardBody {
     display: flex;
     align-items: center;

@@ -2791,18 +2791,25 @@ export default function Header() {
                             )}
                           </div>
                           <div className={styles.friendCardBody}>
-                            <div
-                              className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}
-                            >
-                              {f.hasAvatar ? (
-                                <ProtectedImage
-                                  src={`${API_URL}/api/media/${f.username}/avatar`}
-                                  alt={f.displayName}
-                                  className={styles.friendAvatarImg}
-                                />
-                              ) : (
-                                <span>{f.displayName.charAt(0)}</span>
-                              )}
+                            <div className={styles.friendAvatarWrap}>
+                              <div
+                                className={`${styles.friendAvatar}${f.effectAvatarGlow ? ` ${styles.friendAvatarGlow}` : ""}`}
+                              >
+                                {f.hasAvatar ? (
+                                  <ProtectedImage
+                                    src={`${API_URL}/api/media/${f.username}/avatar`}
+                                    alt={f.displayName}
+                                    className={styles.friendAvatarImg}
+                                  />
+                                ) : (
+                                  <span>{f.displayName.charAt(0)}</span>
+                                )}
+                              </div>
+                              <UserStatusIndicator
+                                userId={f.id}
+                                size="sm"
+                                dotOnly
+                              />
                             </div>
                             <div className={styles.friendInfo}>
                               <span className={styles.friendName}>
