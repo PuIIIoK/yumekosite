@@ -393,50 +393,57 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setUserManualStatus = useCallback(async (status: ManualStatus) => {
-    const uid = userIdRef.current;
-    if (!uid) return;
+  // isAutomatic=true — вызван авто-таймером, не сбрасываем флаг wasAutoAwayRef
+  const setUserManualStatus = useCallback(
+    async (status: ManualStatus, isAutomatic = false) => {
+      const uid = userIdRef.current;
+      if (!uid) return;
 
-    const publicStatus: UserStatus =
-      status === "ONLINE"
-        ? "ONLINE"
-        : status === "INVISIBLE"
-          ? "OFFLINE"
-          : "RECENTLY";
+      const publicStatus: UserStatus =
+        status === "ONLINE"
+          ? "ONLINE"
+          : status === "INVISIBLE"
+            ? "OFFLINE"
+            : "RECENTLY";
 
-    // Любое ручное действие отменяет авто-Трекинг
-    wasAutoAwayRef.current = false;
-    // Обновляем ref синхронно ДО любого setState
-    lastLocalChangeRef.current = Date.now(); // фиксируем время локального изменения
-    manualStatusRef.current = status;
-    userManualOverridesRef.current.set(uid, status);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(MANUAL_STATUS_KEY, status);
-    }
+      // Сбрасываем флаг авто-неактива только если это ручное действие
+      // При авто-авей (isAutomatic=true) флаг остаётся true для обнаружения возвращения
+      if (!isAutomatic) {
+        wasAutoAwayRef.current = false;
+      }
+      // Обновляем ref синхронно ДО любого setState
+      lastLocalChangeRef.current = Date.now(); // фиксируем время локального изменения
+      manualStatusRef.current = status;
+      userManualOverridesRef.current.set(uid, status);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(MANUAL_STATUS_KEY, status);
+      }
 
-    // Один setStatuses — всё в одном батче, никакого промежуточного рендера
-    setStatuses((prev) =>
-      new Map(prev).set(uid, {
-        userId: uid,
-        status: publicStatus,
-        manualStatus: status,
-        lastSeen: new Date().toISOString(),
-      }),
-    );
-
-    const client = clientRef.current;
-    if (client?.connected) {
-      client.publish({
-        destination: "/app/set-status",
-        // status — публичный (ONLINE/RECENTLY/OFFLINE), originalStatus — оригинальный для БД
-        body: JSON.stringify({
+      // Один setStatuses — всё в одном батче, никакого промежуточного рендера
+      setStatuses((prev) =>
+        new Map(prev).set(uid, {
           userId: uid,
           status: publicStatus,
-          originalStatus: status,
+          manualStatus: status,
+          lastSeen: new Date().toISOString(),
         }),
-      });
-    }
-  }, []);
+      );
+
+      const client = clientRef.current;
+      if (client?.connected) {
+        client.publish({
+          destination: "/app/set-status",
+          // status — публичный (ONLINE/RECENTLY/OFFLINE), originalStatus — оригинальный для БД
+          body: JSON.stringify({
+            userId: uid,
+            status: publicStatus,
+            originalStatus: status,
+          }),
+        });
+      }
+    },
+    [],
+  );
 
   // Авто-Неактив: если пользователь не делает ничего 1.5 часа — статус меняется на Неактив
   useEffect(() => {
@@ -456,20 +463,28 @@ export function StatusProvider({ children }: { children: ReactNode }) {
         // Ставим Неактив только если текущий статус ONLINE (не DND/INVISIBLE/ман. AWAY)
         if (manualStatusRef.current === "ONLINE") {
           wasAutoAwayRef.current = true;
-          setUserManualStatus("AWAY");
+          // isAutomatic=true — не сбрасываем wasAutoAwayRef внутри setUserManualStatus
+          setUserManualStatus("AWAY", true);
         }
       }, AUTO_AWAY_TIMEOUT);
+    };
+
+    // Возвращение в вкладку — также считается активностью
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") onActivity();
     };
 
     const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
     events.forEach((e) =>
       window.addEventListener(e, onActivity, { passive: true }),
     );
+    document.addEventListener("visibilitychange", onVisibility);
     onActivity(); // запуск таймера сразу
 
     return () => {
       if (timer) clearTimeout(timer);
       events.forEach((e) => window.removeEventListener(e, onActivity));
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [user?.id, setUserManualStatus]);
 
