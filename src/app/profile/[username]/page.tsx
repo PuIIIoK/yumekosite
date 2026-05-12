@@ -321,6 +321,33 @@ export default function ProfilePage() {
     };
   }, [profileUser]);
 
+  // Sync own profile with live auth.user data (settings changes apply instantly)
+  useEffect(() => {
+    if (!auth.user || !profileUser) return;
+    if (auth.user.username.toLowerCase() !== profileUser.username.toLowerCase())
+      return;
+    setProfileUser((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        displayName: auth.user!.displayName || prev.displayName,
+        bio: auth.user!.bio ?? prev.bio,
+        hasAvatar: auth.user!.hasAvatar ?? prev.hasAvatar,
+        hasBanner: auth.user!.hasBanner ?? prev.hasBanner,
+        effects: auth.user!.effects
+          ? {
+              effectShimmer: auth.user!.effects.effectShimmer,
+              effectBorderGlow: auth.user!.effects.effectBorderGlow,
+              effectAvatarGlow: auth.user!.effects.effectAvatarGlow,
+              effectVerifiedBadge: auth.user!.effects.effectVerifiedBadge,
+              accentColor: auth.user!.effects.accentColor,
+              profileCanvasStyle: auth.user!.effects.profileCanvasStyle,
+            }
+          : prev.effects,
+      };
+    });
+  }, [auth.user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!username) return;
     fetch(`${API_URL}/api/friends/count/${username.toLowerCase()}`)

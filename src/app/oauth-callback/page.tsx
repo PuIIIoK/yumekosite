@@ -2,12 +2,48 @@
 
 import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ArrowLeft,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  Link2,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/config/hosts";
+import s from "./OAuthCallback.module.scss";
 
 type Phase = "loading" | "linking" | "success" | "error";
 
-// Внутренний компонент использует useSearchParams — должен быть внутри Suspense
+// ── SVG иконки провайдеров ────────────────────────────────────────────────────
+function DiscordIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 127.14 96.36"
+      fill="currentColor"
+    >
+      <path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.1 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.1 12.69-11.43 12.69z" />
+    </svg>
+  );
+}
+
+function TelegramIcon({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
+    </svg>
+  );
+}
+
+// ── Внутренний компонент ──────────────────────────────────────────────────────
 function OAuthCallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
@@ -18,11 +54,22 @@ function OAuthCallbackInner() {
   const [provider, setProvider] = useState<"discord" | "telegram">("discord");
   const [providerUsername, setProviderUsername] = useState("");
   const [linkToken, setLinkToken] = useState("");
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [linking, setLinking] = useState(false);
   const [linkError, setLinkError] = useState("");
+
   const processed = useRef(false);
+  const usernameRef = useRef<HTMLInputElement>(null);
+
+  // Focus username field when linking phase appears
+  useEffect(() => {
+    if (phase === "linking") {
+      setTimeout(() => usernameRef.current?.focus(), 120);
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (processed.current) return;
@@ -30,25 +77,23 @@ function OAuthCallbackInner() {
 
     const token = params.get("token");
     const error = params.get("error");
-    const isNew = params.get("new") === "true";
 
     if (error) {
       setErrorMsg(
         error === "cancelled"
           ? "Авторизация отменена"
-          : "Ошибка сервера. Попробуйте снова.",
+          : "Произошла ошибка на сервере. Попробуйте снова.",
       );
       setPhase("error");
       return;
     }
 
     if (!token) {
-      setErrorMsg("Неверный запрос");
+      setErrorMsg("Неверный запрос. Попробуйте войти ещё раз.");
       setPhase("error");
       return;
     }
 
-    // Exchange temp token for user data
     fetch(`${API_URL}/api/auth/oauth/exchange?token=${token}`)
       .then((r) => r.json())
       .then((data) => {
@@ -59,12 +104,10 @@ function OAuthCallbackInner() {
         }
 
         if (!data.needsLink) {
-          // Already linked — log in immediately
           loginWithOAuthUser(data.user);
-          setTimeout(() => router.replace("/"), 500);
           setPhase("success");
+          setTimeout(() => router.replace("/"), 1000);
         } else {
-          // Need to link to existing account
           setProvider(data.provider ?? "discord");
           setProviderUsername(data.username ?? "");
           setLinkToken(data.linkToken ?? "");
@@ -72,13 +115,13 @@ function OAuthCallbackInner() {
         }
       })
       .catch(() => {
-        setErrorMsg("Ошибка соединения с сервером");
+        setErrorMsg("Ошибка соединения с сервером. Проверьте подключение.");
         setPhase("error");
       });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLink = async () => {
-    if (!username.trim() || !password) return;
+    if (!username.trim() || !password || linking) return;
     setLinking(true);
     setLinkError("");
 
@@ -102,7 +145,7 @@ function OAuthCallbackInner() {
 
       loginWithOAuthUser(data.user);
       setPhase("success");
-      setTimeout(() => router.replace("/"), 800);
+      setTimeout(() => router.replace("/"), 1000);
     } catch {
       setLinkError("Ошибка соединения с сервером");
       setLinking(false);
@@ -110,213 +153,198 @@ function OAuthCallbackInner() {
   };
 
   const providerLabel = provider === "discord" ? "Discord" : "Telegram";
-  const providerColor = provider === "discord" ? "#5865f2" : "#2aabee";
+  const providerColor = provider === "discord" ? "#5865f2" : "#229ED9";
+  const providerIcon =
+    provider === "discord" ? (
+      <DiscordIcon size={28} />
+    ) : (
+      <TelegramIcon size={26} />
+    );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--bg-primary, #0a0a0c)",
-        padding: "20px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          background: "var(--bg-elevated, #141418)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 20,
-          padding: 40,
-          textAlign: "center",
-        }}
-      >
-        {/* ── Loading ── */}
-        {phase === "loading" && (
-          <>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⏳</div>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15 }}>
-              Подключаемся...
-            </p>
-          </>
-        )}
+    <div className={s.page}>
+      {/* Logo */}
+      <Link href="/" className={s.logo}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Yumeko
+      </Link>
 
-        {/* ── Success ── */}
-        {phase === "success" && (
-          <>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-            <p style={{ color: "#22c55e", fontSize: 16, fontWeight: 600 }}>
-              Вход выполнен!
-            </p>
+      <div className={s.card}>
+        {/* ── Loading ─────────────────────────────────────────────────────── */}
+        {phase === "loading" && (
+          <div className={s.phaseContent} key="loading">
+            <div className={s.spinnerWrap}>
+              <Loader2 size={28} className={s.spinner} />
+            </div>
+            <p className={s.loadingTitle}>Устанавливаем соединение</p>
             <p
               style={{
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--text-secondary)",
                 fontSize: 13,
-                marginTop: 6,
+                margin: 0,
               }}
             >
-              Переадресация...
+              Проверяем данные авторизации…
             </p>
-          </>
+            <div className={s.loadingDots}>
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
         )}
 
-        {/* ── Error ── */}
+        {/* ── Success ─────────────────────────────────────────────────────── */}
+        {phase === "success" && (
+          <div className={s.phaseContent} key="success">
+            <div className={s.successIcon}>
+              <CheckCircle2 size={34} strokeWidth={1.8} />
+            </div>
+            <p className={s.successTitle}>Вход выполнен!</p>
+            <p className={s.successSub}>Перенаправляем вас на главную…</p>
+            <div className={s.progressBar} />
+          </div>
+        )}
+
+        {/* ── Error ───────────────────────────────────────────────────────── */}
         {phase === "error" && (
-          <>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>❌</div>
-            <p style={{ color: "#ef4444", fontSize: 15, fontWeight: 600 }}>
-              {errorMsg}
-            </p>
-            <button
-              onClick={() => router.replace("/")}
-              style={{
-                marginTop: 24,
-                padding: "10px 28px",
-                borderRadius: 10,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#fff",
-                cursor: "pointer",
-                fontSize: 14,
-              }}
-            >
+          <div className={s.phaseContent} key="error">
+            <div className={s.errorIcon}>
+              <XCircle size={34} strokeWidth={1.8} />
+            </div>
+            <p className={s.errorTitle}>{errorMsg}</p>
+            <button className={s.homeBtn} onClick={() => router.replace("/")}>
+              <ArrowLeft size={16} strokeWidth={2.2} />
               На главную
             </button>
-          </>
+          </div>
         )}
 
-        {/* ── Link to existing account ── */}
+        {/* ── Linking ─────────────────────────────────────────────────────── */}
         {phase === "linking" && (
-          <>
-            {/* Provider icon */}
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                background: providerColor,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 16px",
-                fontSize: 28,
-              }}
-            >
-              {provider === "discord" ? "🎮" : "✈️"}
+          <div className={s.phaseContentLeft} key="linking">
+            {/* Provider header */}
+            <div className={s.providerHeader}>
+              <div
+                className={s.providerBadge}
+                style={{ background: providerColor }}
+              >
+                <span style={{ color: "#fff" }}>{providerIcon}</span>
+              </div>
+              <p className={s.providerName}>{providerLabel}</p>
+              {providerUsername && (
+                <p className={s.providerUser} style={{ color: providerColor }}>
+                  @{providerUsername}
+                </p>
+              )}
             </div>
 
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: 20,
-                fontWeight: 700,
-                margin: "0 0 8px",
-              }}
-            >
-              Привязка {providerLabel}
-            </h2>
-            {providerUsername && (
-              <p
-                style={{
-                  color: providerColor,
-                  fontSize: 13,
-                  margin: "0 0 6px",
-                }}
-              >
-                @{providerUsername}
-              </p>
-            )}
-            <p
-              style={{
-                color: "rgba(255,255,255,0.5)",
-                fontSize: 13,
-                margin: "0 0 28px",
-                lineHeight: 1.5,
-              }}
-            >
-              Войдите в свой аккаунт Yumeko, чтобы привязать {providerLabel}
+            <div className={s.divider}>Привязка к аккаунту</div>
+
+            <p className={s.formTitle}>Войдите в Yumeko</p>
+            <p className={s.formSub}>
+              Укажите данные своего аккаунта, чтобы привязать&nbsp;
+              {providerLabel}
             </p>
 
+            {/* Error alert */}
             {linkError && (
-              <div
-                style={{
-                  padding: "10px 14px",
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                  borderRadius: 10,
-                  color: "#ff6b6b",
-                  fontSize: 13,
-                  marginBottom: 16,
-                }}
-              >
+              <div className={s.errorAlert}>
+                <AlertCircle size={15} strokeWidth={2} />
                 {linkError}
               </div>
             )}
 
-            <input
-              type="text"
-              placeholder="Логин"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="password"
-              placeholder="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleLink()}
-              style={{ ...inputStyle, marginTop: 10 }}
-            />
+            {/* Username */}
+            <div className={s.inputGroup}>
+              <User size={15} className={s.inputIcon} />
+              <input
+                ref={usernameRef}
+                type="text"
+                className={s.input}
+                placeholder="Логин"
+                value={username}
+                autoComplete="username"
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  document.getElementById("pwd-input")?.focus()
+                }
+              />
+            </div>
 
+            {/* Password */}
+            <div className={s.inputGroup}>
+              <Lock size={15} className={s.inputIcon} />
+              <input
+                id="pwd-input"
+                type={showPassword ? "text" : "password"}
+                className={`${s.input} ${s.inputWithEye}`}
+                placeholder="Пароль"
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLink()}
+              />
+              <button
+                type="button"
+                className={s.eyeBtn}
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff size={15} strokeWidth={2} />
+                ) : (
+                  <Eye size={15} strokeWidth={2} />
+                )}
+              </button>
+            </div>
+
+            {/* Submit */}
             <button
+              className={s.submitBtn}
+              style={{ background: providerColor }}
               onClick={handleLink}
               disabled={linking || !username.trim() || !password}
-              style={{
-                width: "100%",
-                marginTop: 16,
-                padding: "13px",
-                borderRadius: 10,
-                background: providerColor,
-                border: "none",
-                color: "#fff",
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: linking ? "not-allowed" : "pointer",
-                opacity: linking ? 0.6 : 1,
-                transition: "opacity 0.2s",
-              }}
             >
-              {linking ? "Привязываем..." : `Привязать ${providerLabel}`}
+              {linking ? (
+                <>
+                  <Loader2 size={16} className={s.submitBtnSpinner} />
+                  Привязываем…
+                </>
+              ) : (
+                <>
+                  <Link2 size={16} strokeWidth={2.2} />
+                  Привязать {providerLabel}
+                </>
+              )}
             </button>
 
+            {/* Cancel */}
             <button
+              className={s.cancelBtn}
               onClick={() => router.replace("/")}
-              style={{
-                width: "100%",
-                marginTop: 10,
-                padding: "11px",
-                borderRadius: 10,
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.5)",
-                fontSize: 14,
-                cursor: "pointer",
-              }}
+              disabled={linking}
             >
               Отмена
             </button>
-          </>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-// Внешняя обёртка с Suspense — экспортируем как default
+// ── Обёртка с Suspense ────────────────────────────────────────────────────────
 export default function OAuthCallbackPage() {
   return (
     <Suspense
@@ -325,14 +353,24 @@ export default function OAuthCallbackPage() {
           style={{
             minHeight: "100vh",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            background: "var(--bg-primary, #0a0a0c)",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: 15,
+            gap: 16,
           }}
         >
-          Подключаемся...
+          <Loader2
+            size={28}
+            style={{
+              color: "var(--accent)",
+              animation: "spin 0.9s linear infinite",
+            }}
+          />
+          <p
+            style={{ color: "var(--text-secondary)", fontSize: 14, margin: 0 }}
+          >
+            Загрузка…
+          </p>
         </div>
       }
     >
@@ -340,15 +378,3 @@ export default function OAuthCallbackPage() {
     </Suspense>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: 10,
-  border: "1px solid rgba(255,255,255,0.08)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-};
