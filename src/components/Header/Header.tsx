@@ -595,6 +595,23 @@ export default function Header() {
     const passwordValue = passwordInputRef.current?.value ?? "";
 
     setAuthError(null);
+
+    // Валидация логина при регистрации
+    if (authMode === "register") {
+      if (!loginValue.trim()) {
+        setAuthError("Введите логин");
+        return;
+      }
+      if (/\s/.test(loginValue)) {
+        setAuthError("Логин не может содержать пробелы");
+        return;
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(loginValue)) {
+        setAuthError("Логин может содержать только буквы, цифры, _ и -");
+        return;
+      }
+    }
+
     setAuthLoading(true);
 
     let result;
@@ -3123,9 +3140,33 @@ export default function Header() {
                     type="text"
                     className={styles.authInput}
                     placeholder="Введите логин"
-                    autoComplete="username"
+                    autoComplete={authMode === "login" ? "username" : "off"}
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    onChange={(e) => {
+                      if (authMode === "register") {
+                        // Фильтруем недопустимые символы на лету
+                        const clean = e.target.value.replace(
+                          /[^a-zA-Z0-9_-]/g,
+                          "",
+                        );
+                        if (e.target.value !== clean) e.target.value = clean;
+                      }
+                    }}
                   />
                 </div>
+                {authMode === "register" && (
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "var(--text-muted)",
+                      margin: "4px 0 0 2px",
+                    }}
+                  >
+                    Только буквы, цифры, «_» и «-» — без пробелов
+                  </p>
+                )}
               </div>
 
               <div className={styles.authFieldAnimated}>
