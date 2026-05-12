@@ -30,6 +30,7 @@ import {
   MinusCircle,
   WifiOff,
   Wifi,
+  ChevronLeft,
 } from "lucide-react";
 import { type AnimeDetails, getAccent } from "@/data/anime";
 import {
@@ -79,6 +80,10 @@ export default function Header() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [searchClosing, setSearchClosing] = useState(false);
   const [settingsClosing, setSettingsClosing] = useState(false);
   const [authClosing, setAuthClosing] = useState(false);
@@ -970,97 +975,149 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* ─── Status Picker ─── */}
-                  <div className={styles.statusPickerSection}>
-                    <span className={styles.statusPickerLabel}>Статус</span>
-                    <div className={styles.statusPickerList}>
-                      {(
-                        [
-                          {
-                            key: "ONLINE",
-                            label: "В сети",
-                            hint: undefined,
-                            color: "#2ee07a",
-                            icon: (
-                              <span
-                                className={styles.statusPickerDot}
-                                style={{ background: "#2ee07a" }}
-                              />
-                            ),
-                          },
-                          {
-                            key: "AWAY",
-                            label: "Неактивен",
-                            hint: undefined,
-                            color: "#f59e0b",
-                            icon: (
-                              <Moon
-                                size={13}
-                                strokeWidth={2}
-                                style={{ color: "#f59e0b", flexShrink: 0 }}
-                              />
-                            ),
-                          },
-                          {
-                            key: "DND",
-                            label: "Не беспокоить",
-                            hint: "Вы не будете получать уведомления на рабочем столе",
-                            color: "#ef4444",
-                            icon: (
-                              <MinusCircle
-                                size={13}
-                                strokeWidth={2}
-                                style={{ color: "#ef4444", flexShrink: 0 }}
-                              />
-                            ),
-                          },
-                          {
-                            key: "INVISIBLE",
-                            label: "Невидимый",
-                            hint: "У вас будет статус \u00ABНе в сети\u00BB",
-                            color: "#6b7280",
-                            icon: (
-                              <span
-                                className={styles.statusPickerDot}
-                                style={{ background: "#6b7280" }}
-                              />
-                            ),
-                          },
-                        ] as {
-                          key: "ONLINE" | "AWAY" | "DND" | "INVISIBLE";
-                          label: string;
-                          hint?: string;
-                          color: string;
-                          icon: React.ReactNode;
-                        }[]
-                      ).map((s) => (
-                        <button
-                          key={s.key}
-                          className={`${styles.statusPickerItem} ${
-                            manualStatus === s.key
-                              ? styles.statusPickerItemActive
-                              : ""
-                          }`}
-                          onClick={() => setUserManualStatus(s.key)}
-                          role="menuitem"
+                  {/* ─── Status Picker (компактный + дропдаун влево по наведению) ─── */}
+                  {(() => {
+                    const STATUS_OPTIONS = [
+                      {
+                        key: "ONLINE" as const,
+                        label: "В сети",
+                        hint: undefined as string | undefined,
+                        color: "#2ee07a",
+                        icon: (
+                          <span
+                            className={styles.statusPickerDot}
+                            style={{ background: "#2ee07a" }}
+                          />
+                        ),
+                      },
+                      {
+                        key: "AWAY" as const,
+                        label: "Неактивен",
+                        hint: undefined as string | undefined,
+                        color: "#f59e0b",
+                        icon: (
+                          <Moon
+                            size={13}
+                            strokeWidth={2}
+                            style={{ color: "#f59e0b", flexShrink: 0 }}
+                          />
+                        ),
+                      },
+                      {
+                        key: "DND" as const,
+                        label: "Не беспокоить",
+                        hint: "Вы не будете получать уведомления на рабочем столе" as
+                          | string
+                          | undefined,
+                        color: "#ef4444",
+                        icon: (
+                          <MinusCircle
+                            size={13}
+                            strokeWidth={2}
+                            style={{ color: "#ef4444", flexShrink: 0 }}
+                          />
+                        ),
+                      },
+                      {
+                        key: "INVISIBLE" as const,
+                        label: "Невидимый",
+                        hint: "У вас будет статус «Не в сети»" as
+                          | string
+                          | undefined,
+                        color: "#6b7280",
+                        icon: (
+                          <span
+                            className={styles.statusPickerDot}
+                            style={{ background: "#6b7280" }}
+                          />
+                        ),
+                      },
+                    ];
+                    const current =
+                      STATUS_OPTIONS.find((s) => s.key === manualStatus) ??
+                      STATUS_OPTIONS[0];
+
+                    const openDropdown = () => {
+                      if (statusDropdownTimerRef.current)
+                        clearTimeout(statusDropdownTimerRef.current);
+                      setStatusDropdownOpen(true);
+                    };
+                    const closeDropdown = () => {
+                      statusDropdownTimerRef.current = setTimeout(
+                        () => setStatusDropdownOpen(false),
+                        120,
+                      );
+                    };
+
+                    return (
+                      <div className={styles.statusPickerSection}>
+                        {/* Текущий статус */}
+                        <div
+                          className={styles.statusPickerCompact}
+                          onMouseEnter={openDropdown}
+                          onMouseLeave={closeDropdown}
                         >
-                          <span className={styles.statusPickerIconWrap}>
-                            {s.icon}
-                          </span>
-                          <span className={styles.statusPickerItemText}>
-                            <span className={styles.statusPickerItemLabel}>
-                              {s.label}
+                          <button className={styles.statusPickerCurrentBtn}>
+                            <span className={styles.statusPickerIconWrap}>
+                              {current.icon}
                             </span>
-                            {s.hint && (
-                              <span className={styles.statusPickerHint}>
-                                {s.hint}
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                            <span
+                              className={styles.statusPickerCurrentLabel}
+                              style={{ color: current.color }}
+                            >
+                              {current.label}
+                            </span>
+                            <ChevronLeft
+                              size={12}
+                              className={styles.statusPickerChevron}
+                            />
+                          </button>
+
+                          {/* Дропдаун влево */}
+                          <div
+                            className={`${styles.statusPickerDropdown} ${
+                              statusDropdownOpen
+                                ? styles.statusPickerDropdownVisible
+                                : ""
+                            }`}
+                            onMouseEnter={openDropdown}
+                            onMouseLeave={closeDropdown}
+                          >
+                            {STATUS_OPTIONS.map((s) => (
+                              <button
+                                key={s.key}
+                                className={`${styles.statusPickerDropdownItem} ${
+                                  manualStatus === s.key
+                                    ? styles.statusPickerDropdownItemActive
+                                    : ""
+                                }`}
+                                onClick={() => {
+                                  setUserManualStatus(s.key);
+                                  setStatusDropdownOpen(false);
+                                }}
+                              >
+                                <span className={styles.statusPickerIconWrap}>
+                                  {s.icon}
+                                </span>
+                                <span className={styles.statusPickerItemText}>
+                                  <span
+                                    className={styles.statusPickerItemLabel}
+                                  >
+                                    {s.label}
+                                  </span>
+                                  {s.hint && (
+                                    <span className={styles.statusPickerHint}>
+                                      {s.hint}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div className={styles.profileMenuDivider} />
 

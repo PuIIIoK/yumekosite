@@ -354,7 +354,7 @@
     border: 1px solid var(--border-color);
     border-radius: 14px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-    overflow: hidden;
+    overflow: visible; // допускаем дропдаун выходить за пределы меню
     z-index: 1000;
     animation: profileMenuIn 0.18s ease-out;
 }
@@ -388,6 +388,7 @@
     height: 72px;
     margin: 0 -6px;
     overflow: hidden;
+    border-radius: 14px 14px 0 0; // округляем верхние углы баннера (overflow: visible на родителе)
     background:
         radial-gradient(
             ellipse 70% 80% at 15% 20%,
@@ -3361,28 +3362,82 @@
 
 // ─── Status Picker in Profile Menu ───
 .statusPickerSection {
-    padding: 10px 16px 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    padding: 4px 8px;
 }
 
-.statusPickerLabel {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+// Обёртка с relative-позиционированием для дропдауна
+.statusPickerCompact {
+    position: relative;
+    display: flex; // растягиваем на всю ширину
+}
+
+// Кнопка текущего статуса
+.statusPickerCurrentBtn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer;
+    font-size: 13px;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+}
+
+.statusPickerCurrentLabel {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.statusPickerChevron {
     color: var(--text-muted);
-    padding-left: 2px;
+    opacity: 0.55;
+    flex-shrink: 0;
+    margin-left: auto; // стрелка всегда справа
 }
 
-.statusPickerList {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+// Дропдаун влево от кнопки статуса
+.statusPickerDropdown {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 8px);
+    width: 252px;
+    background: var(--bg-card, #1a1a1e);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow:
+        -8px 8px 28px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+    z-index: 1010;
+    overflow: hidden;
+    padding: 4px;
+
+    // Начальное состояние — скрыт
+    opacity: 0;
+    transform: translateX(10px) scale(0.97);
+    pointer-events: none;
+    transition:
+        opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: right center;
 }
 
-.statusPickerItem {
+.statusPickerDropdownVisible {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    pointer-events: all;
+}
+
+.statusPickerDropdownItem {
     display: flex;
     align-items: flex-start;
     gap: 9px;
@@ -3395,15 +3450,22 @@
     font-size: 13px;
     cursor: pointer;
     text-align: left;
-    transition:
-        background 0.15s ease,
-        color 0.15s ease;
+    transition: background 0.15s ease;
 
     &:hover {
         background: rgba(255, 255, 255, 0.07);
     }
 }
 
+.statusPickerDropdownItemActive {
+    background: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.11);
+    }
+}
+
+// Совместимые классы
 .statusPickerIconWrap {
     display: flex;
     align-items: center;
@@ -3441,9 +3503,29 @@
     flex-shrink: 0;
 }
 
+// Остальные (backward compat)
+.statusPickerItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 8px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.07);
+    }
+}
+
 .statusPickerItemActive {
     background: rgba(255, 255, 255, 0.1);
-    font-weight: 500;
 
     &:hover {
         background: rgba(255, 255, 255, 0.13);
