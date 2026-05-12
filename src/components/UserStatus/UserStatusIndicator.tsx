@@ -32,7 +32,12 @@ export default function UserStatusIndicator({
   const status = info?.status ?? "OFFLINE";
   const manual = info?.manualStatus;
   // Сырое значение без TypeScript-сужения типа (для проверок после isPresent)
-  const rawManual = info?.manualStatus as ManualStatus | undefined;
+  const rawManual = info?.manualStatus as
+    | "ONLINE"
+    | "AWAY"
+    | "DND"
+    | "INVISIBLE"
+    | undefined;
 
   // Иконка — крупная, без подложки
   const iconSize = size === "lg" ? 20 : size === "md" ? 16 : 13;
