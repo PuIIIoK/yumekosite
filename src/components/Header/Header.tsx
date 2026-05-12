@@ -2752,6 +2752,76 @@ export default function Header() {
                   </svg>
                 </span>
               </button>
+
+              {/* ─── OAuth кнопки ─── */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  marginTop: 4,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    color: "rgba(255,255,255,0.3)",
+                    fontSize: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      background: "rgba(255,255,255,0.08)",
+                    }}
+                  />
+                  или войдите через
+                  <div
+                    style={{
+                      flex: 1,
+                      height: 1,
+                      background: "rgba(255,255,255,0.08)",
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.href = `${API_URL}/api/auth/discord/redirect`;
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#5865f2",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.opacity = "0.88")}
+                  onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 127.14 96.36"
+                    fill="#fff"
+                  >
+                    <path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.1 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.1 12.69-11.43 12.69z" />
+                  </svg>
+                  Discord
+                </button>
+              </div>
             </form>
           </div>
         </>

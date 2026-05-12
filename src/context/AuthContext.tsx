@@ -50,6 +50,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   mounted: boolean;
+  loginWithOAuthUser: (userData: any) => void;
   login: (username: string, password: string) => Promise<AuthResult>;
   register: (
     username: string,
@@ -380,6 +381,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.username, user?.roles]);
 
+  const loginWithOAuthUser = (userData: any) => {
+    const u = mapUser(userData);
+    setUser(u);
+  };
+
   const logout = () => setUser(null);
 
   return (
@@ -388,6 +394,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         mounted,
+        loginWithOAuthUser,
         login,
         register,
         updateProfile,
