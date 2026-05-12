@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/config/hosts";
 
-type Phase =
-  | "loading"
-  | "linking"
-  | "success"
-  | "error";
+type Phase = "loading" | "linking" | "success" | "error";
 
-export default function OAuthCallbackPage() {
+// Внутренний компонент использует useSearchParams — должен быть внутри Suspense
+function OAuthCallbackInner() {
   const router = useRouter();
   const params = useSearchParams();
   const { loginWithOAuthUser } = useAuth();
@@ -39,7 +36,7 @@ export default function OAuthCallbackPage() {
       setErrorMsg(
         error === "cancelled"
           ? "Авторизация отменена"
-          : "Ошибка сервера. Попробуйте снова."
+          : "Ошибка сервера. Попробуйте снова.",
       );
       setPhase("error");
       return;
@@ -89,7 +86,11 @@ export default function OAuthCallbackPage() {
       const res = await fetch(`${API_URL}/api/auth/oauth/link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ linkToken, username: username.trim(), password }),
+        body: JSON.stringify({
+          linkToken,
+          username: username.trim(),
+          password,
+        }),
       });
       const data = await res.json();
 
@@ -112,24 +113,27 @@ export default function OAuthCallbackPage() {
   const providerColor = provider === "discord" ? "#5865f2" : "#2aabee";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "var(--bg-primary, #0a0a0c)",
-      padding: "20px",
-    }}>
-      <div style={{
-        width: "100%",
-        maxWidth: 420,
-        background: "var(--bg-elevated, #141418)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20,
-        padding: 40,
-        textAlign: "center",
-      }}>
-
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--bg-primary, #0a0a0c)",
+        padding: "20px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 420,
+          background: "var(--bg-elevated, #141418)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 20,
+          padding: 40,
+          textAlign: "center",
+        }}
+      >
         {/* ── Loading ── */}
         {phase === "loading" && (
           <>
@@ -147,7 +151,13 @@ export default function OAuthCallbackPage() {
             <p style={{ color: "#22c55e", fontSize: 16, fontWeight: 600 }}>
               Вход выполнен!
             </p>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 6 }}>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 13,
+                marginTop: 6,
+              }}
+            >
               Переадресация...
             </p>
           </>
@@ -182,38 +192,66 @@ export default function OAuthCallbackPage() {
         {phase === "linking" && (
           <>
             {/* Provider icon */}
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%",
-              background: providerColor,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 16px",
-              fontSize: 28,
-            }}>
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: providerColor,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+                fontSize: 28,
+              }}
+            >
               {provider === "discord" ? "🎮" : "✈️"}
             </div>
 
-            <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>
+            <h2
+              style={{
+                color: "#fff",
+                fontSize: 20,
+                fontWeight: 700,
+                margin: "0 0 8px",
+              }}
+            >
               Привязка {providerLabel}
             </h2>
             {providerUsername && (
-              <p style={{ color: providerColor, fontSize: 13, margin: "0 0 6px" }}>
+              <p
+                style={{
+                  color: providerColor,
+                  fontSize: 13,
+                  margin: "0 0 6px",
+                }}
+              >
                 @{providerUsername}
               </p>
             )}
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, margin: "0 0 28px", lineHeight: 1.5 }}>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 13,
+                margin: "0 0 28px",
+                lineHeight: 1.5,
+              }}
+            >
               Войдите в свой аккаунт Yumeko, чтобы привязать {providerLabel}
             </p>
 
             {linkError && (
-              <div style={{
-                padding: "10px 14px",
-                background: "rgba(239,68,68,0.1)",
-                border: "1px solid rgba(239,68,68,0.25)",
-                borderRadius: 10,
-                color: "#ff6b6b",
-                fontSize: 13,
-                marginBottom: 16,
-              }}>
+              <div
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(239,68,68,0.1)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  borderRadius: 10,
+                  color: "#ff6b6b",
+                  fontSize: 13,
+                  marginBottom: 16,
+                }}
+              >
                 {linkError}
               </div>
             )}
@@ -275,6 +313,31 @@ export default function OAuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Внешняя обёртка с Suspense — экспортируем как default
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--bg-primary, #0a0a0c)",
+            color: "rgba(255,255,255,0.5)",
+            fontSize: 15,
+          }}
+        >
+          Подключаемся...
+        </div>
+      }
+    >
+      <OAuthCallbackInner />
+    </Suspense>
   );
 }
 
