@@ -3,10 +3,26 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Play, Heart, BookMarked, ChevronRight, ChevronDown, Clock, List, LayoutGrid, Eye, CalendarClock, CheckCircle2, PauseCircle, XCircle, Mic } from "lucide-react";
+import {
+  Play,
+  Heart,
+  BookMarked,
+  ChevronRight,
+  ChevronDown,
+  Clock,
+  List,
+  LayoutGrid,
+  Eye,
+  CalendarClock,
+  CheckCircle2,
+  PauseCircle,
+  XCircle,
+  Mic,
+} from "lucide-react";
 import { getAccent, type AnimeDetails } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
+import Comments from "./Comments";
 
 type Tab = "episodes" | "related" | "comments";
 
@@ -47,7 +63,11 @@ const COLLECTION_ITEMS = [
   { key: "dropped", label: "Брошено", icon: XCircle },
 ] as const;
 
-export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Props) {
+export default function AnimePageContent({
+  anime,
+  accent,
+  dbEpisodes = [],
+}: Props) {
   const auth = useAuth();
   const [tab, setTab] = useState<Tab>("episodes");
   const [collectionOpen, setCollectionOpen] = useState(false);
@@ -57,12 +77,25 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
   const genreTags = anime.genres.split(" • ");
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
-  const [voiceCast, setVoiceCast] = useState<{ id: number; studio: string; actorName: string; actorUsername?: string; actorDisplayName?: string; actorHasAvatar?: boolean; actorRoleColor?: string; characterName: string }[]>([]);
+  const [voiceCast, setVoiceCast] = useState<
+    {
+      id: number;
+      studio: string;
+      actorName: string;
+      actorUsername?: string;
+      actorDisplayName?: string;
+      actorHasAvatar?: boolean;
+      actorRoleColor?: string;
+      characterName: string;
+    }[]
+  >([]);
 
   const fetchStatuses = useCallback(async () => {
     if (!auth.user) return;
     try {
-      const res = await fetch(`${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`);
+      const res = await fetch(
+        `${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setActiveStatuses(data.statuses || []);
@@ -70,12 +103,17 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
     } catch {}
   }, [auth.user, anime.id]);
 
-  useEffect(() => { fetchStatuses(); }, [fetchStatuses]);
+  useEffect(() => {
+    fetchStatuses();
+  }, [fetchStatuses]);
 
   useEffect(() => {
     if (!collectionOpen) return;
     const onClick = (e: MouseEvent) => {
-      if (collectionRef.current && !collectionRef.current.contains(e.target as Node)) {
+      if (
+        collectionRef.current &&
+        !collectionRef.current.contains(e.target as Node)
+      ) {
         setCollectionOpen(false);
       }
     };
@@ -86,11 +124,14 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   const toggleStatus = async (status: string) => {
     if (!auth.user) return;
     try {
-      const res = await fetch(`${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      const res = await fetch(
+        `${API_URL}/api/collections/${auth.user.username}/anime/${anime.id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         setActiveStatuses(data.statuses || []);
@@ -102,20 +143,24 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
     if (anime.relatedIds.length === 0) return;
     Promise.all(
       anime.relatedIds.map((id) =>
-        fetch(`${API_URL}/api/anime/${id}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
-      )
+        fetch(`${API_URL}/api/anime/${id}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
+      ),
     ).then((items) => setRelatedItems(items.filter(Boolean)));
   }, [anime.relatedIds]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/voice-cast/${anime.id}`)
-      .then((r) => r.ok ? r.json() : [])
+      .then((r) => (r.ok ? r.json() : []))
       .then((data) => setVoiceCast(data))
       .catch(() => {});
   }, [anime.id]);
 
   const readyEpisodes = dbEpisodes.filter((db) => db.status === "ready");
-  const studioSet = [...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio"))];
+  const studioSet = [
+    ...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio")),
+  ];
   const studioList = studioSet.sort((a, b) => {
     if (a === "YumekoStudio") return -1;
     if (b === "YumekoStudio") return 1;
@@ -124,41 +169,81 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
   const activeStudio = selectedStudio ?? studioList[0] ?? null;
 
   // ── Watch progress ──
-  const [watchProgress, setWatchProgress] = useState<Record<number, { watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }>>({});
+  const [watchProgress, setWatchProgress] = useState<
+    Record<
+      number,
+      {
+        watchedSeconds: number;
+        totalSeconds: number;
+        completed: boolean;
+        updatedAt: string;
+      }
+    >
+  >({});
   const [lastWatchedEpId, setLastWatchedEpId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!auth.user || readyEpisodes.length === 0) return;
     const ids = readyEpisodes.map((e) => e.id);
-    fetch(`${API_URL}/api/watch-progress/bulk?userId=${auth.user.id}&${ids.map((id) => `episodeIds=${id}`).join("&")}`)
-      .then((r) => r.ok ? r.json() : [])
-      .then((list: { episodeId: number; watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }[]) => {
-        const map: Record<number, { watchedSeconds: number; totalSeconds: number; completed: boolean; updatedAt: string }> = {};
-        list.forEach((wp) => { map[wp.episodeId] = wp; });
-        setWatchProgress(map);
-
-        // Find the most recently watched non-completed episode
-        const inProgress = list.filter((wp) => !wp.completed && wp.watchedSeconds > 0);
-        if (inProgress.length > 0) {
-          inProgress.sort((a, b) => {
-            if (a.updatedAt && b.updatedAt) return b.updatedAt.localeCompare(a.updatedAt);
-            return b.watchedSeconds - a.watchedSeconds;
+    fetch(
+      `${API_URL}/api/watch-progress/bulk?userId=${auth.user.id}&${ids.map((id) => `episodeIds=${id}`).join("&")}`,
+    )
+      .then((r) => (r.ok ? r.json() : []))
+      .then(
+        (
+          list: {
+            episodeId: number;
+            watchedSeconds: number;
+            totalSeconds: number;
+            completed: boolean;
+            updatedAt: string;
+          }[],
+        ) => {
+          const map: Record<
+            number,
+            {
+              watchedSeconds: number;
+              totalSeconds: number;
+              completed: boolean;
+              updatedAt: string;
+            }
+          > = {};
+          list.forEach((wp) => {
+            map[wp.episodeId] = wp;
           });
-          setLastWatchedEpId(inProgress[0].episodeId);
-        } else {
-          setLastWatchedEpId(null);
-        }
-      })
+          setWatchProgress(map);
+
+          // Find the most recently watched non-completed episode
+          const inProgress = list.filter(
+            (wp) => !wp.completed && wp.watchedSeconds > 0,
+          );
+          if (inProgress.length > 0) {
+            inProgress.sort((a, b) => {
+              if (a.updatedAt && b.updatedAt)
+                return b.updatedAt.localeCompare(a.updatedAt);
+              return b.watchedSeconds - a.watchedSeconds;
+            });
+            setLastWatchedEpId(inProgress[0].episodeId);
+          } else {
+            setLastWatchedEpId(null);
+          }
+        },
+      )
       .catch(() => {});
   }, [auth.user, readyEpisodes.length]);
 
   const episodes = readyEpisodes
-    .filter((db) => studioList.length <= 1 || (db.studio || "YumekoStudio") === activeStudio)
+    .filter(
+      (db) =>
+        studioList.length <= 1 ||
+        (db.studio || "YumekoStudio") === activeStudio,
+    )
     .sort((a, b) => a.number - b.number)
     .map((db) => {
       const num = db.number;
       const wp = watchProgress[db.id];
-      const progress = wp && wp.totalSeconds > 0 ? wp.watchedSeconds / wp.totalSeconds : 0;
+      const progress =
+        wp && wp.totalSeconds > 0 ? wp.watchedSeconds / wp.totalSeconds : 0;
       return {
         num,
         watched: wp?.completed ?? false,
@@ -174,7 +259,10 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
     });
 
   const relatedChronology = [anime, ...relatedItems]
-    .filter((item, index, array) => array.findIndex((candidate) => candidate.id === item.id) === index)
+    .filter(
+      (item, index, array) =>
+        array.findIndex((candidate) => candidate.id === item.id) === index,
+    )
     .sort((a, b) => Number(a.year) - Number(b.year) || a.id - b.id)
     .map((item, index) => ({
       ...item,
@@ -182,10 +270,16 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
       isCurrent: item.id === anime.id,
     }));
   const relatedStartYear = relatedChronology[0]?.year ?? anime.year;
-  const relatedEndYear = relatedChronology[relatedChronology.length - 1]?.year ?? anime.year;
-  const totalRelatedEpisodes = relatedChronology.reduce((sum, item) => sum + parseEpisodeCount(item.episodes), 0);
+  const relatedEndYear =
+    relatedChronology[relatedChronology.length - 1]?.year ?? anime.year;
+  const totalRelatedEpisodes = relatedChronology.reduce(
+    (sum, item) => sum + parseEpisodeCount(item.episodes),
+    0,
+  );
   const totalRelatedMinutes = relatedChronology.reduce(
-    (sum, item) => sum + parseEpisodeCount(item.episodes) * parseDurationMinutes(item.duration),
+    (sum, item) =>
+      sum +
+      parseEpisodeCount(item.episodes) * parseDurationMinutes(item.duration),
     0,
   );
   const relatedHours = Math.floor(totalRelatedMinutes / 60);
@@ -199,7 +293,6 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
 
   return (
     <div className={styles.page}>
-
       {/* ── Breadcrumb ── */}
       <nav className={styles.breadcrumb}>
         <Link href="/">Главная</Link>
@@ -211,9 +304,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
 
       {/* ── Hero ── */}
       <div className={styles.hero}>
-
         {/* Poster */}
-        <div className={styles.poster} style={{ ["--accent-color" as string]: accent }}>
+        <div
+          className={styles.poster}
+          style={{ ["--accent-color" as string]: accent }}
+        >
           {anime.poster && (
             <img
               src={anime.poster}
@@ -234,10 +329,15 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
           <p className={styles.altTitle}>{anime.altTitle}</p>
 
           <div className={styles.heroBadges}>
-            <span className={`${styles.ageTag} ${styles[`age${anime.rating.replace('+', '')}`] ?? ""}`}>
+            <span
+              className={`${styles.ageTag} ${styles[`age${anime.rating.replace("+", "")}`] ?? ""}`}
+            >
               {anime.rating}
             </span>
-            <span className={styles.statusBadge} style={{ color: accent, borderColor: `${accent}40` }}>
+            <span
+              className={styles.statusBadge}
+              style={{ color: accent, borderColor: `${accent}40` }}
+            >
               {anime.status}
             </span>
             <span className={styles.formatBadge}>{anime.format}</span>
@@ -250,7 +350,9 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
             </div>
             <div className={styles.infoRow}>
               <dt>Сезон</dt>
-              <dd>{anime.season}, {anime.year}г.</dd>
+              <dd>
+                {anime.season}, {anime.year}г.
+              </dd>
             </div>
             <div className={styles.infoRow}>
               <dt>Жанры</dt>
@@ -258,7 +360,9 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                 {genreTags.map((g, i) => (
                   <span key={g}>
                     <span>{g}</span>
-                    {i < genreTags.length - 1 && <span className={styles.sep}>, </span>}
+                    {i < genreTags.length - 1 && (
+                      <span className={styles.sep}>, </span>
+                    )}
                   </span>
                 ))}
               </dd>
@@ -282,18 +386,33 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
           <div className={styles.actions}>
             <div className={styles.collectionWrap} ref={collectionRef}>
               <button
-                className={`${styles.collectionBtn} ${activeStatuses.some(s => s !== "favorites") ? styles.collectionBtnActive : ""}`}
-                onClick={() => auth.user ? setCollectionOpen(!collectionOpen) : undefined}
+                className={`${styles.collectionBtn} ${activeStatuses.some((s) => s !== "favorites") ? styles.collectionBtnActive : ""}`}
+                onClick={() =>
+                  auth.user ? setCollectionOpen(!collectionOpen) : undefined
+                }
               >
                 {(() => {
-                  const currentList = COLLECTION_ITEMS.find(c => activeStatuses.includes(c.key));
+                  const currentList = COLLECTION_ITEMS.find((c) =>
+                    activeStatuses.includes(c.key),
+                  );
                   if (currentList) {
                     const Icon = currentList.icon;
-                    return <><Icon size={15} /> {currentList.label}</>;
+                    return (
+                      <>
+                        <Icon size={15} /> {currentList.label}
+                      </>
+                    );
                   }
-                  return <><BookMarked size={15} /> Добавить в список</>;
+                  return (
+                    <>
+                      <BookMarked size={15} /> Добавить в список
+                    </>
+                  );
                 })()}
-                <ChevronDown size={14} className={collectionOpen ? styles.chevronOpen : ''} />
+                <ChevronDown
+                  size={14}
+                  className={collectionOpen ? styles.chevronOpen : ""}
+                />
               </button>
               {collectionOpen && (
                 <div className={styles.collectionDropdown}>
@@ -307,7 +426,12 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                         onClick={() => toggleStatus(item.key)}
                       >
                         <Icon size={15} /> {item.label}
-                        {active && <CheckCircle2 size={14} className={styles.dropdownCheck} />}
+                        {active && (
+                          <CheckCircle2
+                            size={14}
+                            className={styles.dropdownCheck}
+                          />
+                        )}
                       </button>
                     );
                   })}
@@ -317,9 +441,16 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
             <button
               className={`${styles.iconBtn} ${activeStatuses.includes("favorites") ? styles.iconBtnActive : ""}`}
               aria-label="В избранное"
-              onClick={() => auth.user ? toggleStatus("favorites") : undefined}
+              onClick={() =>
+                auth.user ? toggleStatus("favorites") : undefined
+              }
             >
-              <Heart size={16} fill={activeStatuses.includes("favorites") ? "currentColor" : "none"} />
+              <Heart
+                size={16}
+                fill={
+                  activeStatuses.includes("favorites") ? "currentColor" : "none"
+                }
+              />
             </button>
           </div>
         </div>
@@ -338,7 +469,9 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               key={key}
               className={tab === key ? styles.tabActive : styles.tab}
               onClick={() => setTab(key)}
-              style={tab === key ? { ["--tab-accent" as string]: accent } : undefined}
+              style={
+                tab === key ? { ["--tab-accent" as string]: accent } : undefined
+              }
             >
               {label}
             </button>
@@ -383,24 +516,42 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
       {tab === "episodes" && epView === "list" && (
         <div className={styles.episodesList}>
           {episodes.map((ep) => {
-            const epHref = ep.dbId ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}` : undefined;
+            const epHref = ep.dbId
+              ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}`
+              : undefined;
             const rowContent = (
               <>
                 <span className={styles.epNumber}>{ep.num}</span>
                 <div className={styles.epRowInfo}>
-                  <span className={styles.epRowTitle}>{ep.name || `${ep.num} эпизод`}</span>
-                  <span className={styles.epRowDuration}>{ep.durationFormatted}</span>
+                  <span className={styles.epRowTitle}>
+                    {ep.name || `${ep.num} эпизод`}
+                  </span>
+                  <span className={styles.epRowDuration}>
+                    {ep.durationFormatted}
+                  </span>
                 </div>
                 <div className={styles.epRowRight}>
-                  {ep.watched && <span className={styles.epRowWatched}>Просмотрено</span>}
-                  {ep.current && <span className={styles.epRowCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
+                  {ep.watched && (
+                    <span className={styles.epRowWatched}>Просмотрено</span>
+                  )}
+                  {ep.current && (
+                    <span
+                      className={styles.epRowCurrentLabel}
+                      style={{ color: "var(--accent)" }}
+                    >
+                      Текущий
+                    </span>
+                  )}
                   <Play size={16} className={styles.epRowPlay} />
                 </div>
                 {ep.progress > 0 && !ep.watched && (
                   <div className={styles.epRowProgress}>
                     <div
                       className={styles.epRowProgressBar}
-                      style={{ width: `${ep.progress}%`, background: 'var(--accent)' }}
+                      style={{
+                        width: `${ep.progress}%`,
+                        background: "var(--accent)",
+                      }}
                     />
                   </div>
                 )}
@@ -411,7 +562,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                 key={ep.dbId}
                 href={epHref}
                 className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+                style={
+                  ep.current
+                    ? { ["--ep-accent" as string]: "var(--accent)" }
+                    : undefined
+                }
               >
                 {rowContent}
               </Link>
@@ -419,7 +574,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               <div
                 key={ep.dbId}
                 className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+                style={
+                  ep.current
+                    ? { ["--ep-accent" as string]: "var(--accent)" }
+                    : undefined
+                }
               >
                 {rowContent}
               </div>
@@ -431,7 +590,9 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
       {tab === "episodes" && epView === "grid" && (
         <div className={styles.episodesGrid}>
           {episodes.map((ep) => {
-            const epHref = ep.dbId ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}` : undefined;
+            const epHref = ep.dbId
+              ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}`
+              : undefined;
             const cardContent = (
               <div className={styles.epCardThumb}>
                 {ep.preview && (
@@ -443,20 +604,39 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                   />
                 )}
                 {ep.current && (
-                  <span className={styles.epCardDot} style={{ background: 'var(--accent)' }} />
+                  <span
+                    className={styles.epCardDot}
+                    style={{ background: "var(--accent)" }}
+                  />
                 )}
-                {ep.watched && <span className={styles.epCardWatched}>Просмотрено</span>}
-                {ep.current && <span className={styles.epCardCurrentLabel} style={{ color: 'var(--accent)' }}>Текущий</span>}
+                {ep.watched && (
+                  <span className={styles.epCardWatched}>Просмотрено</span>
+                )}
+                {ep.current && (
+                  <span
+                    className={styles.epCardCurrentLabel}
+                    style={{ color: "var(--accent)" }}
+                  >
+                    Текущий
+                  </span>
+                )}
                 <div className={styles.epCardInfo}>
-                  {ep.name && <span className={styles.epCardTitle}>{ep.name}</span>}
+                  {ep.name && (
+                    <span className={styles.epCardTitle}>{ep.name}</span>
+                  )}
                   <span className={styles.epCardNum}>{ep.num} эпизод</span>
                 </div>
-                <span className={styles.epCardDuration}>{ep.durationFormatted}</span>
+                <span className={styles.epCardDuration}>
+                  {ep.durationFormatted}
+                </span>
                 {ep.progress > 0 && !ep.watched && (
                   <div className={styles.epCardProgress}>
                     <div
                       className={styles.epCardProgressBar}
-                      style={{ width: `${ep.progress}%`, background: 'var(--accent)' }}
+                      style={{
+                        width: `${ep.progress}%`,
+                        background: "var(--accent)",
+                      }}
                     />
                   </div>
                 )}
@@ -467,7 +647,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                 key={ep.dbId}
                 href={epHref}
                 className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+                style={
+                  ep.current
+                    ? { ["--ep-accent" as string]: "var(--accent)" }
+                    : undefined
+                }
               >
                 {cardContent}
               </Link>
@@ -475,7 +659,11 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
               <div
                 key={ep.dbId}
                 className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-                style={ep.current ? { ["--ep-accent" as string]: "var(--accent)" } : undefined}
+                style={
+                  ep.current
+                    ? { ["--ep-accent" as string]: "var(--accent)" }
+                    : undefined
+                }
               >
                 {cardContent}
               </div>
@@ -485,45 +673,82 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
       )}
 
       {/* ── Voice Cast ── */}
-      {tab === "episodes" && voiceCast.length > 0 && (() => {
-        const castStudios = [...new Set(voiceCast.map((vc) => vc.studio))];
-        const showStudio = activeStudio && castStudios.includes(activeStudio) ? activeStudio : castStudios[0];
-        const filtered = voiceCast.filter((vc) => vc.studio === showStudio);
-        if (filtered.length === 0) return null;
-        return (
-          <div className={styles.voiceCastSection}>
-            <h3 className={styles.voiceCastTitle}>
-              <Mic size={15} />
-              Озвучка — {showStudio}
-            </h3>
-            <div className={styles.voiceCastGrid}>
-              {filtered.map((vc) => {
-                const inner = (
-                  <>
-                    {vc.actorUsername && vc.actorHasAvatar ? (
-                      <img src={`${API_URL}/api/media/${vc.actorUsername}/avatar`} alt="" className={styles.voiceCastAvatar} style={vc.actorRoleColor ? { borderColor: vc.actorRoleColor } : undefined} />
-                    ) : (
-                      <div className={styles.voiceCastAvatarEmpty} />
-                    )}
-                    <div className={styles.voiceCastInfo}>
-                      <div className={styles.voiceCastActorRow}>
-                        <span className={styles.voiceCastActor} style={vc.actorRoleColor ? { color: vc.actorRoleColor } : undefined}>{vc.actorDisplayName || vc.actorName}</span>
-                        {vc.actorUsername && <span className={styles.voiceCastHandle}>@{vc.actorUsername}</span>}
+      {tab === "episodes" &&
+        voiceCast.length > 0 &&
+        (() => {
+          const castStudios = [...new Set(voiceCast.map((vc) => vc.studio))];
+          const showStudio =
+            activeStudio && castStudios.includes(activeStudio)
+              ? activeStudio
+              : castStudios[0];
+          const filtered = voiceCast.filter((vc) => vc.studio === showStudio);
+          if (filtered.length === 0) return null;
+          return (
+            <div className={styles.voiceCastSection}>
+              <h3 className={styles.voiceCastTitle}>
+                <Mic size={15} />
+                Озвучка — {showStudio}
+              </h3>
+              <div className={styles.voiceCastGrid}>
+                {filtered.map((vc) => {
+                  const inner = (
+                    <>
+                      {vc.actorUsername && vc.actorHasAvatar ? (
+                        <img
+                          src={`${API_URL}/api/media/${vc.actorUsername}/avatar`}
+                          alt=""
+                          className={styles.voiceCastAvatar}
+                          style={
+                            vc.actorRoleColor
+                              ? { borderColor: vc.actorRoleColor }
+                              : undefined
+                          }
+                        />
+                      ) : (
+                        <div className={styles.voiceCastAvatarEmpty} />
+                      )}
+                      <div className={styles.voiceCastInfo}>
+                        <div className={styles.voiceCastActorRow}>
+                          <span
+                            className={styles.voiceCastActor}
+                            style={
+                              vc.actorRoleColor
+                                ? { color: vc.actorRoleColor }
+                                : undefined
+                            }
+                          >
+                            {vc.actorDisplayName || vc.actorName}
+                          </span>
+                          {vc.actorUsername && (
+                            <span className={styles.voiceCastHandle}>
+                              @{vc.actorUsername}
+                            </span>
+                          )}
+                        </div>
+                        <span className={styles.voiceCastCharacter}>
+                          → {vc.characterName}
+                        </span>
                       </div>
-                      <span className={styles.voiceCastCharacter}>→ {vc.characterName}</span>
+                    </>
+                  );
+                  return vc.actorUsername ? (
+                    <Link
+                      key={vc.id}
+                      href={`/profile/${vc.actorUsername}`}
+                      className={styles.voiceCastItem}
+                    >
+                      {inner}
+                    </Link>
+                  ) : (
+                    <div key={vc.id} className={styles.voiceCastItem}>
+                      {inner}
                     </div>
-                  </>
-                );
-                return vc.actorUsername ? (
-                  <Link key={vc.id} href={`/profile/${vc.actorUsername}`} className={styles.voiceCastItem}>{inner}</Link>
-                ) : (
-                  <div key={vc.id} className={styles.voiceCastItem}>{inner}</div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {tab === "related" && (
         <div className={styles.relatedTimeline}>
@@ -532,7 +757,9 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
             <p className={styles.relatedTimelineSubtitle}>{anime.altTitle}</p>
             <p className={styles.relatedTimelineMeta}>
               {relatedStartYear}
-              {relatedEndYear !== relatedStartYear ? ` — ${relatedEndYear}` : ""}
+              {relatedEndYear !== relatedStartYear
+                ? ` — ${relatedEndYear}`
+                : ""}
               {` • ${relatedChronology.length} релизов • ${totalRelatedEpisodes} эпизодов • ${relatedHours} ч ${relatedMinutes} мин`}
             </p>
           </div>
@@ -546,19 +773,29 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
                   key={item.id}
                   href={`/realeses/anime-page/${item.id}`}
                   className={`${styles.relatedTimelineRow} ${item.isCurrent ? styles.relatedTimelineRowCurrent : ""}`}
-                  style={item.isCurrent ? { ["--related-current-accent" as string]: itemAccent } : undefined}
+                  style={
+                    item.isCurrent
+                      ? { ["--related-current-accent" as string]: itemAccent }
+                      : undefined
+                  }
                 >
-                  <div className={styles.relatedTimelinePoster} style={{ ["--related-accent" as string]: itemAccent }} />
+                  <div
+                    className={styles.relatedTimelinePoster}
+                    style={{ ["--related-accent" as string]: itemAccent }}
+                  />
 
                   <div className={styles.relatedTimelineContent}>
                     <p className={styles.relatedTimelineName}>{item.title}</p>
                     <p className={styles.relatedTimelineAlt}>{item.altTitle}</p>
                     <p className={styles.relatedTimelineItemMeta}>
-                      {item.year} • {item.season} • {item.format} • {item.episodes}
+                      {item.year} • {item.season} • {item.format} •{" "}
+                      {item.episodes}
                     </p>
                   </div>
 
-                  <span className={styles.relatedTimelineIndex}>#{item.order}</span>
+                  <span className={styles.relatedTimelineIndex}>
+                    #{item.order}
+                  </span>
                 </Link>
               );
             })}
@@ -566,10 +803,7 @@ export default function AnimePageContent({ anime, accent, dbEpisodes = [] }: Pro
         </div>
       )}
 
-      {tab === "comments" && (
-        <div className={styles.emptyTab}>Комментариев пока нет</div>
-      )}
-
+      {tab === "comments" && <Comments animeId={anime.id} accent={accent} />}
     </div>
   );
 }
