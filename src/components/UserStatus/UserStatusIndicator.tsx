@@ -49,17 +49,17 @@ export default function UserStatusIndicator({
   };
 
   const getLabel = () => {
-    if (manual === "AWAY") return "Неактив";
-    if (manual === "DND") return "Не беспокоить";
     if (manual === "INVISIBLE") return "Не в сети";
-    switch (status) {
-      case "ONLINE":
-        return "В сети";
-      case "RECENTLY":
-        return "Недавно";
-      default:
-        return "Не в сети";
+
+    // Действительно в сети — показываем актуальный статус
+    if (status === "ONLINE") {
+      if (manual === "AWAY") return "Неактив";
+      if (manual === "DND") return "Не беспокоить";
+      return "В сети";
     }
+
+    // Не в сессии (RECENTLY / OFFLINE) — всегда «Не в сети»
+    return "Не в сети";
   };
 
   const getTimeAgo = () => {
@@ -73,12 +73,12 @@ export default function UserStatusIndicator({
     return `${Math.floor(diff / 86400)} д назад`;
   };
 
-  // ONLINE → время последней активности
-  // AWAY   → время последней активности
-  // DND    → фиксированная строка "Был недавно"
-  // INVISIBLE/OFFLINE → ничего
-  const showTimeAgo =
-    manual !== "DND" && manual !== "INVISIBLE" && status !== "OFFLINE";
+  // Пользователь не в сессии и не невидимый
+  const isOffline = status !== "ONLINE" && manual !== "INVISIBLE";
+  // Для DND+offline — показываем «Был недавно»
+  const showRecentlyFixed = isOffline && manual === "DND";
+  // Для остальных offline — реальное время
+  const showRealTime = isOffline && !showRecentlyFixed && !!info?.lastSeen;
 
   return (
     <div className={`${styles.statusIndicator} ${styles[size]}`}>
@@ -118,10 +118,10 @@ export default function UserStatusIndicator({
       {showLabel && (
         <span className={styles.label}>
           {getLabel()}
-          {manual === "DND" && (
+          {showRecentlyFixed && (
             <span className={styles.timeAgo}> • Был недавно</span>
           )}
-          {manual !== "DND" && info?.lastSeen && showTimeAgo && (
+          {showRealTime && (
             <span className={styles.timeAgo}> • {getTimeAgo()}</span>
           )}
         </span>
