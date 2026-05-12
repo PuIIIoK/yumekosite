@@ -31,6 +31,8 @@ export default function UserStatusIndicator({
   const info = getStatus(userId);
   const status = info?.status ?? "OFFLINE";
   const manual = info?.manualStatus;
+  // Сырое значение без TypeScript-сужения типа (для проверок после isPresent)
+  const rawManual = info?.manualStatus as ManualStatus | undefined;
 
   // Иконка — крупная, без подложки
   const iconSize = size === "lg" ? 20 : size === "md" ? 16 : 13;
@@ -80,9 +82,9 @@ export default function UserStatusIndicator({
   };
 
   // Пользователь оффлайн (не присутствует и не INVISIBLE)
-  const isOffline = !isPresent && manual !== "INVISIBLE";
-  // DND+оффлайн — «Был недавно»
-  const showRecentlyFixed = isOffline && manual === "DND";
+  const isOffline = !isPresent && rawManual !== "INVISIBLE";
+  // DND+оффлайн — «Был недавно» (rawManual не сужается TypeScript)
+  const showRecentlyFixed = isOffline && rawManual === "DND";
   // Остальные оффлайн — реальное время
   const showRealTime = isOffline && !showRecentlyFixed && !!info?.lastSeen;
 
