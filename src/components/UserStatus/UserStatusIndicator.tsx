@@ -30,49 +30,42 @@ export default function UserStatusIndicator({
 
   const info = getStatus(userId);
   const status = info?.status ?? "OFFLINE";
-  const manual = info?.manualStatus;
-  // Сырое значение без TypeScript-сужения типа (для проверок после isPresent)
-  const rawManual = info?.manualStatus as
+  const manual = info?.manualStatus as
     | "ONLINE"
     | "AWAY"
     | "DND"
     | "INVISIBLE"
     | undefined;
 
-  // Иконка — крупная, без подложки
   const iconSize = size === "lg" ? 20 : size === "md" ? 16 : 13;
   const dndIconSize = size === "lg" ? 24 : size === "md" ? 20 : 16;
-  // Луна: маленькая, вписывается в тёмный кружок-бейдж
   const awayIconSize = size === "lg" ? 14 : size === "md" ? 11 : 9;
 
-  // Пользователь «присутствует», если:
-  // - ONLINE (heartbeat активен)
-  // - ИЛИ manual выставлен в AWAY/DND (сервер переводит их в RECENTLY, а не ONLINE)
-  const isPresent =
-    status === "ONLINE" || manual === "AWAY" || manual === "DND";
+  // Сессия активна, если сервер видит heartbeat или пользователь вышел в AWAY/DND
+  // (RECENTLY = сервер перевёл их в RECENTLY, не ONLINE)
+  const hasActiveSession = status === "ONLINE" || status === "RECENTLY";
+
+  // Пользователь присутствует — если есть активная сессия И он не INVISIBLE
+  // OFFLINE — никогда не считается присутствующим, даже если раньше был AWAY/DND
+  const isPresent = hasActiveSession && manual !== "INVISIBLE";
 
   const getDotClass = () => {
-    if (isPresent) {
-      if (manual === "AWAY") return dotOnly ? styles.awayDot : styles.away;
-      if (manual === "DND") return dotOnly ? styles.dndDot : styles.dndIcon;
-      return styles.online;
+    if (!isPresent) {
+      // Фулл-оффлайн: серая точка. Иконок AWAY/DND нет — пользователь вышел с сайта
+      return styles.offline;
     }
-    // Не в сессии — обычная/недавняя точка без любых икон
-    if (status === "RECENTLY") return styles.recently;
-    return styles.offline;
+    if (manual === "AWAY") return dotOnly ? styles.awayDot : styles.away;
+    if (manual === "DND") return dotOnly ? styles.dndDot : styles.dndIcon;
+    if (status === "ONLINE") return styles.online;
+    return styles.recently;
   };
 
   const getLabel = () => {
     if (manual === "INVISIBLE") return "Не в сети";
-
-    if (isPresent) {
-      if (manual === "AWAY") return "Неактив";
-      if (manual === "DND") return "Не беспокоить";
-      return "В сети";
-    }
-
-    // Не в сессии (OFFLINE) — всегда «Не в сети»
-    return "Не в сети";
+    if (!isPresent) return "Не в сети";
+    if (manual === "AWAY") return "Неактив";
+    if (manual === "DND") return "Не беспокоить";
+    return "В сети";
   };
 
   const getTimeAgo = () => {
@@ -86,18 +79,16 @@ export default function UserStatusIndicator({
     return `${Math.floor(diff / 86400)} д назад`;
   };
 
-  // Пользователь оффлайн (не присутствует и не INVISIBLE)
-  const isOffline = !isPresent && rawManual !== "INVISIBLE";
-  // DND+оффлайн — «Был недавно» (rawManual не сужается TypeScript)
-  const showRecentlyFixed = isOffline && rawManual === "DND";
-  // Остальные оффлайн — реальное время
-  const showRealTime = isOffline && !showRecentlyFixed && !!info?.lastSeen;
+  // Время показываем только когда пользователь полностью оффлайн (OFFLINE)
+  // При AWAY/DND+активная сессия (RECENTLY) — время не показываем
+  const showRealTime =
+    status === "OFFLINE" && !!info?.lastSeen && manual !== "INVISIBLE";
 
   return (
     <div className={`${styles.statusIndicator} ${styles[size]}`}>
       <span className={`${styles.dot} ${getDotClass()}`}>
+        {/* AWAY: луна только при активной сессии. При OFFLINE — никакой иконки */}
         {manual === "AWAY" && isPresent && (
-          // Луна — только когда пользователь присутствует
           <Moon
             size={dotOnly ? awayIconSize : iconSize}
             strokeWidth={2}
@@ -105,8 +96,8 @@ export default function UserStatusIndicator({
             style={{ color: "#f59e0b" }}
           />
         )}
+        {/* DND: красный кружок только при активной сессии. При OFFLINE — никакой иконки */}
         {manual === "DND" && isPresent && (
-          // DND SVG — только когда пользователь присутствует
           <svg
             width={dotOnly ? awayIconSize : dndIconSize}
             height={dotOnly ? awayIconSize : dndIconSize}
@@ -130,9 +121,6 @@ export default function UserStatusIndicator({
       {showLabel && (
         <span className={styles.label}>
           {getLabel()}
-          {showRecentlyFixed && (
-            <span className={styles.timeAgo}> • Был недавно</span>
-          )}
           {showRealTime && (
             <span className={styles.timeAgo}> • {getTimeAgo()}</span>
           )}

@@ -206,12 +206,18 @@ export function StatusProvider({ children }: { children: ReactNode }) {
                 const uid = Number(userId);
                 // Свой статус не перезаписываем из WebSocket — он уже выставлен локально
                 if (uid === userIdRef.current) return;
-                setStatuses((prev) =>
-                  new Map(prev).set(uid, {
+                setStatuses((prev) => {
+                  const existing = prev.get(uid);
+                  return new Map(prev).set(uid, {
                     ...data,
-                    manualStatus: userManualOverridesRef.current.get(uid),
-                  }),
-                );
+                    // Сохраняем lastSeen если в новом обновлении он null (напр. OFFLINE-пуш)
+                    lastSeen: data.lastSeen ?? existing?.lastSeen ?? null,
+                    // Сохраняем manualStatus: берём override если есть, иначе текущий
+                    manualStatus:
+                      userManualOverridesRef.current.get(uid) ??
+                      existing?.manualStatus,
+                  });
+                });
               },
             );
             subscriptionsRef.current.set(userId, sub);
@@ -306,12 +312,16 @@ export function StatusProvider({ children }: { children: ReactNode }) {
           const data = JSON.parse(message.body);
           const uid = Number(userId);
           if (uid === userIdRef.current) return;
-          setStatuses((prev) =>
-            new Map(prev).set(uid, {
+          setStatuses((prev) => {
+            const existing = prev.get(uid);
+            return new Map(prev).set(uid, {
               ...data,
-              manualStatus: userManualOverridesRef.current.get(uid),
-            }),
-          );
+              lastSeen: data.lastSeen ?? existing?.lastSeen ?? null,
+              manualStatus:
+                userManualOverridesRef.current.get(uid) ??
+                existing?.manualStatus,
+            });
+          });
         },
       );
       subscriptionsRef.current.set(userId, sub);
