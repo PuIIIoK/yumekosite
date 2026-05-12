@@ -39,11 +39,13 @@ export default function UserStatusIndicator({
   const awayIconSize = size === "lg" ? 14 : size === "md" ? 11 : 9;
 
   const getDotClass = () => {
-    // dotOnly=true  → бейдж-аватарка: тёмный кружок с иконкой внутри
-    // dotOnly=false → профиль: прозрачный фон, иконка рядом с лейблом (без обводки/подложки)
-    if (manual === "AWAY") return dotOnly ? styles.awayDot : styles.away;
-    if (manual === "DND") return dotOnly ? styles.dndDot : styles.dndIcon;
-    if (status === "ONLINE") return styles.online;
+    // Иконки AWAY/DND показываются только когда пользователь активно онлайн
+    if (status === "ONLINE") {
+      if (manual === "AWAY") return dotOnly ? styles.awayDot : styles.away;
+      if (manual === "DND") return dotOnly ? styles.dndDot : styles.dndIcon;
+      return styles.online;
+    }
+    // Не в сессии — обычная/недавняя точка без любых икон
     if (status === "RECENTLY") return styles.recently;
     return styles.offline;
   };
@@ -83,8 +85,8 @@ export default function UserStatusIndicator({
   return (
     <div className={`${styles.statusIndicator} ${styles[size]}`}>
       <span className={`${styles.dot} ${getDotClass()}`}>
-        {manual === "AWAY" && (
-          // Луна: маленькая в бейдже (awayDot) или крупная рядом с лейблом
+        {manual === "AWAY" && status === "ONLINE" && (
+          // Луна — только когда пользователь активно онлайн
           <Moon
             size={dotOnly ? awayIconSize : iconSize}
             strokeWidth={2}
@@ -92,9 +94,8 @@ export default function UserStatusIndicator({
             style={{ color: "#f59e0b" }}
           />
         )}
-        {manual === "DND" && (
-          // DND SVG: маленький в бейдже (dndDot) или крупный рядом с лейблом (dndIcon)
-          // В профиле (dndIcon) — без подложки, «без обводки»
+        {manual === "DND" && status === "ONLINE" && (
+          // DND SVG — только когда пользователь активно онлайн
           <svg
             width={dotOnly ? awayIconSize : dndIconSize}
             height={dotOnly ? awayIconSize : dndIconSize}
