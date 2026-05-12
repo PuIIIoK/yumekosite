@@ -96,6 +96,10 @@ export default function Header() {
   const loginInputRef = useRef<HTMLInputElement>(null);
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const confirmPasswordInputRef = useRef<HTMLInputElement>(null);
+  const tgContainerRef = useRef<HTMLDivElement>(null);
+  const tgSettingsRef = useRef<HTMLDivElement>(null);
+  const [socialLinkError, setSocialLinkError] = useState<string | null>(null);
+  const [socialUnlinking, setSocialUnlinking] = useState<string | null>(null);
   const [profileDisplayName, setProfileDisplayName] = useState("");
   const [profileBio, setProfileBio] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
@@ -616,52 +620,32 @@ export default function Header() {
     }
   };
 
-  const handleTelegramLogin = () => {
-    const width = 420;
-    const height = 340;
-    const left = Math.round(window.screenX + (window.outerWidth - width) / 2);
-    const top = Math.round(window.screenY + (window.outerHeight - height) / 2);
-
-    const popup = window.open(
-      "/telegram-auth",
-      "telegram_auth",
-      `width=${width},height=${height},left=${left},top=${top},toolbar=0,menubar=0,location=0,resizable=0`,
-    );
-
-    if (!popup) {
-      setAuthError("Разрешите всплывающие окна для авторизации через Telegram");
-      return;
-    }
-
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
-      if (!event.data || event.data.type !== "TELEGRAM_AUTH") return;
-      window.removeEventListener("message", handleMessage);
-
-      const tgData = event.data.data as Record<string, unknown>;
+  // ── Telegram widget: auth modal ──
+  useEffect(() => {
+    if (!authOpen) return;
+    (window as any).onTelegramAuth = async (
+      userData: Record<string, unknown>,
+    ) => {
       setTgLoading(true);
       setAuthError(null);
-
       try {
         const res = await fetch(`${API_URL}/api/auth/telegram/verify`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tgData),
+          body: JSON.stringify(userData),
         });
         const data = await res.json();
-
         if (!data.ok) {
           setAuthError(data.error || "Ошибка Telegram авторизации");
           setTgLoading(false);
           return;
         }
-
         if (!data.needsLink) {
           auth.loginWithOAuthUser(data.user);
-          closeAuth();
+          setAuthOpen(false);
           router.push(`/profile/${data.user.username}`);
         } else {
-          closeAuth();
+          setAuthOpen(false);
           router.push(
             `/oauth-callback?token=${data.linkToken}&type=telegram&new=true`,
           );
@@ -671,8 +655,126 @@ export default function Header() {
         setTgLoading(false);
       }
     };
+    return () => {
+      delete (window as any).onTelegramAuth;
+    };
+  }, [authOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    window.addEventListener("message", handleMessage);
+  useEffect(() => {
+    if (!authOpen || !tgContainerRef.current) return;
+    tgContainerRef.current.innerHTML = "";
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.setAttribute("data-telegram-login", "yumekoauth_bot");
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "10");
+    s.setAttribute("data-onauth", "onTelegramAuth(user)");
+    s.setAttribute("data-request-access", "write");
+    tgContainerRef.current.appendChild(s);
+    return () => {
+      if (tgContainerRef.current) tgContainerRef.current.innerHTML = "";
+    };
+  }, [authOpen]);
+
+  // ── Telegram widget: settings social subtab ──
+  useEffect(() => {
+    const isOpen =
+      settingsOpen && settingsSubTab === "social" && !auth.user?.hasTelegram;
+    if (!isOpen) return;
+    (window as any).onTelegramAuth = async (
+      userData: Record<string, unknown>,
+    ) => {
+      setSocialLinkError(null);
+      try {
+        const res = await fetch(`${API_URL}/api/auth/telegram/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          setSocialLinkError(data.error || "Ошибка");
+          return;
+        }
+        if (!data.needsLink) {
+          setSocialLinkError("Этот Telegram уже привязан к другому аккаунту");
+        } else {
+          router.push(
+            `/oauth-callback?token=${data.linkToken}&type=telegram&new=true`,
+          );
+        }
+      } catch {
+        setSocialLinkError("Ошибка соединения с сервером");
+      }
+    };
+    return () => {
+      delete (window as any).onTelegramAuth;
+    };
+  }, [settingsOpen, settingsSubTab, auth.user?.hasTelegram]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const isOpen =
+      settingsOpen && settingsSubTab === "social" && !auth.user?.hasTelegram;
+    if (!isOpen || !tgSettingsRef.current) return;
+    tgSettingsRef.current.innerHTML = "";
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.setAttribute("data-telegram-login", "yumekoauth_bot");
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "8");
+    s.setAttribute("data-onauth", "onTelegramAuth(user)");
+    s.setAttribute("data-request-access", "write");
+    tgSettingsRef.current.appendChild(s);
+    return () => {
+      if (tgSettingsRef.current) tgSettingsRef.current.innerHTML = "";
+    };
+  }, [settingsOpen, settingsSubTab, auth.user?.hasTelegram]);
+
+  // ── Unlink social accounts ──
+  const handleDiscordUnlink = async () => {
+    if (!auth.user || socialUnlinking) return;
+    setSocialUnlinking("discord");
+    setSocialLinkError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/oauth/unlink`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: auth.user.username,
+          provider: "discord",
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) auth.loginWithOAuthUser(data.user);
+      else setSocialLinkError(data.error || "Ошибка отвязки");
+    } catch {
+      setSocialLinkError("Ошибка соединения");
+    }
+    setSocialUnlinking(null);
+  };
+
+  const handleTelegramUnlink = async () => {
+    if (!auth.user || socialUnlinking) return;
+    setSocialUnlinking("telegram");
+    setSocialLinkError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/auth/oauth/unlink`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: auth.user.username,
+          provider: "telegram",
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) auth.loginWithOAuthUser(data.user);
+      else setSocialLinkError(data.error || "Ошибка отвязки");
+    } catch {
+      setSocialLinkError("Ошибка соединения");
+    }
+    setSocialUnlinking(null);
   };
 
   const CLOSE_DURATION = 350;
@@ -816,6 +918,7 @@ export default function Header() {
       avatar: "Аватар",
       bio: "О себе",
       customize: "Кастомизация профиля",
+      social: "Привязка соц. сетей",
     },
     security: {
       password: "Пароль",
@@ -1476,6 +1579,34 @@ export default function Header() {
                           {canCustomize
                             ? "Настройте визуальные эффекты вашего профиля: свечение, анимации, акцентный цвет."
                             : "Доступно для модераторов и выше."}
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={16}
+                        className={styles.settingsCardChevron}
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className={styles.settingsCard}
+                    onClick={() => {
+                      setSocialLinkError(null);
+                      openSubTab("social");
+                    }}
+                  >
+                    <div className={styles.settingsCardInner}>
+                      <div>
+                        <div className={styles.settingsCardTitle}>
+                          Привязка соц. сетей
+                        </div>
+                        <div className={styles.settingsCardDesc}>
+                          {auth.user?.hasDiscord && auth.user?.hasTelegram
+                            ? "Discord и Telegram привязаны"
+                            : auth.user?.hasDiscord
+                              ? "Discord привязан, Telegram — нет"
+                              : auth.user?.hasTelegram
+                                ? "Telegram привязан, Discord — нет"
+                                : "Привяжите Discord или Telegram к аккаунту"}
                         </div>
                       </div>
                       <ChevronRight
@@ -2214,6 +2345,256 @@ export default function Header() {
                   </div>
                 </div>
               )}
+              {settingsSubTab === "social" && (
+                <div className={styles.settingsSubContent}>
+                  {socialLinkError && (
+                    <div
+                      style={{
+                        padding: "10px 14px",
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.25)",
+                        borderRadius: 10,
+                        color: "#ff6b6b",
+                        fontSize: 13,
+                        marginBottom: 12,
+                      }}
+                    >
+                      {socialLinkError}
+                    </div>
+                  )}
+
+                  {/* Discord */}
+                  <div
+                    style={{
+                      background: "rgba(88,101,242,0.07)",
+                      border: "1px solid rgba(88,101,242,0.18)",
+                      borderRadius: 14,
+                      padding: "16px 18px",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            background: "#5865f2",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 127.14 96.36"
+                            fill="#fff"
+                          >
+                            <path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.1 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.1 12.69-11.43 12.69z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#fff",
+                              fontSize: 14,
+                            }}
+                          >
+                            Discord
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              marginTop: 2,
+                              color: auth.user?.hasDiscord
+                                ? "#4ade80"
+                                : "rgba(255,255,255,0.35)",
+                            }}
+                          >
+                            {auth.user?.hasDiscord
+                              ? auth.user.discordUsername
+                                ? auth.user.discordUsername
+                                : "Привязан"
+                              : "Не привязан"}
+                          </div>
+                        </div>
+                      </div>
+                      {auth.user?.hasDiscord ? (
+                        <button
+                          onClick={handleDiscordUnlink}
+                          disabled={socialUnlinking === "discord"}
+                          style={{
+                            padding: "7px 14px",
+                            borderRadius: 8,
+                            border: "1px solid rgba(239,68,68,0.3)",
+                            background: "rgba(239,68,68,0.08)",
+                            color: "#ff6b6b",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor:
+                              socialUnlinking === "discord"
+                                ? "not-allowed"
+                                : "pointer",
+                            opacity: socialUnlinking === "discord" ? 0.5 : 1,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {socialUnlinking === "discord"
+                            ? "Отвязка..."
+                            : "Отвязать"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            window.location.href = `${API_URL}/api/auth/discord/redirect`;
+                          }}
+                          style={{
+                            padding: "7px 14px",
+                            borderRadius: 8,
+                            border: "none",
+                            background: "#5865f2",
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Привязать
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Telegram */}
+                  <div
+                    style={{
+                      background: "rgba(34,158,217,0.07)",
+                      border: "1px solid rgba(34,158,217,0.18)",
+                      borderRadius: 14,
+                      padding: "16px 18px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        marginBottom: auth.user?.hasTelegram ? 0 : 14,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            background: "#229ED9",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="#fff"
+                          >
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#fff",
+                              fontSize: 14,
+                            }}
+                          >
+                            Telegram
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              marginTop: 2,
+                              color: auth.user?.hasTelegram
+                                ? "#4ade80"
+                                : "rgba(255,255,255,0.35)",
+                            }}
+                          >
+                            {auth.user?.hasTelegram
+                              ? auth.user.telegramUsername
+                                ? `@${auth.user.telegramUsername}`
+                                : "Привязан"
+                              : "Не привязан"}
+                          </div>
+                        </div>
+                      </div>
+                      {auth.user?.hasTelegram && (
+                        <button
+                          onClick={handleTelegramUnlink}
+                          disabled={socialUnlinking === "telegram"}
+                          style={{
+                            padding: "7px 14px",
+                            borderRadius: 8,
+                            border: "1px solid rgba(239,68,68,0.3)",
+                            background: "rgba(239,68,68,0.08)",
+                            color: "#ff6b6b",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor:
+                              socialUnlinking === "telegram"
+                                ? "not-allowed"
+                                : "pointer",
+                            opacity: socialUnlinking === "telegram" ? 0.5 : 1,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {socialUnlinking === "telegram"
+                            ? "Отвязка..."
+                            : "Отвязать"}
+                        </button>
+                      )}
+                    </div>
+                    {!auth.user?.hasTelegram && (
+                      <div
+                        ref={tgSettingsRef}
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          minHeight: 50,
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
               {settingsSubTab === "password" && (
                 <div className={styles.settingsSubContent}>
                   {pwdConfirmLogout ? (
@@ -2881,39 +3262,17 @@ export default function Header() {
                   </svg>
                   Discord
                 </button>
-                <button
-                  type="button"
-                  onClick={handleTelegramLogin}
-                  disabled={tgLoading}
+                <div
+                  ref={tgContainerRef}
                   style={{
                     display: "flex",
-                    alignItems: "center",
                     justifyContent: "center",
-                    gap: 10,
-                    width: "100%",
-                    padding: "12px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "#229ED9",
-                    color: "#fff",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: tgLoading ? "not-allowed" : "pointer",
+                    minHeight: 54,
+                    opacity: tgLoading ? 0.5 : 1,
+                    pointerEvents: tgLoading ? "none" : "auto",
                     transition: "opacity 0.2s",
-                    opacity: tgLoading ? 0.6 : 1,
                   }}
-                  onMouseOver={(e) => {
-                    if (!tgLoading) e.currentTarget.style.opacity = "0.88";
-                  }}
-                  onMouseOut={(e) => {
-                    if (!tgLoading) e.currentTarget.style.opacity = "1";
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
-                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
-                  </svg>
-                  {tgLoading ? "Подключение..." : "Telegram"}
-                </button>
+                />
               </div>
             </form>
           </div>

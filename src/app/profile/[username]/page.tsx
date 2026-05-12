@@ -83,6 +83,11 @@ function mapProfileUser(dto: any): User {
       },
     ],
     imageVersion: Date.now(),
+    hasDiscord: dto.hasDiscord ?? false,
+    hasTelegram: dto.hasTelegram ?? false,
+    discordUsername: dto.discordUsername ?? null,
+    discordId: dto.discordId ?? null,
+    telegramUsername: dto.telegramUsername ?? null,
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
       effectBorderGlow: dto.effectBorderGlow ?? false,
@@ -815,6 +820,108 @@ export default function ProfilePage() {
                     ))}
                   </span>
                 </div>
+                {(profileUser.hasDiscord || profileUser.hasTelegram) && (
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Соц. сети</span>
+                    <span
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 5,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      {profileUser.hasDiscord && (
+                        <a
+                          href={
+                            profileUser.discordId
+                              ? `https://discord.com/users/${profileUser.discordId}`
+                              : undefined
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            color: "#7289da",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            textDecoration: "none",
+                            opacity: profileUser.discordId ? 1 : 0.7,
+                            cursor: profileUser.discordId
+                              ? "pointer"
+                              : "default",
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseOver={(e) => {
+                            if (profileUser.discordId)
+                              e.currentTarget.style.opacity = "0.75";
+                          }}
+                          onMouseOut={(e) => {
+                            if (profileUser.discordId)
+                              e.currentTarget.style.opacity = "1";
+                          }}
+                        >
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 127.14 96.36"
+                            fill="#7289da"
+                          >
+                            <path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.1 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.1 12.69-11.43 12.69z" />
+                          </svg>
+                          {profileUser.discordUsername ?? "Discord"}
+                        </a>
+                      )}
+                      {profileUser.hasTelegram && (
+                        <a
+                          href={
+                            profileUser.telegramUsername
+                              ? `https://t.me/${profileUser.telegramUsername}`
+                              : undefined
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            color: "#229ED9",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            textDecoration: "none",
+                            opacity: profileUser.telegramUsername ? 1 : 0.7,
+                            cursor: profileUser.telegramUsername
+                              ? "pointer"
+                              : "default",
+                            transition: "opacity 0.15s",
+                          }}
+                          onMouseOver={(e) => {
+                            if (profileUser.telegramUsername)
+                              e.currentTarget.style.opacity = "0.75";
+                          }}
+                          onMouseOut={(e) => {
+                            if (profileUser.telegramUsername)
+                              e.currentTarget.style.opacity = "1";
+                          }}
+                        >
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="#229ED9"
+                          >
+                            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
+                          </svg>
+                          {profileUser.telegramUsername
+                            ? `@${profileUser.telegramUsername}`
+                            : "Telegram"}
+                        </a>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

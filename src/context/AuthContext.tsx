@@ -41,6 +41,11 @@ export type User = {
   imageVersion: number;
   effects: ProfileEffects;
   manualStatus?: string;
+  hasDiscord?: boolean;
+  hasTelegram?: boolean;
+  discordUsername?: string | null;
+  discordId?: string | null;
+  telegramUsername?: string | null;
 };
 
 type AuthResult = { ok: true; user: User } | { ok: false; error: string };
@@ -147,6 +152,11 @@ function mapUser(dto: any): User {
     ],
     imageVersion: dto.imageVersion ?? Date.now(),
     manualStatus: dto.manualStatus ?? "ONLINE",
+    hasDiscord: dto.hasDiscord ?? false,
+    hasTelegram: dto.hasTelegram ?? false,
+    discordUsername: dto.discordUsername ?? null,
+    discordId: dto.discordId ?? null,
+    telegramUsername: dto.telegramUsername ?? null,
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
       effectBorderGlow: dto.effectBorderGlow ?? false,
