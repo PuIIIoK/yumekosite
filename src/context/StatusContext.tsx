@@ -210,10 +210,11 @@ export function StatusProvider({ children }: { children: ReactNode }) {
                   const existing = prev.get(uid);
                   return new Map(prev).set(uid, {
                     ...data,
-                    // Сохраняем lastSeen если в новом обновлении он null (напр. OFFLINE-пуш)
+                    // Сохраняем lastSeen если в новом обновлении он null
                     lastSeen: data.lastSeen ?? existing?.lastSeen ?? null,
-                    // Сохраняем manualStatus: берём override если есть, иначе текущий
+                    // Сервер теперь шлёт manualStatus напрямую — берём его в первую очередь
                     manualStatus:
+                      data.manualStatus ??
                       userManualOverridesRef.current.get(uid) ??
                       existing?.manualStatus,
                   });
@@ -317,7 +318,9 @@ export function StatusProvider({ children }: { children: ReactNode }) {
             return new Map(prev).set(uid, {
               ...data,
               lastSeen: data.lastSeen ?? existing?.lastSeen ?? null,
+              // Сервер шлёт manualStatus напрямую — нет гонки с REST
               manualStatus:
+                data.manualStatus ??
                 userManualOverridesRef.current.get(uid) ??
                 existing?.manualStatus,
             });
