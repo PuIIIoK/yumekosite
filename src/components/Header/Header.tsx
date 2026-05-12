@@ -79,6 +79,7 @@ export default function Header() {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const [tgLoading, setTgLoading] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const statusDropdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -613,6 +614,65 @@ export default function Header() {
       setAuthError(result.error);
       setAuthLoading(false);
     }
+  };
+
+  const handleTelegramLogin = () => {
+    const width = 420;
+    const height = 340;
+    const left = Math.round(window.screenX + (window.outerWidth - width) / 2);
+    const top = Math.round(window.screenY + (window.outerHeight - height) / 2);
+
+    const popup = window.open(
+      "/telegram-auth",
+      "telegram_auth",
+      `width=${width},height=${height},left=${left},top=${top},toolbar=0,menubar=0,location=0,resizable=0`,
+    );
+
+    if (!popup) {
+      setAuthError("Разрешите всплывающие окна для авторизации через Telegram");
+      return;
+    }
+
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (!event.data || event.data.type !== "TELEGRAM_AUTH") return;
+      window.removeEventListener("message", handleMessage);
+
+      const tgData = event.data.data as Record<string, unknown>;
+      setTgLoading(true);
+      setAuthError(null);
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/telegram/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tgData),
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+          setAuthError(data.error || "Ошибка Telegram авторизации");
+          setTgLoading(false);
+          return;
+        }
+
+        if (!data.needsLink) {
+          auth.loginWithOAuthUser(data.user);
+          closeAuth();
+          router.push(`/profile/${data.user.username}`);
+        } else {
+          closeAuth();
+          router.push(
+            `/oauth-callback?token=${data.linkToken}&type=telegram&new=true`,
+          );
+        }
+      } catch {
+        setAuthError("Ошибка соединения с сервером");
+        setTgLoading(false);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
   };
 
   const CLOSE_DURATION = 350;
@@ -2820,6 +2880,39 @@ export default function Header() {
                     <path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.1 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.1 12.69-11.43 12.69z" />
                   </svg>
                   Discord
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTelegramLogin}
+                  disabled={tgLoading}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: "#229ED9",
+                    color: "#fff",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: tgLoading ? "not-allowed" : "pointer",
+                    transition: "opacity 0.2s",
+                    opacity: tgLoading ? 0.6 : 1,
+                  }}
+                  onMouseOver={(e) => {
+                    if (!tgLoading) e.currentTarget.style.opacity = "0.88";
+                  }}
+                  onMouseOut={(e) => {
+                    if (!tgLoading) e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z" />
+                  </svg>
+                  {tgLoading ? "Подключение..." : "Telegram"}
                 </button>
               </div>
             </form>
