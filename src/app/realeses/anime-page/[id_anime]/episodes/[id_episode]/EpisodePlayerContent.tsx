@@ -50,7 +50,7 @@ export default function EpisodePlayerContent({
   episodes,
   accent,
 }: Props) {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [currentEp, setCurrentEp] = useState<Episode>(initialEpisode);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -232,6 +232,7 @@ export default function EpisodePlayerContent({
               episodes={playerEpisodes}
               currentEpisodeId={currentEp.id}
               onEpisodeChange={handlePlayerEpisodeChange}
+              onEpisodeComplete={refreshUser}
               accent="var(--accent)"
               userId={user?.id}
               markers={currentMarkers}

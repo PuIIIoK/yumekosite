@@ -123,7 +123,7 @@ interface Props {
 }
 
 export default function Comments({ animeId, accent }: Props) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshUser } = useAuth();
   const [comments, setComments] = useState<CommentDto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -187,6 +187,8 @@ export default function Comments({ animeId, accent }: Props) {
       if (data.ok) {
         setComments((prev) => [{ ...data.comment, replies: [] }, ...prev]);
         setNewText("");
+        // Обновляем пользователя для детекции повышения уровня
+        refreshUser();
       }
     } catch {}
     setPosting(false);
@@ -220,6 +222,8 @@ export default function Comments({ animeId, accent }: Props) {
         );
         setReplyText("");
         setReplyTo(null);
+        // Обновляем пользователя для детекции повышения уровня
+        refreshUser();
       }
     } catch {}
     setReplyPosting(false);

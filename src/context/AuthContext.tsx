@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
@@ -56,10 +57,14 @@ export type User = {
 type AuthResult = { ok: true; user: User } | { ok: false; error: string };
 type UpdateResult = { ok: true; user: User } | { ok: false; error: string };
 
+export type LevelUpInfo = { newLevel: number; oldLevel: number };
+
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   mounted: boolean;
+  levelUpInfo: LevelUpInfo | null;
+  clearLevelUp: () => void;
   loginWithOAuthUser: (userData: any) => void;
   login: (username: string, password: string) => Promise<AuthResult>;
   register: (
@@ -181,6 +186,24 @@ function mapUser(dto: any): User {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [levelUpInfo, setLevelUpInfo] = useState<LevelUpInfo | null>(null);
+  const prevLevelRef = useRef<number | null>(null);
+
+  const clearLevelUp = () => setLevelUpInfo(null);
+
+  // Обёртка над setUser — детекция повышения уровня
+  const setUserWithLevelCheck = (u: User | null) => {
+    if (u && prevLevelRef.current !== null) {
+      const newLv = u.level ?? 1;
+      const oldLv = prevLevelRef.current;
+      if (newLv > oldLv) {
+        setLevelUpInfo({ newLevel: newLv, oldLevel: oldLv });
+      }
+    }
+    if (u) prevLevelRef.current = u.level ?? 1;
+    else prevLevelRef.current = null;
+    setUser(u);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -211,6 +234,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!parsed.roles && parsed.role) {
           parsed.roles = [parsed.role];
         }
+        // Инициализируем prevLevel без триггера level-up
+        prevLevelRef.current = parsed.level ?? 1;
         setUser(parsed as User);
       }
     } catch {}
@@ -246,7 +271,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const u = mapUser(data.user);
-      setUser(u);
+      setUserWithLevelCheck(u);
       return { ok: true, user: u };
     } catch {
       return { ok: false, error: "Ошибка соединения с сервером" };
@@ -279,7 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const u = mapUser(data.user);
-      setUser(u);
+      setUserWithLevelCheck(u);
       return { ok: true, user: u };
     } catch {
       return { ok: false, error: "Ошибка соединения с сервером" };
@@ -312,7 +337,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const u = mapUser(result.user);
-      setUser(u);
+      setUserWithLevelCheck(u);
       return { ok: true, user: u };
     } catch {
       return { ok: false, error: "Ошибка соединения с сервером" };
@@ -345,7 +370,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const u = mapUser(result.user);
       u.imageVersion = Date.now();
-      setUser(u);
+      setUserWithLevelCheck(u);
       return { ok: true, user: u };
     } catch {
       return { ok: false, error: "Ошибка соединения с сервером" };
@@ -363,7 +388,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (json.ok && json.user) {
         const u = mapUser(json.user);
         u.imageVersion = Date.now();
-        setUser(u);
+        setUserWithLevelCheck(u);
       }
     } catch {}
   };
@@ -380,7 +405,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const json = JSON.parse(parseHexDump(hex));
         if (json.ok && json.user) {
           const u = mapUser(json.user);
-          // Update if roles changed
           const currentRoles =
             user.roles
               ?.map((r) => r.name)
@@ -391,22 +415,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               ?.map((r) => r.name)
               .sort()
               .join(",") || "";
-          if (currentRoles !== newRoles) {
+          const currentLevel = user.level ?? 1;
+          const newLevel = u.level ?? 1;
+          const currentXp = user.xp ?? 0;
+          const newXp = u.xp ?? 0;
+          // Обновляем если изменились роли, уровень или XP
+          if (
+            currentRoles !== newRoles ||
+            newLevel !== currentLevel ||
+            newXp !== currentXp
+          ) {
             u.imageVersion = Date.now();
-            setUser(u);
+            setUserWithLevelCheck(u);
           }
         }
       } catch {}
     }, 10000); // Check every 10 seconds
     return () => clearInterval(interval);
-  }, [user?.username, user?.roles]);
+  }, [user?.username, user?.roles, user?.level, user?.xp]);
 
   const loginWithOAuthUser = (userData: any) => {
     const u = mapUser(userData);
-    setUser(u);
+    setUserWithLevelCheck(u);
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    prevLevelRef.current = null;
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider
@@ -414,6 +450,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isAuthenticated: !!user,
         mounted,
+        levelUpInfo,
+        clearLevelUp,
         loginWithOAuthUser,
         login,
         register,

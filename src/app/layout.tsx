@@ -4,6 +4,7 @@ import { AppearanceProvider } from "@/context/AppearanceContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { StatusProvider } from "@/context/StatusContext";
 import ParticleCanvas from "@/components/ParticleCanvas/ParticleCanvas";
+import LevelUpModal from "@/components/LevelUpModal/LevelUpModal";
 import "./globals.scss";
 
 const geistSans = Geist({
@@ -25,12 +26,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://yumeko.ru"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://yumeko.ru",
+  ),
   title: {
     default: "Yumeko - твоя любимая озвучка!",
     template: "%s | Yumeko",
   },
-  description: "Смотрите аниме онлайн в качественной озвучке. Свежие релизы, расписание, огромная коллекция тайтлов.",
+  description:
+    "Смотрите аниме онлайн в качественной озвучке. Свежие релизы, расписание, огромная коллекция тайтлов.",
   icons: {
     icon: "/favicon.png",
   },
@@ -57,6 +61,7 @@ export default function RootLayout({
           <AuthProvider>
             <StatusProvider>
               {children}
+              <LevelUpModal />
             </StatusProvider>
           </AuthProvider>
         </AppearanceProvider>

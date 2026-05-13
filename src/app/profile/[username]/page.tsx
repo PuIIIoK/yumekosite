@@ -367,6 +367,13 @@ export default function ProfilePage() {
         bio: auth.user!.bio ?? prev.bio,
         hasAvatar: auth.user!.hasAvatar ?? prev.hasAvatar,
         hasBanner: auth.user!.hasBanner ?? prev.hasBanner,
+        // Обновляем уровень и XP — чтобы бейдж обновлялся сразу
+        level: auth.user!.level ?? prev.level,
+        xp: auth.user!.xp ?? prev.xp,
+        xpToNextLevel: auth.user!.xpToNextLevel ?? prev.xpToNextLevel,
+        xpInCurrentLevel: auth.user!.xpInCurrentLevel ?? prev.xpInCurrentLevel,
+        xpNeededForNextLevel:
+          auth.user!.xpNeededForNextLevel ?? prev.xpNeededForNextLevel,
         effects: auth.user!.effects
           ? {
               effectShimmer: auth.user!.effects.effectShimmer,
@@ -764,6 +771,8 @@ export default function ProfilePage() {
                 <div className={styles.activityList}>
                   {activities.map((a) => {
                     const isEpWatch = a.type === "episode_watch";
+                    const isEpUpload = a.type === "episode_upload";
+                    const isLevelUp = a.type === "level_up";
                     const epThumb = isEpWatch
                       ? a.episodePreview
                       : a.animePoster;
@@ -774,7 +783,31 @@ export default function ProfilePage() {
                       a.episodeStudio !== "Yumeko Studio";
                     return (
                       <div key={a.id} className={styles.activityItem}>
-                        {isEpWatch ? (
+                        {isLevelUp ? (
+                          <div
+                            className={styles.activityEpThumb}
+                            style={{
+                              background: `${getLevelTier(a.levelTo ?? 1).color}18`,
+                              border: `1px solid ${getLevelTier(a.levelTo ?? 1).color}44`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 8,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 22,
+                                fontFamily: "monospace",
+                                fontWeight: 800,
+                                color: getLevelTier(a.levelTo ?? 1).color,
+                              }}
+                            >
+                              {String(a.levelTo ?? 1).padStart(2, "0")}
+                            </span>
+                          </div>
+                        ) : isEpWatch ? (
                           <div className={styles.activityEpThumb}>
                             {epThumb ? (
                               <img
@@ -786,6 +819,18 @@ export default function ProfilePage() {
                               <div className={styles.activityEpThumbEmpty} />
                             )}
                           </div>
+                        ) : isEpUpload ? (
+                          a.animePoster ? (
+                            <img
+                              src={a.animePoster}
+                              alt=""
+                              className={styles.activityPoster}
+                            />
+                          ) : (
+                            <div className={styles.activityEpThumb}>
+                              <div className={styles.activityEpThumbEmpty} />
+                            </div>
+                          )
                         ) : (
                           a.animePoster && (
                             <img
@@ -797,6 +842,43 @@ export default function ProfilePage() {
                         )}
                         <div className={styles.activityContent}>
                           <span className={styles.activityText}>
+                            {a.type === "level_up" && (
+                              <span
+                                style={{
+                                  color: getLevelTier(a.levelTo ?? 1).color,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                Достиг {a.levelTo} уровня{" "}
+                                <span
+                                  style={{
+                                    opacity: 0.7,
+                                    fontSize: 11,
+                                    fontFamily: "monospace",
+                                    textTransform: "uppercase",
+                                  }}
+                                >
+                                  [{getLevelTier(a.levelTo ?? 1).label}]
+                                </span>
+                              </span>
+                            )}
+                            {a.type === "anime_add" && (
+                              <>
+                                Добавил(а) аниме <strong>{a.animeTitle}</strong>
+                              </>
+                            )}
+                            {a.type === "episode_upload" && (
+                              <>
+                                Залил(а) {a.episodeNumber} эпизод{" "}
+                                {a.episodeStudio &&
+                                  a.episodeStudio !== "YumekoStudio" && (
+                                    <span className={styles.activityStudio}>
+                                      {a.episodeStudio}
+                                    </span>
+                                  )}{" "}
+                                — <strong>{a.animeTitle}</strong>
+                              </>
+                            )}
                             {a.type === "collection_add" && (
                               <>
                                 {formatActivityStatus(a.statusTo)} —{" "}
