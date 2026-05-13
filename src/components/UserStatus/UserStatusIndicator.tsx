@@ -65,6 +65,7 @@ export default function UserStatusIndicator({
     if (!isPresent) return "Не в сети";
     if (manual === "AWAY") return "Неактив";
     if (manual === "DND") return "Не беспокоить";
+    if (status === "RECENTLY") return "Неактив";
     return "В сети";
   };
 
@@ -86,7 +87,17 @@ export default function UserStatusIndicator({
 
   return (
     <div className={`${styles.statusIndicator} ${styles[size]}`}>
-      <span className={`${styles.dot} ${getDotClass()}`}>
+      <span
+        className={`${styles.dot} ${getDotClass()}`}
+        style={
+          getDotClass() === styles.recently
+            ? {
+                background: "#f59e0b",
+                boxShadow: "0 0 6px rgba(245,158,11,0.5)",
+              }
+            : undefined
+        }
+      >
         {/* AWAY: луна только при активной сессии. При OFFLINE — никакой иконки */}
         {manual === "AWAY" && isPresent && (
           <Moon
