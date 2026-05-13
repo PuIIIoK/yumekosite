@@ -452,18 +452,18 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const onActivity = () => {
-      // Если был авто-авей — возвращаем в Сеть, как только пользователь вернулся
-      if (wasAutoAwayRef.current && manualStatusRef.current === "AWAY") {
+      // AWAY — сбрасываем при любой активности (авто или ручной не важно)
+      // DND / INVISIBLE — осознанный выбор, не сбрасываем
+      if (manualStatusRef.current === "AWAY") {
         wasAutoAwayRef.current = false;
         setUserManualStatus("ONLINE");
       }
 
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        // Ставим Неактив только если текущий статус ONLINE (не DND/INVISIBLE/ман. AWAY)
+        // Ставим Неактив только если статус ONLINE
         if (manualStatusRef.current === "ONLINE") {
           wasAutoAwayRef.current = true;
-          // isAutomatic=true — не сбрасываем wasAutoAwayRef внутри setUserManualStatus
           setUserManualStatus("AWAY", true);
         }
       }, AUTO_AWAY_TIMEOUT);
