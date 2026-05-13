@@ -68,21 +68,60 @@ function formatTimeAgo(dateStr: string): string {
 // level 100:  Legendary
 function getLevelTier(level: number): {
   color: string;
+  color2: string;
   tier: string;
   label: string;
 } {
   if (level >= 100)
-    return { color: "#f59e0b", tier: "legendary", label: "LEGENDARY" };
+    return {
+      color: "#f59e0b",
+      color2: "#ff4500",
+      tier: "legendary",
+      label: "LEGENDARY",
+    };
   if (level >= 85)
-    return { color: "#c084fc", tier: "amethyst", label: "AMETHYST" };
+    return {
+      color: "#c084fc",
+      color2: "#7c3aed",
+      tier: "amethyst",
+      label: "AMETHYST",
+    };
   if (level >= 70)
-    return { color: "#60a5fa", tier: "sapphire", label: "SAPPHIRE" };
+    return {
+      color: "#60a5fa",
+      color2: "#1d4ed8",
+      tier: "sapphire",
+      label: "SAPPHIRE",
+    };
   if (level >= 50)
-    return { color: "#34d399", tier: "emerald", label: "EMERALD" };
-  if (level >= 30) return { color: "#fbbf24", tier: "gold", label: "GOLD" };
-  if (level >= 15) return { color: "#cbd5e1", tier: "silver", label: "SILVER" };
-  if (level >= 5) return { color: "#c97c3a", tier: "bronze", label: "BRONZE" };
-  return { color: "#6b7280", tier: "novice", label: "NOVICE" };
+    return {
+      color: "#34d399",
+      color2: "#059669",
+      tier: "emerald",
+      label: "EMERALD",
+    };
+  if (level >= 30)
+    return { color: "#fbbf24", color2: "#b45309", tier: "gold", label: "GOLD" };
+  if (level >= 15)
+    return {
+      color: "#cbd5e1",
+      color2: "#64748b",
+      tier: "silver",
+      label: "SILVER",
+    };
+  if (level >= 5)
+    return {
+      color: "#c97c3a",
+      color2: "#7c3d12",
+      tier: "bronze",
+      label: "BRONZE",
+    };
+  return {
+    color: "#6b7280",
+    color2: "#374151",
+    tier: "novice",
+    label: "NOVICE",
+  };
 }
 
 function mapProfileUser(dto: any): User {
@@ -549,6 +588,22 @@ export default function ProfilePage() {
         >
           {fx.effectBorderGlow && <div className={styles.heroBorderGlow} />}
           {fx.effectShimmer && <div className={styles.heroShimmer} />}
+          {/* Тир-эффект баннера по уровню */}
+          {(() => {
+            const tier = getLevelTier(profileUser.level ?? 1);
+            if (tier.tier === "novice") return null;
+            return (
+              <div
+                className={`${styles.heroTierEffect} ${styles[`heroTierEffect_${tier.tier}`] ?? ""}`}
+                style={
+                  {
+                    "--tier-c": tier.color,
+                    "--tier-c2": tier.color2,
+                  } as React.CSSProperties
+                }
+              />
+            );
+          })()}
           {profileUser.hasBanner && (
             <ProtectedImage
               src={`${API_URL}/api/media/${profileUser.username}/banner?v=${profileUser.imageVersion}`}

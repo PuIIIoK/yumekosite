@@ -354,9 +354,259 @@
     opacity: 0.3;
 }
 
-.hero > *:not(.heroBannerImg):not(.heroShimmer):not(.heroBorderGlow) {
+.hero
+    > *:not(.heroBannerImg):not(.heroShimmer):not(.heroBorderGlow):not(
+        .heroTierEffect
+    ) {
     position: relative;
     z-index: 1;
+}
+
+// ─── LEVEL TIER BANNER EFFECTS ─────────────────────────────────────────────
+
+.heroTierEffect {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    overflow: hidden;
+    z-index: 2;
+}
+
+// Bronze (5–14): subtle warm copper corner glow
+.heroTierEffect_bronze {
+    background:
+        radial-gradient(
+            ellipse 60% 80% at 100% 0%,
+            rgba(201, 124, 58, 0.12) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse 40% 50% at 0% 100%,
+            rgba(201, 124, 58, 0.06) 0%,
+            transparent 50%
+        );
+}
+
+// Silver (15–29): cool chrome shimmer sweep
+.heroTierEffect_silver {
+    background: radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        rgba(203, 213, 225, 0.06) 0%,
+        transparent 60%
+    );
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -60%;
+        width: 30%;
+        height: 200%;
+        background: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(226, 232, 240, 0.04) 40%,
+            rgba(248, 250, 252, 0.1) 50%,
+            rgba(226, 232, 240, 0.04) 60%,
+            transparent 70%
+        );
+        animation: tierSweep 7s ease-in-out infinite;
+    }
+}
+
+// Gold (30–49): golden shimmer + warm glow
+.heroTierEffect_gold {
+    background:
+        radial-gradient(
+            ellipse 70% 60% at 90% 10%,
+            rgba(251, 191, 36, 0.1) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse 50% 40% at 10% 90%,
+            rgba(180, 83, 9, 0.06) 0%,
+            transparent 50%
+        );
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -60%;
+        width: 25%;
+        height: 200%;
+        background: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(251, 191, 36, 0.04) 40%,
+            rgba(253, 230, 138, 0.13) 50%,
+            rgba(251, 191, 36, 0.04) 60%,
+            transparent 70%
+        );
+        animation: tierSweep 5.5s ease-in-out infinite;
+    }
+}
+
+// Emerald (50–69): green mist + beam
+.heroTierEffect_emerald {
+    background:
+        radial-gradient(
+            ellipse 60% 80% at 0% 100%,
+            rgba(52, 211, 153, 0.1) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse 40% 50% at 100% 0%,
+            rgba(5, 150, 105, 0.06) 0%,
+            transparent 50%
+        );
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -60%;
+        width: 22%;
+        height: 200%;
+        background: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(52, 211, 153, 0.05) 40%,
+            rgba(110, 231, 183, 0.14) 50%,
+            rgba(52, 211, 153, 0.05) 60%,
+            transparent 70%
+        );
+        animation: tierSweep 4.5s ease-in-out infinite;
+    }
+}
+
+// Sapphire (70–84): blue shimmer + deep glow
+.heroTierEffect_sapphire {
+    background:
+        radial-gradient(
+            ellipse 80% 60% at 100% 0%,
+            rgba(96, 165, 250, 0.12) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse 50% 70% at 0% 80%,
+            rgba(29, 78, 216, 0.08) 0%,
+            transparent 55%
+        );
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -60%;
+        width: 22%;
+        height: 200%;
+        background: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(96, 165, 250, 0.05) 40%,
+            rgba(191, 219, 254, 0.14) 50%,
+            rgba(96, 165, 250, 0.05) 60%,
+            transparent 70%
+        );
+        animation: tierSweep 4s ease-in-out infinite;
+    }
+}
+
+// Amethyst (85–99): purple pulse + shimmer
+.heroTierEffect_amethyst {
+    background:
+        radial-gradient(
+            ellipse 70% 70% at 100% 0%,
+            rgba(192, 132, 252, 0.14) 0%,
+            transparent 55%
+        ),
+        radial-gradient(
+            ellipse 50% 50% at 0% 100%,
+            rgba(109, 40, 217, 0.1) 0%,
+            transparent 55%
+        );
+    animation: amethystBannerPulse 3s ease-in-out infinite;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -60%;
+        width: 20%;
+        height: 200%;
+        background: linear-gradient(
+            100deg,
+            transparent 30%,
+            rgba(192, 132, 252, 0.06) 40%,
+            rgba(233, 213, 255, 0.16) 50%,
+            rgba(192, 132, 252, 0.06) 60%,
+            transparent 70%
+        );
+        animation: tierSweep 3.5s ease-in-out infinite;
+    }
+}
+
+// Legendary (100): rainbow flowing gradient + prismatic sweep + corner sparks
+.heroTierEffect_legendary {
+    // Rainbow gradient overlay
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 69, 0, 0.05),
+            rgba(255, 165, 0, 0.07),
+            rgba(255, 215, 0, 0.06),
+            rgba(0, 200, 81, 0.05),
+            rgba(0, 123, 255, 0.06),
+            rgba(138, 43, 226, 0.05),
+            rgba(255, 69, 0, 0.05)
+        );
+        background-size: 300% 100%;
+        animation: legendaryBannerRainbow 6s linear infinite;
+    }
+}
+
+// ─── Tier animation keyframes ────────────────────────────────────────────────
+
+@keyframes tierSweep {
+    0%,
+    100% {
+        transform: translateX(-20%) translateY(-10%) rotate(8deg);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    85% {
+        opacity: 1;
+    }
+    to {
+        transform: translateX(350%) translateY(10%) rotate(8deg);
+        opacity: 0;
+    }
+}
+
+@keyframes amethystBannerPulse {
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes legendaryBannerRainbow {
+    from {
+        background-position: 0% 0;
+    }
+    to {
+        background-position: 300% 0;
+    }
 }
 
 .heroLeft {
