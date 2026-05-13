@@ -617,6 +617,20 @@ export default function ProfilePage() {
                 dotOnly
               />
             </div>
+
+            {/* Level badge */}
+            <div
+              className={styles.levelBadge}
+              style={
+                rc
+                  ? ({ "--level-accent": rc.c1 } as React.CSSProperties)
+                  : undefined
+              }
+            >
+              <span className={styles.levelBadgeSlash}>//</span>
+              <span className={styles.levelBadgeLabel}>LV.</span>
+              <span className={styles.levelBadgeNum}>01</span>
+            </div>
           </div>
         </section>
 
@@ -799,10 +813,6 @@ export default function ProfilePage() {
                         })
                       : "—"}
                   </span>
-                </div>
-                <div className={styles.infoRow}>
-                  <span className={styles.infoLabel}>Уровень</span>
-                  <span className={styles.infoValue}>01</span>
                 </div>
                 <div className={styles.infoRow}>
                   <span className={styles.infoLabel}>Роли</span>

@@ -106,10 +106,12 @@ export function StatusProvider({ children }: { children: ReactNode }) {
               lastSeen: new Date().toISOString(),
             }),
           );
-          client.publish({
-            destination: "/app/heartbeat",
-            body: JSON.stringify({ userId: uid, timestamp: Date.now() }),
-          });
+          if (client.connected) {
+            client.publish({
+              destination: "/app/heartbeat",
+              body: JSON.stringify({ userId: uid, timestamp: Date.now() }),
+            });
+          }
         } else {
           const publicStatus: UserStatus =
             resolved === "INVISIBLE" ? "OFFLINE" : "RECENTLY";
@@ -122,18 +124,20 @@ export function StatusProvider({ children }: { children: ReactNode }) {
               lastSeen: new Date().toISOString(),
             }),
           );
-          client.publish({
-            destination: "/app/set-status",
-            body: JSON.stringify({
-              userId: uid,
-              status: publicStatus,
-              originalStatus: resolved,
-            }),
-          });
+          if (client.connected) {
+            client.publish({
+              destination: "/app/set-status",
+              body: JSON.stringify({
+                userId: uid,
+                status: publicStatus,
+                originalStatus: resolved,
+              }),
+            });
+          }
         }
       })
       .catch(() => {
-        // Фоллбэк: применяем ONLINE локально и отправляем heartbeat
+        // Фоллбэк: применяем ONLINE локально и отправляем heartbeat если подключены
         userManualOverridesRef.current.set(uid, "ONLINE");
         setStatuses((prev) =>
           new Map(prev).set(uid, {
@@ -143,10 +147,12 @@ export function StatusProvider({ children }: { children: ReactNode }) {
             lastSeen: new Date().toISOString(),
           }),
         );
-        client.publish({
-          destination: "/app/heartbeat",
-          body: JSON.stringify({ userId: uid, timestamp: Date.now() }),
-        });
+        if (client.connected) {
+          client.publish({
+            destination: "/app/heartbeat",
+            body: JSON.stringify({ userId: uid, timestamp: Date.now() }),
+          });
+        }
       });
   };
 
@@ -229,6 +235,7 @@ export function StatusProvider({ children }: { children: ReactNode }) {
         const sendHeartbeat = () => {
           if (!userIdRef.current) return;
           if (manualStatusRef.current !== "ONLINE") return;
+          if (!client.connected) return;
           client.publish({
             destination: "/app/heartbeat",
             body: JSON.stringify({
