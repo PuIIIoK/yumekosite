@@ -675,8 +675,8 @@
 .levelBadge {
     width: 180px;
     display: flex;
-    align-items: baseline;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     gap: 4px;
     padding: 7px 14px;
     background: color-mix(
@@ -737,6 +737,14 @@
     letter-spacing: 0.2em;
 }
 
+.levelBadgeTop {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+}
+
 .levelBadgeNum {
     font-size: 22px;
     font-weight: 800;
@@ -745,6 +753,225 @@
     letter-spacing: 0.04em;
     text-shadow: 0 0 16px
         color-mix(in srgb, var(--level-accent, var(--accent)) 50%, transparent);
+}
+
+// XP progress bar inside the level badge
+.levelBadgeBar {
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: color-mix(
+        in srgb,
+        var(--level-accent, var(--accent)) 15%,
+        transparent
+    );
+    overflow: hidden;
+    margin-top: 2px;
+}
+
+.levelBadgeBarFill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--level-accent, var(--accent)) 70%, transparent),
+        var(--level-accent, var(--accent))
+    );
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 6px
+        color-mix(in srgb, var(--level-accent, var(--accent)) 60%, transparent);
+}
+
+// ── Тиры уровней ─────────────────────────────────────────────────────────
+
+// Bronze (5–14) — тёплый медный оттенок, минимальный эффект
+.levelBadgeTier_bronze .levelBadgeBarFill {
+    background: linear-gradient(90deg, #8b4513, #cd7f32, #e8a45a);
+    box-shadow: 0 0 5px rgba(201, 124, 58, 0.4);
+}
+
+// Silver (15–29) — холодный серебряный шиммер
+.levelBadgeTier_silver .levelBadgeBarFill {
+    background: linear-gradient(90deg, #64748b, #e2e8f0, #94a3b8, #e2e8f0);
+    background-size: 200% 100%;
+    animation: levelBarShimmer 2.5s linear infinite;
+    box-shadow: 0 0 6px rgba(203, 213, 225, 0.5);
+}
+.levelBadgeTier_silver .levelBadgeNum {
+    text-shadow: 0 0 12px rgba(203, 213, 225, 0.8);
+}
+
+// Gold (30–49) — золотая пульсация
+.levelBadgeTier_gold {
+    animation: levelGoldPulse 2s ease-in-out infinite;
+}
+.levelBadgeTier_gold .levelBadgeBarFill {
+    background: linear-gradient(90deg, #b45309, #fbbf24, #fde68a, #fbbf24);
+    background-size: 200% 100%;
+    animation: levelBarShimmer 2s linear infinite;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+}
+.levelBadgeTier_gold .levelBadgeNum {
+    text-shadow: 0 0 14px rgba(251, 191, 36, 0.9);
+}
+
+// Emerald (50–69) — зелёный свет
+.levelBadgeTier_emerald {
+    animation: levelEmeraldPulse 2.5s ease-in-out infinite;
+}
+.levelBadgeTier_emerald .levelBadgeBarFill {
+    background: linear-gradient(90deg, #065f46, #34d399, #6ee7b7, #34d399);
+    background-size: 200% 100%;
+    animation: levelBarShimmer 1.8s linear infinite;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.65);
+}
+.levelBadgeTier_emerald .levelBadgeNum {
+    text-shadow: 0 0 16px rgba(52, 211, 153, 0.9);
+}
+
+// Sapphire (70–84) — сапфировый холодный свет
+.levelBadgeTier_sapphire {
+    animation: levelSapphirePulse 2.5s ease-in-out infinite;
+}
+.levelBadgeTier_sapphire .levelBadgeBarFill {
+    background: linear-gradient(90deg, #1d4ed8, #60a5fa, #bfdbfe, #60a5fa);
+    background-size: 200% 100%;
+    animation: levelBarShimmer 1.6s linear infinite;
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.65);
+}
+.levelBadgeTier_sapphire .levelBadgeNum {
+    text-shadow: 0 0 16px rgba(96, 165, 250, 0.9);
+}
+
+// Amethyst (85–99) — фиолетовый с пульсацией
+.levelBadgeTier_amethyst {
+    animation: levelAmethystPulse 2s ease-in-out infinite;
+    border-color: rgba(192, 132, 252, 0.4) !important;
+}
+.levelBadgeTier_amethyst .levelBadgeBarFill {
+    background: linear-gradient(90deg, #6d28d9, #c084fc, #e9d5ff, #c084fc);
+    background-size: 200% 100%;
+    animation: levelBarShimmer 1.4s linear infinite;
+    box-shadow: 0 0 12px rgba(192, 132, 252, 0.7);
+}
+.levelBadgeTier_amethyst .levelBadgeNum {
+    text-shadow: 0 0 20px rgba(192, 132, 252, 1);
+}
+
+// Legendary (100) — радужный шиммер
+.levelBadgeTier_legendary {
+    border-color: rgba(245, 158, 11, 0.5) !important;
+    animation: levelLegendaryGlow 2s ease-in-out infinite;
+}
+.levelBadgeTier_legendary .levelBadgeBarFill {
+    background: linear-gradient(
+        90deg,
+        #ff4500,
+        #ff8c00,
+        #ffd700,
+        #00c851,
+        #007bff,
+        #8a2be2,
+        #ff4500
+    );
+    background-size: 300% 100%;
+    animation: levelBarRainbow 12s linear infinite;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.8);
+}
+.levelBadgeTier_legendary .levelBadgeNum {
+    background: linear-gradient(90deg, #ff8c00, #ffd700, #ff8c00);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: levelBarShimmer 7s linear infinite;
+    text-shadow: none;
+    filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.9));
+}
+
+// ── Анимации тиров ────────────────────────────────────────────────────
+
+@keyframes levelBarShimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+@keyframes levelBarRainbow {
+    0% {
+        background-position: 0% 0;
+    }
+    100% {
+        background-position: 300% 0;
+    }
+}
+
+@keyframes levelGoldPulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 0 rgba(251, 191, 36, 0.25),
+            0 0 8px rgba(251, 191, 36, 0.1);
+    }
+    50% {
+        box-shadow:
+            0 0 0 4px rgba(251, 191, 36, 0),
+            0 0 18px rgba(251, 191, 36, 0.35);
+    }
+}
+
+@keyframes levelEmeraldPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(52, 211, 153, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(52, 211, 153, 0.45);
+    }
+}
+
+@keyframes levelSapphirePulse {
+    0%,
+    100% {
+        box-shadow: 0 0 8px rgba(96, 165, 250, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(96, 165, 250, 0.45);
+    }
+}
+
+@keyframes levelAmethystPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+        border-color: rgba(192, 132, 252, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(192, 132, 252, 0.55);
+        border-color: rgba(192, 132, 252, 0.6);
+    }
+}
+
+@keyframes levelLegendaryGlow {
+    0%,
+    100% {
+        box-shadow:
+            0 0 12px rgba(255, 165, 0, 0.3),
+            0 0 24px rgba(255, 215, 0, 0.15);
+    }
+    33% {
+        box-shadow:
+            0 0 12px rgba(255, 50, 50, 0.3),
+            0 0 24px rgba(255, 100, 100, 0.15);
+    }
+    66% {
+        box-shadow:
+            0 0 12px rgba(100, 200, 255, 0.3),
+            0 0 24px rgba(150, 100, 255, 0.15);
+    }
 }
 
 .avatarFrame {

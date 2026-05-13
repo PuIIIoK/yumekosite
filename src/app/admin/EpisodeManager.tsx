@@ -1,7 +1,24 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Search, X, Plus, Trash2, Loader2, Check, ChevronDown, Film, Play, AlertTriangle, Upload, Image, Maximize2, Users, Mic } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Search,
+  X,
+  Plus,
+  Trash2,
+  Loader2,
+  Check,
+  ChevronDown,
+  Film,
+  Play,
+  AlertTriangle,
+  Upload,
+  Image,
+  Maximize2,
+  Users,
+  Mic,
+} from "lucide-react";
 import Hls from "hls.js";
 import { API_URL } from "@/config/hosts";
 import type { AnimeDetails } from "@/data/anime";
@@ -41,9 +58,19 @@ interface VoiceCast {
 
 const DEFAULT_STUDIOS = ["YumekoStudio"];
 const STUDIOS_KEY = "yumeko_studios";
-const emptyForm: EpisodeForm = { number: "", title: "", studio: "YumekoStudio" };
+const emptyForm: EpisodeForm = {
+  number: "",
+  title: "",
+  studio: "YumekoStudio",
+};
 
-function HlsModal({ episode, onClose }: { episode: Episode; onClose: () => void }) {
+function HlsModal({
+  episode,
+  onClose,
+}: {
+  episode: Episode;
+  onClose: () => void;
+}) {
   const vRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -91,6 +118,7 @@ function HlsModal({ episode, onClose }: { episode: Episode; onClose: () => void 
 }
 
 export default function EpisodeManager() {
+  const { user } = useAuth();
   const [animeList, setAnimeList] = useState<AnimeDetails[]>([]);
   const [selectedAnime, setSelectedAnime] = useState<AnimeDetails | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -163,13 +191,20 @@ export default function EpisodeManager() {
   }, []);
 
   const addVoiceCast = async () => {
-    if (!selectedAnime || !vcStudio || !vcActor.trim() || !vcCharacter.trim()) return;
+    if (!selectedAnime || !vcStudio || !vcActor.trim() || !vcCharacter.trim())
+      return;
     setVcSaving(true);
     try {
       const res = await fetch(`${API_URL}/api/voice-cast`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ animeId: selectedAnime.id, studio: vcStudio, actorName: vcActor.trim(), actorUsername: vcUsername.trim() || null, characterName: vcCharacter.trim() }),
+        body: JSON.stringify({
+          animeId: selectedAnime.id,
+          studio: vcStudio,
+          actorName: vcActor.trim(),
+          actorUsername: vcUsername.trim() || null,
+          characterName: vcCharacter.trim(),
+        }),
       });
       if (res.ok) {
         setVcActor("");
@@ -192,7 +227,11 @@ export default function EpisodeManager() {
   // Poll for in-progress episodes (silent — no loading flash)
   useEffect(() => {
     if (!selectedAnime) return;
-    const hasActive = episodes.some((e) => ["processing", "converting", "uploading", "finalizing"].includes(e.status));
+    const hasActive = episodes.some((e) =>
+      ["processing", "converting", "uploading", "finalizing"].includes(
+        e.status,
+      ),
+    );
     if (!hasActive) return;
     const interval = setInterval(() => {
       fetchEpisodes(selectedAnime.id, true);
@@ -218,7 +257,9 @@ export default function EpisodeManager() {
     if (!animeSearch.trim()) return animeList;
     const q = animeSearch.trim().toLowerCase();
     return animeList.filter(
-      (a) => a.title.toLowerCase().includes(q) || (a.altTitle && a.altTitle.toLowerCase().includes(q))
+      (a) =>
+        a.title.toLowerCase().includes(q) ||
+        (a.altTitle && a.altTitle.toLowerCase().includes(q)),
     );
   }, [animeList, animeSearch]);
 
@@ -245,7 +286,7 @@ export default function EpisodeManager() {
       list = list.filter(
         (e) =>
           String(e.number).includes(q) ||
-          (e.title && e.title.toLowerCase().includes(q))
+          (e.title && e.title.toLowerCase().includes(q)),
       );
     }
     return list;
@@ -259,7 +300,12 @@ export default function EpisodeManager() {
     setSuccess(null);
   };
 
-  const ACCEPTED_TYPES = ["video/mp4", "video/x-matroska", "video/quicktime", "video/webm"];
+  const ACCEPTED_TYPES = [
+    "video/mp4",
+    "video/x-matroska",
+    "video/quicktime",
+    "video/webm",
+  ];
   const ACCEPTED_EXT = [".mp4", ".mkv", ".mov", ".webm"];
 
   const isVideoFile = (file: File) => {
@@ -288,6 +334,8 @@ export default function EpisodeManager() {
     fd.append("number", String(num));
     if (form.title.trim()) fd.append("title", form.title.trim());
     fd.append("studio", form.studio);
+    // grantXpUserId — для начисления XP залившему
+    if (user?.id) fd.append("grantXpUserId", String(user.id));
 
     const animeId = selectedAnime.id;
 
@@ -327,7 +375,9 @@ export default function EpisodeManager() {
     xhr.send(fd);
   };
 
-  const handleUploadEpisode = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadEpisode = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     await uploadFile(file);
@@ -341,7 +391,10 @@ export default function EpisodeManager() {
     if (file) await uploadFile(file);
   };
 
-  const handlePreviewUpload = async (epId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePreviewUpload = async (
+    epId: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !selectedAnime) return;
     setPreviewUploading(epId);
@@ -371,7 +424,9 @@ export default function EpisodeManager() {
     if (!deleteTarget || !selectedAnime) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/episodes/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/api/episodes/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         await fetchEpisodes(selectedAnime.id);
         setSuccess(`Эпизод ${deleteTarget.number} удалён`);
@@ -401,7 +456,8 @@ export default function EpisodeManager() {
     return "#888";
   };
 
-  const isActiveStatus = (s: string) => ["processing", "converting", "uploading", "finalizing"].includes(s);
+  const isActiveStatus = (s: string) =>
+    ["processing", "converting", "uploading", "finalizing"].includes(s);
 
   if (loading) {
     return <div className={styles.loader}>Загрузка...</div>;
@@ -430,9 +486,14 @@ export default function EpisodeManager() {
                 {selectedAnime.title}
               </span>
             ) : (
-              <span className={styles.episodeDropdownPlaceholder}>Нажмите для выбора...</span>
+              <span className={styles.episodeDropdownPlaceholder}>
+                Нажмите для выбора...
+              </span>
             )}
-            <ChevronDown size={16} className={dropdownOpen ? styles.episodeChevronOpen : ""} />
+            <ChevronDown
+              size={16}
+              className={dropdownOpen ? styles.episodeChevronOpen : ""}
+            />
           </button>
           {dropdownOpen && (
             <div className={styles.episodeDropdownList}>
@@ -447,7 +508,9 @@ export default function EpisodeManager() {
               </div>
               <div className={styles.episodeDropdownItems}>
                 {filteredAnime.length === 0 ? (
-                  <div className={styles.episodeDropdownEmpty}>Ничего не найдено</div>
+                  <div className={styles.episodeDropdownEmpty}>
+                    Ничего не найдено
+                  </div>
                 ) : (
                   filteredAnime.map((a) => (
                     <button
@@ -456,12 +519,20 @@ export default function EpisodeManager() {
                       onClick={() => selectAnime(a)}
                     >
                       {a.poster && (
-                        <img src={a.poster} alt="" className={styles.episodeDropdownPoster} />
+                        <img
+                          src={a.poster}
+                          alt=""
+                          className={styles.episodeDropdownPoster}
+                        />
                       )}
                       <div className={styles.episodeDropdownInfo}>
-                        <span className={styles.episodeDropdownTitle}>{a.title}</span>
+                        <span className={styles.episodeDropdownTitle}>
+                          {a.title}
+                        </span>
                         {a.altTitle && (
-                          <span className={styles.episodeDropdownAlt}>{a.altTitle}</span>
+                          <span className={styles.episodeDropdownAlt}>
+                            {a.altTitle}
+                          </span>
                         )}
                       </div>
                     </button>
@@ -478,7 +549,10 @@ export default function EpisodeManager() {
           {/* Upload episode form */}
           <div className={styles.episodeForm}>
             <h3 className={styles.episodeFormTitle}>Загрузить эпизод</h3>
-            <div className={styles.episodeFormGrid} style={{ gridTemplateColumns: "80px 1fr 260px" }}>
+            <div
+              className={styles.episodeFormGrid}
+              style={{ gridTemplateColumns: "80px 1fr 260px" }}
+            >
               <div className={styles.episodeFormField}>
                 <label>Номер</label>
                 <input
@@ -512,7 +586,10 @@ export default function EpisodeManager() {
                           if (!studios.includes(trimmed)) {
                             const updated = [...studios, trimmed];
                             setStudios(updated);
-                            localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                            localStorage.setItem(
+                              STUDIOS_KEY,
+                              JSON.stringify(updated),
+                            );
                           }
                           setForm({ ...form, studio: trimmed });
                           setNewStudioName("");
@@ -534,7 +611,10 @@ export default function EpisodeManager() {
                           if (!studios.includes(trimmed)) {
                             const updated = [...studios, trimmed];
                             setStudios(updated);
-                            localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                            localStorage.setItem(
+                              STUDIOS_KEY,
+                              JSON.stringify(updated),
+                            );
                           }
                           setForm({ ...form, studio: trimmed });
                         }
@@ -547,7 +627,10 @@ export default function EpisodeManager() {
                     <button
                       type="button"
                       className={styles.epStudioAddBtn}
-                      onClick={() => { setNewStudioName(""); setAddingStudio(false); }}
+                      onClick={() => {
+                        setNewStudioName("");
+                        setAddingStudio(false);
+                      }}
                     >
                       <X size={14} />
                     </button>
@@ -558,7 +641,9 @@ export default function EpisodeManager() {
                       <button
                         type="button"
                         className={styles.epStudioDropdownTrigger}
-                        onClick={() => setStudioDropdownOpen(!studioDropdownOpen)}
+                        onClick={() =>
+                          setStudioDropdownOpen(!studioDropdownOpen)
+                        }
                       >
                         <span>{form.studio}</span>
                         <ChevronDown size={14} />
@@ -566,7 +651,10 @@ export default function EpisodeManager() {
                       {studioDropdownOpen && (
                         <div className={styles.epStudioDropdownMenu}>
                           {studios.map((s) => (
-                            <div key={s} className={`${styles.epStudioDropdownItem} ${form.studio === s ? styles.epStudioDropdownItemActive : ""}`}>
+                            <div
+                              key={s}
+                              className={`${styles.epStudioDropdownItem} ${form.studio === s ? styles.epStudioDropdownItemActive : ""}`}
+                            >
                               <button
                                 type="button"
                                 className={styles.epStudioDropdownSelect}
@@ -584,11 +672,19 @@ export default function EpisodeManager() {
                                   title={`Удалить ${s}`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const updated = studios.filter((st) => st !== s);
+                                    const updated = studios.filter(
+                                      (st) => st !== s,
+                                    );
                                     setStudios(updated);
-                                    localStorage.setItem(STUDIOS_KEY, JSON.stringify(updated));
+                                    localStorage.setItem(
+                                      STUDIOS_KEY,
+                                      JSON.stringify(updated),
+                                    );
                                     if (form.studio === s) {
-                                      setForm({ ...form, studio: updated[0] || "YumekoStudio" });
+                                      setForm({
+                                        ...form,
+                                        studio: updated[0] || "YumekoStudio",
+                                      });
                                     }
                                   }}
                                 >
@@ -613,20 +709,34 @@ export default function EpisodeManager() {
               </div>
             </div>
 
-            {error && <div className={styles.episodeError}><AlertTriangle size={13} /> {error}</div>}
-            {success && <div className={styles.episodeSuccess}><Check size={13} /> {success}</div>}
+            {error && (
+              <div className={styles.episodeError}>
+                <AlertTriangle size={13} /> {error}
+              </div>
+            )}
+            {success && (
+              <div className={styles.episodeSuccess}>
+                <Check size={13} /> {success}
+              </div>
+            )}
 
             {/* Drag & drop zone */}
             <div
               ref={dropRef}
               className={`${styles.epDropZone} ${dragOver ? styles.epDropZoneActive : ""} ${uploading ? styles.epDropZoneUploading : ""}`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => {
                 if (uploading) return;
                 const num = parseInt(form.number);
-                if (!num || num < 1) { setError("Укажите номер эпизода"); return; }
+                if (!num || num < 1) {
+                  setError("Укажите номер эпизода");
+                  return;
+                }
                 setError(null);
                 fileInputRef.current?.click();
               }}
@@ -648,15 +758,23 @@ export default function EpisodeManager() {
                         style={{ width: `${uploadPercent}%` }}
                       />
                     </div>
-                    <span className={styles.epUploadPercent}>{uploadPercent}%</span>
+                    <span className={styles.epUploadPercent}>
+                      {uploadPercent}%
+                    </span>
                   </div>
-                  <span className={styles.epDropZoneText}>Загрузка видео...</span>
+                  <span className={styles.epDropZoneText}>
+                    Загрузка видео...
+                  </span>
                 </>
               ) : (
                 <>
                   <Upload size={28} />
-                  <span className={styles.epDropZoneText}>Перетащите видео сюда или нажмите</span>
-                  <span className={styles.epDropZoneHint}>MP4, MKV, MOV, WebM</span>
+                  <span className={styles.epDropZoneText}>
+                    Перетащите видео сюда или нажмите
+                  </span>
+                  <span className={styles.epDropZoneHint}>
+                    MP4, MKV, MOV, WebM
+                  </span>
                 </>
               )}
             </div>
@@ -665,7 +783,10 @@ export default function EpisodeManager() {
           {/* Episode list */}
           <div className={styles.episodeListSection}>
             <div className={styles.episodeListHeader}>
-              <h3>Эпизоды ({filterStudio ? filteredEpisodes.length : episodes.length})</h3>
+              <h3>
+                Эпизоды (
+                {filterStudio ? filteredEpisodes.length : episodes.length})
+              </h3>
               {episodes.length > 3 && (
                 <div className={styles.episodeSearchWrap}>
                   <Search size={13} />
@@ -674,7 +795,13 @@ export default function EpisodeManager() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
-                  {search && <X size={13} className={styles.episodeSearchClear} onClick={() => setSearch("")} />}
+                  {search && (
+                    <X
+                      size={13}
+                      className={styles.episodeSearchClear}
+                      onClick={() => setSearch("")}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -702,7 +829,9 @@ export default function EpisodeManager() {
               <div className={styles.loader}>Загрузка эпизодов...</div>
             ) : filteredEpisodes.length === 0 ? (
               <div className={styles.episodeEmpty}>
-                {episodes.length === 0 ? "Эпизодов пока нет. Загрузите первый!" : "Ничего не найдено"}
+                {episodes.length === 0
+                  ? "Эпизодов пока нет. Загрузите первый!"
+                  : "Ничего не найдено"}
               </div>
             ) : (
               <div className={styles.episodeList}>
@@ -711,7 +840,11 @@ export default function EpisodeManager() {
                     {/* Preview thumbnail */}
                     <div className={styles.episodeThumb}>
                       {ep.previewUrl ? (
-                        <img src={ep.previewUrl} alt="" className={styles.episodeThumbImg} />
+                        <img
+                          src={ep.previewUrl}
+                          alt=""
+                          className={styles.episodeThumbImg}
+                        />
                       ) : (
                         <div className={styles.episodeThumbPlaceholder}>
                           <Film size={16} />
@@ -722,7 +855,9 @@ export default function EpisodeManager() {
                     <div className={styles.episodeInfo}>
                       <span className={styles.episodeCardTitle}>
                         {ep.title || `Эпизод ${ep.number}`}
-                        <span className={styles.epStudioBadge}>{ep.studio}</span>
+                        <span className={styles.epStudioBadge}>
+                          {ep.studio}
+                        </span>
                       </span>
                       {isActiveStatus(ep.status) ? (
                         <div className={styles.epProcessing}>
@@ -730,20 +865,34 @@ export default function EpisodeManager() {
                             <div
                               className={styles.epProcessingFill}
                               style={{
-                                width: ep.status === "finalizing" ? "100%" : `${ep.progress}%`,
+                                width:
+                                  ep.status === "finalizing"
+                                    ? "100%"
+                                    : `${ep.progress}%`,
                                 background: statusColor(ep.status),
-                                animation: ep.status === "finalizing" ? "none" : undefined,
+                                animation:
+                                  ep.status === "finalizing"
+                                    ? "none"
+                                    : undefined,
                               }}
                             />
                           </div>
-                          <span className={styles.epProcessingLabel} style={{ color: statusColor(ep.status) }}>
+                          <span
+                            className={styles.epProcessingLabel}
+                            style={{ color: statusColor(ep.status) }}
+                          >
                             {statusLabel(ep.status)}
-                            {(ep.status === "converting" || ep.status === "uploading") && ` ${ep.progress}%`}
+                            {(ep.status === "converting" ||
+                              ep.status === "uploading") &&
+                              ` ${ep.progress}%`}
                             {ep.duration && ` · ${ep.duration}`}
                           </span>
                         </div>
                       ) : (
-                        <span className={styles.episodeStatus} style={{ color: statusColor(ep.status) }}>
+                        <span
+                          className={styles.episodeStatus}
+                          style={{ color: statusColor(ep.status) }}
+                        >
                           {statusLabel(ep.status)}
                           {ep.duration && <> · {ep.duration}</>}
                         </span>
@@ -796,7 +945,10 @@ export default function EpisodeManager() {
           {/* ── Voice Cast / Работа над релизом ── */}
           <div className={styles.episodeListSection}>
             <div className={styles.episodeListHeader}>
-              <h3><Mic size={16} style={{ marginRight: 6, verticalAlign: -2 }} />Работа над релизом</h3>
+              <h3>
+                <Mic size={16} style={{ marginRight: 6, verticalAlign: -2 }} />
+                Работа над релизом
+              </h3>
             </div>
 
             {episodeStudios.length > 1 && (
@@ -813,14 +965,24 @@ export default function EpisodeManager() {
               </div>
             )}
 
-            <div className={styles.episodeFormGrid} style={{ gridTemplateColumns: "1fr 1fr 1fr auto", marginBottom: 12 }}>
+            <div
+              className={styles.episodeFormGrid}
+              style={{
+                gridTemplateColumns: "1fr 1fr 1fr auto",
+                marginBottom: 12,
+              }}
+            >
               <div className={styles.episodeFormField}>
                 <label>Профиль (@username)</label>
                 <input
                   value={vcUsername}
-                  onChange={(e) => setVcUsername(e.target.value.replace("@", ""))}
+                  onChange={(e) =>
+                    setVcUsername(e.target.value.replace("@", ""))
+                  }
                   placeholder="username"
-                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") addVoiceCast();
+                  }}
                 />
               </div>
               <div className={styles.episodeFormField}>
@@ -829,7 +991,9 @@ export default function EpisodeManager() {
                   value={vcActor}
                   onChange={(e) => setVcActor(e.target.value)}
                   placeholder="Hirst"
-                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") addVoiceCast();
+                  }}
                 />
               </div>
               <div className={styles.episodeFormField}>
@@ -838,10 +1002,15 @@ export default function EpisodeManager() {
                   value={vcCharacter}
                   onChange={(e) => setVcCharacter(e.target.value)}
                   placeholder="Ко Ямори"
-                  onKeyDown={(e) => { if (e.key === "Enter") addVoiceCast(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") addVoiceCast();
+                  }}
                 />
               </div>
-              <div className={styles.episodeFormField} style={{ display: "flex", alignItems: "flex-end" }}>
+              <div
+                className={styles.episodeFormField}
+                style={{ display: "flex", alignItems: "flex-end" }}
+              >
                 <button
                   className={styles.epStudioAddBtn}
                   onClick={addVoiceCast}
@@ -849,31 +1018,72 @@ export default function EpisodeManager() {
                   title="Добавить"
                   style={{ height: 36, width: 36 }}
                 >
-                  {vcSaving ? <Loader2 size={14} className={styles.saveSpin} /> : <Plus size={16} />}
+                  {vcSaving ? (
+                    <Loader2 size={14} className={styles.saveSpin} />
+                  ) : (
+                    <Plus size={16} />
+                  )}
                 </button>
               </div>
             </div>
 
             {vcByStudio.length === 0 ? (
-              <div className={styles.episodeEmpty}>Актёров озвучки пока нет</div>
+              <div className={styles.episodeEmpty}>
+                Актёров озвучки пока нет
+              </div>
             ) : (
               <div className={styles.episodeList}>
                 {vcByStudio.map((vc) => (
                   <div key={vc.id} className={styles.episodeCard}>
                     <div className={styles.episodeNumber} style={{ width: 32 }}>
                       {vc.actorUsername && vc.actorHasAvatar ? (
-                        <img src={`${API_URL}/api/media/${vc.actorUsername}/avatar`} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: "cover", border: vc.actorRoleColor ? `2px solid ${vc.actorRoleColor}` : "2px solid rgba(255,255,255,0.1)" }} />
+                        <img
+                          src={`${API_URL}/api/media/${vc.actorUsername}/avatar`}
+                          alt=""
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            objectFit: "cover",
+                            border: vc.actorRoleColor
+                              ? `2px solid ${vc.actorRoleColor}`
+                              : "2px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
                       ) : (
                         <Users size={14} />
                       )}
                     </div>
                     <div className={styles.episodeInfo}>
                       <span className={styles.episodeCardTitle}>
-                        <span style={vc.actorRoleColor ? { color: vc.actorRoleColor } : undefined}>{vc.actorDisplayName || vc.actorName}</span>
-                        {vc.actorUsername && <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 4 }}>@{vc.actorUsername}</span>}
-                        <span className={styles.epStudioBadge}>{vc.studio}</span>
+                        <span
+                          style={
+                            vc.actorRoleColor
+                              ? { color: vc.actorRoleColor }
+                              : undefined
+                          }
+                        >
+                          {vc.actorDisplayName || vc.actorName}
+                        </span>
+                        {vc.actorUsername && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: "var(--text-muted)",
+                              marginLeft: 4,
+                            }}
+                          >
+                            @{vc.actorUsername}
+                          </span>
+                        )}
+                        <span className={styles.epStudioBadge}>
+                          {vc.studio}
+                        </span>
                       </span>
-                      <span className={styles.episodeStatus} style={{ color: "var(--text-muted)" }}>
+                      <span
+                        className={styles.episodeStatus}
+                        style={{ color: "var(--text-muted)" }}
+                      >
                         → {vc.characterName}
                       </span>
                     </div>
@@ -899,15 +1109,42 @@ export default function EpisodeManager() {
 
       {/* Delete confirm modal */}
       {deleteTarget && (
-        <div className={styles.deleteOverlay} onClick={() => !deleting && setDeleteTarget(null)}>
-          <div className={styles.deleteModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.deleteModalIcon}><AlertTriangle size={28} /></div>
+        <div
+          className={styles.deleteOverlay}
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div
+            className={styles.deleteModal}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.deleteModalIcon}>
+              <AlertTriangle size={28} />
+            </div>
             <h3>Удалить эпизод {deleteTarget.number}?</h3>
             <p>Это действие нельзя отменить.</p>
             <div className={styles.deleteModalActions}>
-              <button className={styles.deleteModalCancel} onClick={() => setDeleteTarget(null)} disabled={deleting}>Отмена</button>
-              <button className={styles.deleteModalConfirm} onClick={handleDelete} disabled={deleting}>
-                {deleting ? <><Loader2 size={14} className={styles.saveSpin} /> Удаление...</> : <><Trash2 size={14} /> Удалить</>}
+              <button
+                className={styles.deleteModalCancel}
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting}
+              >
+                Отмена
+              </button>
+              <button
+                className={styles.deleteModalConfirm}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 size={14} className={styles.saveSpin} />{" "}
+                    Удаление...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} /> Удалить
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -46,6 +46,11 @@ export type User = {
   discordUsername?: string | null;
   discordId?: string | null;
   telegramUsername?: string | null;
+  xp?: number;
+  level?: number;
+  xpToNextLevel?: number;
+  xpInCurrentLevel?: number;
+  xpNeededForNextLevel?: number;
 };
 
 type AuthResult = { ok: true; user: User } | { ok: false; error: string };
@@ -157,6 +162,11 @@ function mapUser(dto: any): User {
     discordUsername: dto.discordUsername ?? null,
     discordId: dto.discordId ?? null,
     telegramUsername: dto.telegramUsername ?? null,
+    xp: dto.xp ?? 0,
+    level: dto.level ?? 1,
+    xpToNextLevel: dto.xpToNextLevel ?? 0,
+    xpInCurrentLevel: dto.xpInCurrentLevel ?? 0,
+    xpNeededForNextLevel: dto.xpNeededForNextLevel ?? 0,
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
       effectBorderGlow: dto.effectBorderGlow ?? false,

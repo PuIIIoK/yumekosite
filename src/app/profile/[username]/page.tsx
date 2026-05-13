@@ -57,6 +57,34 @@ function formatTimeAgo(dateStr: string): string {
   });
 }
 
+// ── Тиры уровней ───────────────────────────────────────────────────────────────────────
+// level 1–4: Grey (нет тира)
+// level 5–14: Bronze
+// level 15–29: Silver
+// level 30–49: Gold
+// level 50–69: Emerald
+// level 70–84: Sapphire
+// level 85–99: Amethyst
+// level 100:  Legendary
+function getLevelTier(level: number): {
+  color: string;
+  tier: string;
+  label: string;
+} {
+  if (level >= 100)
+    return { color: "#f59e0b", tier: "legendary", label: "LEGENDARY" };
+  if (level >= 85)
+    return { color: "#c084fc", tier: "amethyst", label: "AMETHYST" };
+  if (level >= 70)
+    return { color: "#60a5fa", tier: "sapphire", label: "SAPPHIRE" };
+  if (level >= 50)
+    return { color: "#34d399", tier: "emerald", label: "EMERALD" };
+  if (level >= 30) return { color: "#fbbf24", tier: "gold", label: "GOLD" };
+  if (level >= 15) return { color: "#cbd5e1", tier: "silver", label: "SILVER" };
+  if (level >= 5) return { color: "#c97c3a", tier: "bronze", label: "BRONZE" };
+  return { color: "#6b7280", tier: "novice", label: "NOVICE" };
+}
+
 function mapProfileUser(dto: any): User {
   return {
     id: dto.id,
@@ -88,6 +116,11 @@ function mapProfileUser(dto: any): User {
     discordUsername: dto.discordUsername ?? null,
     discordId: dto.discordId ?? null,
     telegramUsername: dto.telegramUsername ?? null,
+    xp: dto.xp ?? 0,
+    level: dto.level ?? 1,
+    xpToNextLevel: dto.xpToNextLevel ?? 0,
+    xpInCurrentLevel: dto.xpInCurrentLevel ?? 0,
+    xpNeededForNextLevel: dto.xpNeededForNextLevel ?? 0,
     effects: {
       effectShimmer: dto.effectShimmer ?? false,
       effectBorderGlow: dto.effectBorderGlow ?? false,
@@ -618,19 +651,45 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Level badge */}
-            <div
-              className={styles.levelBadge}
-              style={
-                rc
-                  ? ({ "--level-accent": rc.c1 } as React.CSSProperties)
-                  : undefined
-              }
-            >
-              <span className={styles.levelBadgeSlash}>//</span>
-              <span className={styles.levelBadgeLabel}>LV.</span>
-              <span className={styles.levelBadgeNum}>01</span>
-            </div>
+            {/* Level badge with XP progress */}
+            {(() => {
+              const lv = profileUser.level ?? 1;
+              const xpIn = profileUser.xpInCurrentLevel ?? 0;
+              const xpNeed = profileUser.xpNeededForNextLevel ?? 1;
+              const pct =
+                lv >= 100
+                  ? 100
+                  : Math.min(100, Math.round((xpIn / xpNeed) * 100));
+              const tier = getLevelTier(lv);
+              return (
+                <div
+                  className={`${styles.levelBadge} ${styles[`levelBadgeTier_${tier.tier}`] ?? ""}`}
+                  data-tier={tier.tier}
+                  style={
+                    { "--level-accent": tier.color } as React.CSSProperties
+                  }
+                  title={
+                    lv < 100
+                      ? `${xpIn.toLocaleString()} / ${xpNeed.toLocaleString()} XP до ур. ${lv + 1} • ${tier.label}`
+                      : "Максимальный уровень!"
+                  }
+                >
+                  <div className={styles.levelBadgeTop}>
+                    <span className={styles.levelBadgeSlash}>//</span>
+                    <span className={styles.levelBadgeLabel}>LV.</span>
+                    <span className={styles.levelBadgeNum}>
+                      {String(lv).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className={styles.levelBadgeBar}>
+                    <div
+                      className={styles.levelBadgeBarFill}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </section>
 
