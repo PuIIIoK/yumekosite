@@ -64,6 +64,20 @@ export default function LevelUpModal() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Блокируем скролл пока модалка открыта
+  useEffect(() => {
+    if (!levelUpInfo) return;
+    const prev = document.body.style.overflow;
+    const prevPad = document.body.style.paddingRight;
+    const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollbarW > 0) document.body.style.paddingRight = `${scrollbarW}px`;
+    return () => {
+      document.body.style.overflow = prev;
+      document.body.style.paddingRight = prevPad;
+    };
+  }, [levelUpInfo]);
+
   useEffect(() => {
     if (!levelUpInfo) return;
 
