@@ -671,8 +671,8 @@
             animation: onlineHeroPulse 2s ease-in-out infinite;
         }
         &[class*="recently"] {
-            background: #f59e0b;
-            box-shadow: 0 0 4px rgba(245, 158, 11, 0.3);
+            background: #9ca3af; // нейтральный серый, не путать с жёлтым AWAY
+            box-shadow: none;
         }
         &[class*="offline"] {
             background: #6b7280;
