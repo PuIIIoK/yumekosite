@@ -459,9 +459,10 @@ export function StatusProvider({ children }: { children: ReactNode }) {
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const onActivity = () => {
-      // AWAY — сбрасываем при любой активности (авто или ручной не важно)
+      // AWAY — сбрасываем только если он был выставлен автоматически (авто-неактив)
+      // Ручной AWAY (выбранный пользователем) не трогаем
       // DND / INVISIBLE — осознанный выбор, не сбрасываем
-      if (manualStatusRef.current === "AWAY") {
+      if (manualStatusRef.current === "AWAY" && wasAutoAwayRef.current) {
         wasAutoAwayRef.current = false;
         setUserManualStatus("ONLINE");
       }
