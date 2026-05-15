@@ -164,7 +164,29 @@ export default function VideoPlayer({
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    setIsMobile("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    // Detect mobile by screen width, not touch capability
+    // Many Windows desktops/laptops report maxTouchPoints > 0 even with mouse
+    const mql = window.matchMedia("(max-width: 768px) and (pointer: coarse)");
+    setIsMobile(mql.matches);
+
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", onChange);
+
+    // Fallback: if user actually touches → mobile, if mouse moves → desktop
+    const onTouch = () => setIsMobile(true);
+    const onMouse = (e: MouseEvent) => {
+      // Ignore simulated mouse events from touch
+      if ((e as any).sourceCapabilities?.firesTouchEvents) return;
+      setIsMobile(false);
+    };
+    window.addEventListener("touchstart", onTouch, { once: true });
+    window.addEventListener("mousemove", onMouse, { once: true });
+
+    return () => {
+      mql.removeEventListener("change", onChange);
+      window.removeEventListener("touchstart", onTouch);
+      window.removeEventListener("mousemove", onMouse);
+    };
   }, []);
 
   // Playback state
