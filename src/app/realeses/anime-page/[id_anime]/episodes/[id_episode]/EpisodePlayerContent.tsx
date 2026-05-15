@@ -50,7 +50,7 @@ export default function EpisodePlayerContent({
   episodes,
   accent,
 }: Props) {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, mounted } = useAuth();
   const [currentEp, setCurrentEp] = useState<Episode>(initialEpisode);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -59,6 +59,7 @@ export default function EpisodePlayerContent({
   const guestModalShown = useRef(false);
 
   useEffect(() => {
+    if (!mounted) return; // ждём пока AuthContext загрузит пользователя из localStorage
     if (user) return;
     if (guestModalShown.current) return;
     const dismissed = sessionStorage.getItem(GUEST_MODAL_KEY);
@@ -66,7 +67,7 @@ export default function EpisodePlayerContent({
       guestModalShown.current = true;
       setGuestModal(true);
     }
-  }, [user]);
+  }, [user, mounted]);
 
   const dismissGuestModal = () => {
     sessionStorage.setItem(GUEST_MODAL_KEY, "1");
