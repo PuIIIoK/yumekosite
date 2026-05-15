@@ -161,6 +161,8 @@ export default function EpisodeManager() {
   const [addingStudio, setAddingStudio] = useState(false);
   const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
   const [newStudioName, setNewStudioName] = useState("");
+  const [editStudioEpId, setEditStudioEpId] = useState<number | null>(null);
+  const [editStudioSaving, setEditStudioSaving] = useState(false);
   const newStudioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -473,6 +475,29 @@ export default function EpisodeManager() {
     }
     setPreviewUploading(null);
     e.target.value = "";
+  };
+
+  const handleChangeStudio = async (epId: number, newStudio: string) => {
+    if (!selectedAnime) return;
+    setEditStudioSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/api/episodes/${epId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studio: newStudio }),
+      });
+      if (res.ok) {
+        await fetchEpisodes(selectedAnime.id, true);
+        setSuccess(`Студия изменена на ${newStudio}`);
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError("Ошибка смены студии");
+      }
+    } catch {
+      setError("Ошибка сети");
+    }
+    setEditStudioSaving(false);
+    setEditStudioEpId(null);
   };
 
   const handleDelete = async () => {
@@ -910,9 +935,45 @@ export default function EpisodeManager() {
                     <div className={styles.episodeInfo}>
                       <span className={styles.episodeCardTitle}>
                         {ep.title || `Эпизод ${ep.number}`}
-                        <span className={styles.epStudioBadge}>
+                        <span
+                          className={styles.epStudioBadge}
+                          style={{ cursor: "pointer", position: "relative" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditStudioEpId(editStudioEpId === ep.id ? null : ep.id);
+                          }}
+                          title="Нажмите чтобы сменить студию"
+                        >
                           {ep.studio}
+                          <ChevronDown size={10} style={{ marginLeft: 2, verticalAlign: -1 }} />
                         </span>
+                        {editStudioEpId === ep.id && (
+                          <span
+                            className={styles.epStudioDropdownMenu}
+                            style={{ position: "absolute", top: "100%", left: 0, zIndex: 60, minWidth: 160 }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {studios.map((s) => (
+                              <div
+                                key={s}
+                                className={`${styles.epStudioDropdownItem} ${ep.studio === s ? styles.epStudioDropdownItemActive : ""}`}
+                              >
+                                <button
+                                  type="button"
+                                  className={styles.epStudioDropdownSelect}
+                                  disabled={editStudioSaving}
+                                  onClick={() => {
+                                    if (s !== ep.studio) handleChangeStudio(ep.id, s);
+                                    else setEditStudioEpId(null);
+                                  }}
+                                >
+                                  {s}
+                                  {ep.studio === s && <Check size={12} style={{ marginLeft: 4, opacity: 0.6 }} />}
+                                </button>
+                              </div>
+                            ))}
+                          </span>
+                        )}
                       </span>
                       {isActiveStatus(ep.status) ? (
                         <div className={styles.epProcessing}>
