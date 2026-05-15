@@ -946,34 +946,34 @@ export default function EpisodeManager() {
                         >
                           {ep.studio}
                           <ChevronDown size={10} style={{ marginLeft: 2, verticalAlign: -1 }} />
-                        </span>
-                        {editStudioEpId === ep.id && (
-                          <span
-                            className={styles.epStudioDropdownMenu}
-                            style={{ position: "absolute", top: "100%", left: 0, zIndex: 60, minWidth: 160 }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {studios.map((s) => (
-                              <div
-                                key={s}
-                                className={`${styles.epStudioDropdownItem} ${ep.studio === s ? styles.epStudioDropdownItemActive : ""}`}
-                              >
-                                <button
-                                  type="button"
-                                  className={styles.epStudioDropdownSelect}
-                                  disabled={editStudioSaving}
-                                  onClick={() => {
-                                    if (s !== ep.studio) handleChangeStudio(ep.id, s);
-                                    else setEditStudioEpId(null);
-                                  }}
+                          {editStudioEpId === ep.id && (
+                            <span
+                              className={styles.epStudioDropdownMenu}
+                              style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 60, minWidth: 160 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {studios.map((s) => (
+                                <div
+                                  key={s}
+                                  className={`${styles.epStudioDropdownItem} ${ep.studio === s ? styles.epStudioDropdownItemActive : ""}`}
                                 >
-                                  {s}
-                                  {ep.studio === s && <Check size={12} style={{ marginLeft: 4, opacity: 0.6 }} />}
-                                </button>
-                              </div>
-                            ))}
-                          </span>
-                        )}
+                                  <button
+                                    type="button"
+                                    className={styles.epStudioDropdownSelect}
+                                    disabled={editStudioSaving}
+                                    onClick={() => {
+                                      if (s !== ep.studio) handleChangeStudio(ep.id, s);
+                                      else setEditStudioEpId(null);
+                                    }}
+                                  >
+                                    {s}
+                                    {ep.studio === s && <Check size={12} style={{ marginLeft: 4, opacity: 0.6 }} />}
+                                  </button>
+                                </div>
+                              ))}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       {isActiveStatus(ep.status) ? (
                         <div className={styles.epProcessing}>

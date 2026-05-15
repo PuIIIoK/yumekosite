@@ -1576,7 +1576,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  overflow: hidden;
+  overflow: visible;
+  min-width: 0;
 }
 
 .episodeCardTitle {
@@ -1584,8 +1585,9 @@
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: ellipsis;
+  position: relative;
 }
 
 .episodeDuration {
