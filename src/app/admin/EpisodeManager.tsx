@@ -18,6 +18,7 @@ import {
   Maximize2,
   Users,
   Mic,
+  Pencil,
 } from "lucide-react";
 import Hls from "hls.js";
 import { API_URL } from "@/config/hosts";
@@ -78,7 +79,11 @@ function HlsModal({
     if (!video || !episode.hlsUrl) return;
 
     if (Hls.isSupported()) {
-      const hls = new Hls();
+      const hls = new Hls({
+        startLevel: 0, // начинать с минимального качества — мгновенный старт
+        maxBufferLength: 15, // меньший буфер для быстрого старта в превью
+        maxMaxBufferLength: 30,
+      });
       hls.loadSource(episode.hlsUrl);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -134,6 +139,9 @@ export default function EpisodeManager() {
   const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0);
+  const [uploadPhase, setUploadPhase] = useState<"uploading" | "processing">(
+    "uploading",
+  );
   const [previewUploading, setPreviewUploading] = useState<number | null>(null);
   const [modalEp, setModalEp] = useState<Episode | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -144,6 +152,11 @@ export default function EpisodeManager() {
   const [vcUsername, setVcUsername] = useState("");
   const [vcCharacter, setVcCharacter] = useState("");
   const [vcSaving, setVcSaving] = useState(false);
+  const [editingVcId, setEditingVcId] = useState<number | null>(null);
+  const [editVcActor, setEditVcActor] = useState("");
+  const [editVcUsername, setEditVcUsername] = useState("");
+  const [editVcCharacter, setEditVcCharacter] = useState("");
+  const [editVcSaving, setEditVcSaving] = useState(false);
   const [studios, setStudios] = useState<string[]>(DEFAULT_STUDIOS);
   const [addingStudio, setAddingStudio] = useState(false);
   const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
@@ -222,6 +235,42 @@ export default function EpisodeManager() {
       await fetch(`${API_URL}/api/voice-cast/${id}`, { method: "DELETE" });
       await fetchVoiceCast(selectedAnime.id);
     } catch {}
+  };
+
+  const startEditVc = (vc: VoiceCast) => {
+    setEditingVcId(vc.id);
+    setEditVcActor(vc.actorName);
+    setEditVcUsername(vc.actorUsername ?? "");
+    setEditVcCharacter(vc.characterName);
+  };
+
+  const cancelEditVc = () => {
+    setEditingVcId(null);
+    setEditVcActor("");
+    setEditVcUsername("");
+    setEditVcCharacter("");
+  };
+
+  const updateVoiceCast = async () => {
+    if (!selectedAnime || editingVcId === null) return;
+    if (!editVcActor.trim() || !editVcCharacter.trim()) return;
+    setEditVcSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/api/voice-cast/${editingVcId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actorName: editVcActor.trim(),
+          actorUsername: editVcUsername.trim() || null,
+          characterName: editVcCharacter.trim(),
+        }),
+      });
+      if (res.ok) {
+        cancelEditVc();
+        await fetchVoiceCast(selectedAnime.id);
+      }
+    } catch {}
+    setEditVcSaving(false);
   };
 
   // Poll for in-progress episodes (silent — no loading flash)
@@ -326,6 +375,7 @@ export default function EpisodeManager() {
     }
     setUploading(true);
     setUploadPercent(0);
+    setUploadPhase("uploading");
     setError(null);
 
     const fd = new FormData();
@@ -346,6 +396,11 @@ export default function EpisodeManager() {
       if (e.lengthComputable) {
         setUploadPercent(Math.round((e.loaded / e.total) * 100));
       }
+    };
+
+    // Файл 100% отправлен, ждём ответа сервера
+    xhr.upload.onloadend = () => {
+      setUploadPhase("processing");
     };
 
     xhr.onload = async () => {
@@ -1054,46 +1109,161 @@ export default function EpisodeManager() {
                         <Users size={14} />
                       )}
                     </div>
-                    <div className={styles.episodeInfo}>
-                      <span className={styles.episodeCardTitle}>
-                        <span
-                          style={
-                            vc.actorRoleColor
-                              ? { color: vc.actorRoleColor }
-                              : undefined
-                          }
+
+                    {editingVcId === vc.id ? (
+                      <>
+                        <div
+                          className={styles.episodeInfo}
+                          style={{
+                            flexDirection: "row",
+                            gap: 6,
+                            alignItems: "center",
+                          }}
                         >
-                          {vc.actorDisplayName || vc.actorName}
-                        </span>
-                        {vc.actorUsername && (
-                          <span
+                          <input
                             style={{
-                              fontSize: 11,
-                              color: "var(--text-muted)",
-                              marginLeft: 4,
+                              flex: 1,
+                              minWidth: 0,
+                              padding: "4px 8px",
+                              fontSize: 12,
+                              background:
+                                "var(--bg-input, rgba(255,255,255,0.06))",
+                              border: "1px solid var(--border)",
+                              borderRadius: 6,
+                              color: "var(--text-primary)",
+                              outline: "none",
                             }}
-                          >
-                            @{vc.actorUsername}
+                            value={editVcActor}
+                            onChange={(e) => setEditVcActor(e.target.value)}
+                            placeholder="Имя актёра"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") updateVoiceCast();
+                              if (e.key === "Escape") cancelEditVc();
+                            }}
+                            autoFocus
+                          />
+                          <input
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              padding: "4px 8px",
+                              fontSize: 12,
+                              background:
+                                "var(--bg-input, rgba(255,255,255,0.06))",
+                              border: "1px solid var(--border)",
+                              borderRadius: 6,
+                              color: "var(--text-primary)",
+                              outline: "none",
+                            }}
+                            value={editVcUsername}
+                            onChange={(e) =>
+                              setEditVcUsername(e.target.value.replace("@", ""))
+                            }
+                            placeholder="@username"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") updateVoiceCast();
+                              if (e.key === "Escape") cancelEditVc();
+                            }}
+                          />
+                          <input
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              padding: "4px 8px",
+                              fontSize: 12,
+                              background:
+                                "var(--bg-input, rgba(255,255,255,0.06))",
+                              border: "1px solid var(--border)",
+                              borderRadius: 6,
+                              color: "var(--text-primary)",
+                              outline: "none",
+                            }}
+                            value={editVcCharacter}
+                            onChange={(e) => setEditVcCharacter(e.target.value)}
+                            placeholder="Персонаж"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") updateVoiceCast();
+                              if (e.key === "Escape") cancelEditVc();
+                            }}
+                          />
+                        </div>
+                        <button
+                          className={styles.episodeDeleteBtn}
+                          style={{ color: "#22c55e" }}
+                          onClick={updateVoiceCast}
+                          disabled={
+                            editVcSaving ||
+                            !editVcActor.trim() ||
+                            !editVcCharacter.trim()
+                          }
+                          title="Сохранить"
+                        >
+                          {editVcSaving ? (
+                            <Loader2 size={14} className={styles.saveSpin} />
+                          ) : (
+                            <Check size={14} />
+                          )}
+                        </button>
+                        <button
+                          className={styles.episodeDeleteBtn}
+                          onClick={cancelEditVc}
+                          title="Отмена"
+                        >
+                          <X size={14} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.episodeInfo}>
+                          <span className={styles.episodeCardTitle}>
+                            <span
+                              style={
+                                vc.actorRoleColor
+                                  ? { color: vc.actorRoleColor }
+                                  : undefined
+                              }
+                            >
+                              {vc.actorDisplayName || vc.actorName}
+                            </span>
+                            {vc.actorUsername && (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--text-muted)",
+                                  marginLeft: 4,
+                                }}
+                              >
+                                @{vc.actorUsername}
+                              </span>
+                            )}
+                            <span className={styles.epStudioBadge}>
+                              {vc.studio}
+                            </span>
                           </span>
-                        )}
-                        <span className={styles.epStudioBadge}>
-                          {vc.studio}
-                        </span>
-                      </span>
-                      <span
-                        className={styles.episodeStatus}
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        → {vc.characterName}
-                      </span>
-                    </div>
-                    <button
-                      className={styles.episodeDeleteBtn}
-                      onClick={() => deleteVoiceCast(vc.id)}
-                      title="Удалить"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                          <span
+                            className={styles.episodeStatus}
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            → {vc.characterName}
+                          </span>
+                        </div>
+                        <button
+                          className={styles.episodeDeleteBtn}
+                          style={{ color: "var(--accent)" }}
+                          onClick={() => startEditVc(vc)}
+                          title="Редактировать"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          className={styles.episodeDeleteBtn}
+                          onClick={() => deleteVoiceCast(vc.id)}
+                          title="Удалить"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
