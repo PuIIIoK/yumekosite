@@ -390,7 +390,7 @@ export default function BannerManager() {
           {/* Type / AnimeId / Badge */}
           <div
             className={styles.animeFormGrid}
-            style={{ gridTemplateColumns: "repeat(3, 1fr)", marginTop: 8 }}
+            style={{ gridTemplateColumns: "repeat(2, 1fr)", marginTop: 8 }}
           >
             <div className={styles.animeFormGroup}>
               <label>Type</label>
@@ -401,20 +401,6 @@ export default function BannerManager() {
                 <option value="anime">Аниме</option>
                 <option value="promo">Промо / Реклама</option>
               </select>
-            </div>
-            <div className={styles.animeFormGroup}>
-              <label>ID аниме</label>
-              <input
-                type="number"
-                value={formData.animeId ?? ""}
-                onChange={(e) =>
-                  handleField(
-                    "animeId" as keyof SlideFormData,
-                    e.target.value === "" ? null : Number(e.target.value),
-                  )
-                }
-                placeholder="123"
-              />
             </div>
             <div className={styles.animeFormGroup}>
               <label>Бейдж (promo)</label>
