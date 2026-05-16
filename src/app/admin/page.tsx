@@ -31,7 +31,7 @@ const ADMIN_SECTIONS = [
     title: "Баннер",
     icon: LayoutDashboard,
     color: "#f59e0b",
-    minPriority: 80,
+    minPriority: 100,
   },
   {
     id: "anime",
