@@ -39,7 +39,6 @@ const EMPTY_ANIME = {
   status: "Онгоинг",
   badges: [] as string[],
   relatedIds: [] as number[],
-  anilibriaAlias: "",
 };
 
 type AnimeForm = typeof EMPTY_ANIME;
@@ -53,10 +52,13 @@ export default function CreateAnimePage() {
 }
 
 const SEASONS = ["Зима", "Весна", "Лето", "Осень"];
-const FORMATS = ["ТВ", "Фильм", "OVA", "ONA", "Спешл"];
+const FORMATS = ["ТВ", "Фильм", "OVA", "ONA", "Спешл", "Мультфильм"];
 const STATUSES = ["Онгоинг", "Выходит", "Завершён", "Анонс"];
 const RATINGS = ["0+", "6+", "12+", "16+", "18+"];
 const ALL_GENRES = [
+  "Аниме",
+  "Мультфильм",
+  "Фильм",
   "Экшен",
   "Приключения",
   "Комедия",
@@ -81,6 +83,8 @@ const ALL_GENRES = [
   "Военное",
   "Этти",
   "Гарем",
+  "Сериал",
+  "Хентай",
 ];
 const ALL_BADGES = [
   "Топ недели",
@@ -242,7 +246,6 @@ function CreateAnimeContent() {
             status: data.status || "",
             badges: data.badges || [],
             relatedIds: data.relatedIds || [],
-            anilibriaAlias: data.anilibriaAlias || "",
           });
           setLoading(false);
         })
@@ -583,27 +586,14 @@ function CreateAnimeContent() {
                     />
                   </div>
                 </div>
-                <div className={styles.row2}>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.fieldLabel}>Студия</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={form.studio}
-                      onChange={(e) => setField("studio", e.target.value)}
-                      placeholder="MAPPA"
-                    />
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.fieldLabel}>AniLibria Alias</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={form.anilibriaAlias}
-                      onChange={(e) =>
-                        setField("anilibriaAlias", e.target.value)
-                      }
-                      placeholder="jujutsu-kaisen"
-                    />
-                  </div>
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>Студия</label>
+                  <input
+                    className={styles.fieldInput}
+                    value={form.studio}
+                    onChange={(e) => setField("studio", e.target.value)}
+                    placeholder="MAPPA"
+                  />
                 </div>
               </section>
 
@@ -636,13 +626,16 @@ function CreateAnimeContent() {
                 </div>
                 <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel}>Год</label>
-                  <PillSelect
-                    options={years}
+                  <input
+                    className={styles.fieldInput}
                     value={form.year}
-                    onChange={(v) => setField("year", v)}
+                    onChange={(e) => setField("year", e.target.value)}
+                    placeholder="2024"
+                    maxLength={4}
+                    style={{ maxWidth: 120 }}
                   />
                 </div>
-                <div className={styles.row3}>
+                <div className={styles.row2}>
                   <div className={styles.fieldGroup}>
                     <label className={styles.fieldLabel}>Эпизоды</label>
                     <input
@@ -650,15 +643,6 @@ function CreateAnimeContent() {
                       value={form.episodes}
                       onChange={(e) => setField("episodes", e.target.value)}
                       placeholder="24"
-                    />
-                  </div>
-                  <div className={styles.fieldGroup}>
-                    <label className={styles.fieldLabel}>Текущий эпизод</label>
-                    <input
-                      className={styles.fieldInput}
-                      value={form.ep}
-                      onChange={(e) => setField("ep", e.target.value)}
-                      placeholder="Эпизод 12"
                     />
                   </div>
                   <div className={styles.fieldGroup}>

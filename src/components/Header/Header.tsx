@@ -990,12 +990,6 @@ export default function Header() {
             >
               Релизы
             </Link>
-            <Link href="/schedule" className={styles.navLink}>
-              Расписание
-            </Link>
-            <Link href="/apps" className={styles.navLink}>
-              Приложения
-            </Link>
           </nav>
         </div>
 

@@ -10,105 +10,233 @@ import styles from "./catalog.module.scss";
 
 const PER_PAGE = 24;
 
+type TypeFilter = "all" | "anime" | "films" | "cartoons" | "serials" | "hentai";
+
+const CATEGORY_TABS: { key: TypeFilter; label: string }[] = [
+  { key: "all", label: "Все" },
+  { key: "anime", label: "Аниме" },
+  { key: "films", label: "Фильмы" },
+  { key: "cartoons", label: "Мультфильмы" },
+  { key: "serials", label: "Сериалы" },
+  { key: "hentai", label: "Хентай" },
+];
+
+function matchesType(a: AnimeDetails, type: TypeFilter): boolean {
+  if (type === "all") return true;
+  const genres = a.genres ? a.genres.split(" • ").map((g) => g.trim()) : [];
+  const fmt = a.format?.trim() ?? "";
+
+  const isCartoon = genres.includes("Мультфильм") || fmt === "Мультфильм";
+  const isFilm = genres.includes("Фильм") || fmt === "Фильм";
+
+  const isSerial = genres.includes("Сериал") || fmt === "Сериал";
+  const isHentai = genres.includes("Хентай") || fmt === "Хентай";
+
+  if (type === "cartoons") return isCartoon;
+  if (type === "films") return isFilm && !isCartoon;
+  if (type === "serials") return isSerial;
+  if (type === "hentai") return isHentai;
+  if (type === "anime") {
+    if (isCartoon || isFilm || isSerial || isHentai) return false;
+    return (
+      genres.includes("Аниме") || ["ТВ", "OVA", "ONA", "Спешл"].includes(fmt)
+    );
+  }
+  return true;
+}
+
 export default function CatalogPage() {
   const [anime, setAnime] = useState<AnimeDetails[]>([]);
+  const [studioMap, setStudioMap] = useState<Record<string, number[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [type, setType] = useState<TypeFilter>("all");
+  const [studio, setStudio] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/api/anime`);
-        if (res.ok) {
-          const data: AnimeDetails[] = await res.json();
-          setAnime(data);
+        const [ar, vcr, epr] = await Promise.all([
+          fetch(`${API_URL}/api/anime`),
+          fetch(`${API_URL}/api/voice-cast/studio-map`),
+          fetch(`${API_URL}/api/episodes/studio-map`),
+        ]);
+        if (ar.ok) setAnime(await ar.json());
+        const vcMap: Record<string, number[]> = vcr.ok ? await vcr.json() : {};
+        const epMap: Record<string, number[]> = epr.ok ? await epr.json() : {};
+        const merged: Record<string, number[]> = { ...vcMap };
+        for (const [s, ids] of Object.entries(epMap)) {
+          const existing = merged[s] || [];
+          merged[s] = [...new Set([...existing, ...ids])].sort((a, b) => a - b);
         }
+        setStudioMap(merged);
       } catch {}
       setLoading(false);
     })();
   }, []);
 
+  const studios = useMemo(
+    () => Object.keys(studioMap).sort((a, b) => a.localeCompare(b)),
+    [studioMap],
+  );
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return anime;
-    const q = search.trim().toLowerCase();
-    return anime.filter(
-      (a) =>
-        a.title.toLowerCase().includes(q) ||
-        (a.altTitle && a.altTitle.toLowerCase().includes(q)) ||
-        (a.genres && a.genres.toLowerCase().includes(q))
-    );
-  }, [anime, search]);
+    return anime.filter((a) => {
+      if (!matchesType(a, type)) return false;
+      if (studio) {
+        const ids = studioMap[studio];
+        if (!ids?.includes(a.id)) return false;
+      }
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        if (
+          !a.title.toLowerCase().includes(q) &&
+          !a.altTitle?.toLowerCase().includes(q) &&
+          !a.genres?.toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    });
+  }, [anime, type, studio, search, studioMap]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+  const paged = filtered.slice(
+    (currentPage - 1) * PER_PAGE,
+    currentPage * PER_PAGE,
+  );
 
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, type, studio]);
+
+  const pageNums = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+    (p) => {
+      if (totalPages <= 7) return true;
+      if (p === 1 || p === totalPages) return true;
+      return Math.abs(p - currentPage) <= 1;
+    },
+  );
 
   return (
     <>
       <Header />
-      <main className={styles.main}>
+      <main className={styles.page}>
+        {/* ─── Hero ─── */}
         <div className={styles.hero}>
-          <h1 className={styles.title}>Каталог релизов</h1>
-          <p className={styles.subtitle}>
-            Все аниме на Yumeko — {anime.length} тайтлов
-          </p>
+          <h1 className={styles.heroTitle}>Каталог релизов</h1>
+          <p className={styles.heroSub}>{anime.length} тайтлов на Yumeko</p>
         </div>
 
-        <div className={styles.toolbar}>
-          <div className={styles.searchWrap}>
-            <Search size={15} className={styles.searchIcon} />
+        {/* ─── Search ─── */}
+        <div className={styles.searchRow}>
+          <div className={styles.searchBox}>
+            <Search size={16} className={styles.searchIco} />
             <input
               className={styles.searchInput}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Поиск по названию или жанру..."
+              placeholder="Название, жанр..."
             />
             {search && (
-              <button className={styles.searchClear} onClick={() => setSearch("")}>
+              <button
+                className={styles.searchClear}
+                onClick={() => setSearch("")}
+              >
                 <X size={14} />
               </button>
             )}
           </div>
-          <span className={styles.count}>
+          <span className={styles.resultCount}>
             {filtered.length} из {anime.length}
           </span>
         </div>
 
+        {/* ─── Category tabs ─── */}
+        <div className={styles.tabs}>
+          {CATEGORY_TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={type === tab.key ? styles.tabActive : styles.tab}
+              onClick={() => setType(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ─── Studio chips ─── */}
+        {studios.length > 0 && (
+          <div className={styles.studioRow}>
+            <span className={styles.studioLabel}>Озвучено:</span>
+            <div className={styles.studioChips}>
+              <button
+                className={studio === "" ? styles.chipActive : styles.chip}
+                onClick={() => setStudio("")}
+              >
+                Все
+              </button>
+              {studios.map((s) => (
+                <button
+                  key={s}
+                  className={studio === s ? styles.chipActive : styles.chip}
+                  onClick={() => setStudio(s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Grid ─── */}
         {loading ? (
-          <div className={styles.loadingState}>Загрузка каталога...</div>
+          <div className={styles.empty}>Загрузка каталога...</div>
         ) : filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            {search ? "Ничего не найдено" : "Каталог пуст"}
+          <div className={styles.empty}>
+            {search || type !== "all" || studio
+              ? "Ничего не найдено"
+              : "Каталог пуст"}
           </div>
         ) : (
           <>
             <div className={styles.grid}>
-              {paged.map((a) => (
-                <Link
-                  key={a.id}
-                  href={`/realeses/anime-page/${a.id}`}
-                  className={styles.card}
-                >
-                  <div className={styles.cardPoster}>
-                    <img src={a.poster} alt={a.title} className={styles.cardImg} />
-                    <span
-                      className={styles.cardRating}
-                      style={{ background: getAccent(a.rating) }}
-                    >
-                      {a.rating}
-                    </span>
-                  </div>
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.cardTitle}>{a.title}</h3>
-                    <span className={styles.cardMeta}>{a.genres}</span>
-                  </div>
-                </Link>
-              ))}
+              {paged.map((a) => {
+                const accent = getAccent(a.rating);
+                return (
+                  <Link
+                    key={a.id}
+                    href={`/realeses/anime-page/${a.id}`}
+                    className={styles.card}
+                  >
+                    <div className={styles.poster}>
+                      <img
+                        src={a.poster}
+                        alt={a.title}
+                        className={styles.posterImg}
+                      />
+                      <span
+                        className={styles.ratingBadge}
+                        style={{ background: accent }}
+                      >
+                        {a.rating}
+                      </span>
+                      {a.format && (
+                        <span className={styles.formatBadge}>{a.format}</span>
+                      )}
+                      <div className={styles.posterOverlay}>
+                        <span className={styles.overlayTitle}>{a.title}</span>
+                      </div>
+                    </div>
+                    <div className={styles.info}>
+                      <p className={styles.cardTitle}>{a.title}</p>
+                      <p className={styles.cardGenres}>{a.genres}</p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             {totalPages > 1 && (
@@ -120,28 +248,26 @@ export default function CatalogPage() {
                 >
                   <ChevronLeft size={16} />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => {
-                    if (totalPages <= 7) return true;
-                    if (p === 1 || p === totalPages) return true;
-                    if (Math.abs(p - currentPage) <= 1) return true;
-                    return false;
-                  })
-                  .map((p, i, arr) => {
-                    const prev = arr[i - 1];
-                    const showEllipsis = prev !== undefined && p - prev > 1;
-                    return (
-                      <span key={p}>
-                        {showEllipsis && <span className={styles.pageEllipsis}>…</span>}
-                        <button
-                          className={`${styles.pageNum} ${p === currentPage ? styles.pageNumActive : ""}`}
-                          onClick={() => setPage(p)}
-                        >
-                          {p}
-                        </button>
-                      </span>
-                    );
-                  })}
+
+                {pageNums.map((p, i, arr) => {
+                  const showDots = i > 0 && p - arr[i - 1] > 1;
+                  return (
+                    <span key={p} style={{ display: "contents" }}>
+                      {showDots && <span className={styles.dots}>…</span>}
+                      <button
+                        className={
+                          p === currentPage
+                            ? styles.pageNumActive
+                            : styles.pageNum
+                        }
+                        onClick={() => setPage(p)}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  );
+                })}
+
                 <button
                   className={styles.pageBtn}
                   disabled={currentPage >= totalPages}
