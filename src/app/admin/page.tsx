@@ -1,28 +1,73 @@
 "use client";
 
-import { useEffect, useState, useRef, useLayoutEffect, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
-import { Shield, Users, Film, Play, PanelLeftClose, PanelLeft } from "lucide-react";
+import {
+  Shield,
+  Users,
+  Film,
+  Play,
+  PanelLeftClose,
+  PanelLeft,
+  LayoutDashboard,
+} from "lucide-react";
 import AnimeManager from "./AnimeManager";
 import UserManager from "./UserManager";
 import EpisodeManager from "./EpisodeManager";
+import BannerManager from "./BannerManager";
 import styles from "./admin.module.scss";
 
 const ADMIN_SECTIONS = [
-  { id: "anime", title: "Аниме каталог", icon: Film, color: "#a855f7", minPriority: 80 },
-  { id: "episodes", title: "Эпизоды", icon: Play, color: "#10b981", minPriority: 90 },
-  { id: "users", title: "Пользователи", icon: Users, color: "#3b82f6", minPriority: 150 },
+  {
+    id: "banner",
+    title: "Баннер",
+    icon: LayoutDashboard,
+    color: "#f59e0b",
+    minPriority: 80,
+  },
+  {
+    id: "anime",
+    title: "Аниме каталог",
+    icon: Film,
+    color: "#a855f7",
+    minPriority: 80,
+  },
+  {
+    id: "episodes",
+    title: "Эпизоды",
+    icon: Play,
+    color: "#10b981",
+    minPriority: 90,
+  },
+  {
+    id: "users",
+    title: "Пользователи",
+    icon: Users,
+    color: "#3b82f6",
+    minPriority: 150,
+  },
 ];
 
-function getMaxPriority(user: { role?: { priority: number }; roles?: { priority: number }[] } | null): number {
+function getMaxPriority(
+  user: { role?: { priority: number }; roles?: { priority: number }[] } | null,
+): number {
   if (!user) return 0;
-  const rolePriorities = (user.roles ?? [user.role].filter(Boolean)).map((r) => r?.priority ?? 0);
+  const rolePriorities = (user.roles ?? [user.role].filter(Boolean)).map(
+    (r) => r?.priority ?? 0,
+  );
   return Math.max(0, ...rolePriorities);
 }
 
 function AdminContent({ section }: { section: string }) {
+  if (section === "banner") return <BannerManager />;
   if (section === "anime") return <AnimeManager />;
   if (section === "episodes") return <EpisodeManager />;
   if (section === "users") return <UserManager />;
@@ -31,7 +76,11 @@ function AdminContent({ section }: { section: string }) {
   const Icon = matched.icon;
   return (
     <div className={styles.contentPlaceholder}>
-      <Icon size={48} strokeWidth={1.2} style={{ color: matched.color, opacity: 0.5 }} />
+      <Icon
+        size={48}
+        strokeWidth={1.2}
+        style={{ color: matched.color, opacity: 0.5 }}
+      />
       <h2>{matched.title}</h2>
       <p>Раздел в разработке</p>
     </div>
@@ -63,15 +112,23 @@ export default function AdminPage() {
 
   const updateIndicator = useCallback(() => {
     if (!navRef.current) return;
-    const active = navRef.current.querySelector(`[data-section="${visualSection}"]`) as HTMLElement | null;
+    const active = navRef.current.querySelector(
+      `[data-section="${visualSection}"]`,
+    ) as HTMLElement | null;
     if (active) {
       const navRect = navRef.current.getBoundingClientRect();
       const btnRect = active.getBoundingClientRect();
-      setIndicator({ top: btnRect.top - navRect.top, height: btnRect.height, opacity: 1 });
+      setIndicator({
+        top: btnRect.top - navRect.top,
+        height: btnRect.height,
+        opacity: 1,
+      });
     }
   }, [visualSection]);
 
-  useLayoutEffect(() => { updateIndicator(); }, [visualSection, sidebarOpen, updateIndicator]);
+  useLayoutEffect(() => {
+    updateIndicator();
+  }, [visualSection, sidebarOpen, updateIndicator]);
 
   useEffect(() => {
     if (!auth.mounted) return;
@@ -84,7 +141,9 @@ export default function AdminPage() {
       router.replace("/");
       return;
     }
-    const visibleSections = ADMIN_SECTIONS.filter((s) => priority >= s.minPriority);
+    const visibleSections = ADMIN_SECTIONS.filter(
+      (s) => priority >= s.minPriority,
+    );
     const hash = window.location.hash.replace("#", "");
     if (hash && visibleSections.some((s) => s.id === hash)) {
       setActiveSectionState(hash);
@@ -107,13 +166,16 @@ export default function AdminPage() {
     );
   }
 
-  const roleName = auth.user.role?.displayName || auth.user.role?.name || "Staff";
+  const roleName =
+    auth.user.role?.displayName || auth.user.role?.name || "Staff";
 
   return (
     <>
       <Header />
       <main className={styles.adminWrap}>
-        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}>
+        <aside
+          className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : styles.sidebarClosed}`}
+        >
           <div className={styles.sidebarHeader}>
             {sidebarOpen && (
               <div className={styles.sidebarBrand}>
@@ -121,22 +183,36 @@ export default function AdminPage() {
                 <span>Админ панель</span>
               </div>
             )}
-            <button className={styles.sidebarToggle} onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle sidebar">
-              {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeft size={18} />}
+            <button
+              className={styles.sidebarToggle}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? (
+                <PanelLeftClose size={18} />
+              ) : (
+                <PanelLeft size={18} />
+              )}
             </button>
           </div>
 
           <nav className={styles.sidebarNav} ref={navRef}>
             <div
               className={styles.sidebarIndicator}
-              style={{
-                transform: `translateY(${indicator.top}px)`,
-                height: indicator.height,
-                opacity: indicator.opacity,
-                "--indicator-color": ADMIN_SECTIONS.find(s => s.id === visualSection)?.color || "var(--accent)",
-              } as React.CSSProperties}
+              style={
+                {
+                  transform: `translateY(${indicator.top}px)`,
+                  height: indicator.height,
+                  opacity: indicator.opacity,
+                  "--indicator-color":
+                    ADMIN_SECTIONS.find((s) => s.id === visualSection)?.color ||
+                    "var(--accent)",
+                } as React.CSSProperties
+              }
             />
-            {ADMIN_SECTIONS.filter((s) => getMaxPriority(auth.user) >= s.minPriority).map((section) => {
+            {ADMIN_SECTIONS.filter(
+              (s) => getMaxPriority(auth.user) >= s.minPriority,
+            ).map((section) => {
               const Icon = section.icon;
               const isActive = visualSection === section.id;
               return (
@@ -146,7 +222,9 @@ export default function AdminPage() {
                   className={`${styles.sidebarItem} ${isActive ? styles.sidebarItemActive : ""}`}
                   onClick={() => setActiveSection(section.id)}
                   title={sidebarOpen ? undefined : section.title}
-                  style={{ "--item-color": section.color } as React.CSSProperties}
+                  style={
+                    { "--item-color": section.color } as React.CSSProperties
+                  }
                 >
                   <Icon size={18} />
                   {sidebarOpen && <span>{section.title}</span>}
@@ -157,14 +235,25 @@ export default function AdminPage() {
 
           {sidebarOpen && (
             <div className={styles.sidebarFooter}>
-              <span className={styles.sidebarUser}>{auth.user.displayName}</span>
-              <span className={styles.sidebarRole} style={{ color: auth.user.role?.color }}>{roleName}</span>
+              <span className={styles.sidebarUser}>
+                {auth.user.displayName}
+              </span>
+              <span
+                className={styles.sidebarRole}
+                style={{ color: auth.user.role?.color }}
+              >
+                {roleName}
+              </span>
             </div>
           )}
         </aside>
 
-        <div className={`${styles.content} ${sidebarOpen ? styles.contentShifted : styles.contentFull}`}>
-          <div className={`${styles.tabContent} ${tabFading ? styles.tabContentOut : styles.tabContentIn}`}>
+        <div
+          className={`${styles.content} ${sidebarOpen ? styles.contentShifted : styles.contentFull}`}
+        >
+          <div
+            className={`${styles.tabContent} ${tabFading ? styles.tabContentOut : styles.tabContentIn}`}
+          >
             <AdminContent section={activeSection} />
           </div>
         </div>

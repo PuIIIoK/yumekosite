@@ -1,358 +1,476 @@
 .adminWrap {
-  display: flex;
-  min-height: 100vh;
-  padding-top: var(--header-height, 90px);
+    display: flex;
+    min-height: 100vh;
+    padding-top: var(--header-height, 90px);
 }
 
 .loader {
-  color: var(--text-secondary);
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
 }
 
 // ── Sidebar ──
 
 .sidebar {
-  position: fixed;
-  top: var(--header-height, 90px);
-  left: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  transition: width 0.2s ease;
-  z-index: 40;
-  overflow: hidden;
+    position: fixed;
+    top: var(--header-height, 90px);
+    left: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border);
+    transition: width 0.2s ease;
+    z-index: 40;
+    overflow: hidden;
 }
 
 .sidebarOpen {
-  width: 240px;
+    width: 240px;
 }
 
 .sidebarClosed {
-  width: 56px;
+    width: 56px;
 }
 
 .sidebarHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 12px 12px;
-  gap: 8px;
-  min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 12px 12px;
+    gap: 8px;
+    min-height: 56px;
 }
 
 .sidebarBrand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .sidebarBrandIcon {
-  color: var(--accent);
-  flex-shrink: 0;
+    color: var(--accent);
+    flex-shrink: 0;
 }
 
 .sidebarToggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+        color: var(--text-primary);
+    }
 }
 
 .sidebarNav {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 8px;
-  overflow-y: auto;
-  position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 8px;
+    overflow-y: auto;
+    position: relative;
 }
 
 .sidebarIndicator {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--indicator-color, var(--accent)) 12%, transparent);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease, opacity 0.2s ease;
-  pointer-events: none;
-  z-index: 0;
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    border-radius: 8px;
+    background: color-mix(
+        in srgb,
+        var(--indicator-color, var(--accent)) 12%,
+        transparent
+    );
+    transition:
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.2s ease,
+        opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .sidebarItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 0.25s ease, background 0.12s ease;
-  text-align: left;
-  width: 100%;
-  position: relative;
-  z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+        color 0.25s ease,
+        background 0.12s ease;
+    text-align: left;
+    width: 100%;
+    position: relative;
+    z-index: 1;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
+        color: var(--text-primary);
+    }
 
-  svg {
-    flex-shrink: 0;
-  }
+    svg {
+        flex-shrink: 0;
+    }
 }
 
 .sidebarItemActive {
-  background: transparent;
-  color: var(--item-color, var(--accent));
-
-  &:hover {
     background: transparent;
     color: var(--item-color, var(--accent));
-  }
+
+    &:hover {
+        background: transparent;
+        color: var(--item-color, var(--accent));
+    }
 }
 
 .sidebarFooter {
-  padding: 14px 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .sidebarUser {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sidebarRole {
-  font-size: 11px;
-  font-weight: 600;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 // ── Content ──
 
 .content {
-  flex: 1;
-  min-height: calc(100vh - var(--header-height, 90px));
-  transition: margin-left 0.2s ease;
-  padding: 32px;
+    flex: 1;
+    min-height: calc(100vh - var(--header-height, 90px));
+    transition: margin-left 0.2s ease;
+    padding: 32px;
 }
 
 .contentShifted {
-  margin-left: 240px;
+    margin-left: 240px;
 }
 
 .contentFull {
-  margin-left: 56px;
+    margin-left: 56px;
 }
 
 .tabContent {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .tabContentIn {
-  opacity: 1;
-  transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tabContentOut {
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
 }
 
 .contentPlaceholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 60vh;
-  color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 60vh;
+    color: var(--text-secondary);
 
-  h2 {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-  }
+    h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
 
-  p {
-    font-size: 13px;
-    margin: 0;
-    opacity: 0.6;
-  }
+    p {
+        font-size: 13px;
+        margin: 0;
+        opacity: 0.6;
+    }
 }
 
 // ── Anime Manager ──
 
 .animeManager {
-  max-width: 100%;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+    max-width: 100%;
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
 }
 
 .animeManagerOut {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
 }
 
 .animeManagerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
 
 .animeManagerTitle {
-  display: flex;
-  align-items: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
 }
 
 .animeAddBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  min-width: 130px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    min-width: 130px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
 
-  &:hover:not(:disabled) { opacity: 0.85; }
-  &:disabled { cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+    }
+    &:disabled {
+        cursor: not-allowed;
+    }
 }
 
 .animeAddBtnLoading {
-  opacity: 0.75;
+    opacity: 0.75;
 }
 
 @keyframes addBtnSpin {
-  to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .animeAddSpin {
-  animation: addBtnSpin 0.8s linear infinite;
+    animation: addBtnSpin 0.8s linear infinite;
 }
 
 .animeError {
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  font-size: 13px;
-  margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    font-size: 13px;
+    margin-bottom: 16px;
 }
 
 // Form
 .animeForm {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .animeFormHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
 
-  h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-  }
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
 }
 
 .animeFormClose {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
 
-  &:hover { color: var(--text-primary); }
+    &:hover {
+        color: var(--text-primary);
+    }
 }
 
 .animeFormGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .animeFormGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
 
-  label {
-    font-size: 11px;
+    label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg-body, #0a0a0c);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.15s;
+
+        &:focus {
+            border-color: var(--accent);
+        }
+
+        &::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+}
+
+.animeFormActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.animeSaveBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-size: 13px;
     font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+    cursor: pointer;
 
-  input, select, textarea {
-    padding: 8px 10px;
-    border-radius: 6px;
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+    }
+}
+
+.animeCancelBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: transparent;
     border: 1px solid var(--border);
-    background: var(--bg-body, #0a0a0c);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+    }
+}
+
+// ── Search & Toolbar ──
+
+.animeToolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.animeSearchWrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.animeSearchIcon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-secondary);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.animeSearchInput {
+    width: 100%;
+    padding: 9px 36px 9px 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
     color: var(--text-primary);
     font-size: 13px;
     font-family: inherit;
@@ -360,771 +478,739 @@
     transition: border-color 0.15s;
 
     &:focus {
-      border-color: var(--accent);
+        border-color: var(--accent);
     }
-
     &::placeholder {
-      color: var(--text-secondary);
-      opacity: 0.5;
+        color: var(--text-secondary);
+        opacity: 0.4;
     }
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 60px;
-  }
-}
-
-.animeFormActions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.animeSaveBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &:hover:not(:disabled) { opacity: 0.85; }
-}
-
-.animeCancelBtn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover { color: var(--text-primary); border-color: var(--text-secondary); }
-}
-
-// ── Search & Toolbar ──
-
-.animeToolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.animeSearchWrap {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.animeSearchIcon {
-  position: absolute;
-  left: 12px;
-  color: var(--text-secondary);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.animeSearchInput {
-  width: 100%;
-  padding: 9px 36px 9px 34px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
-
-  &:focus { border-color: var(--accent); }
-  &::placeholder { color: var(--text-secondary); opacity: 0.4; }
 }
 
 .animeSearchClear {
-  position: absolute;
-  right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  opacity: 0.5;
+    position: absolute;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    opacity: 0.5;
 
-  &:hover { opacity: 1; }
+    &:hover {
+        opacity: 1;
+    }
 }
 
 .animeCount {
-  font-size: 12px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 // ── Pagination ──
 
 .pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 14px;
 }
 
 .paginationBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover:not(:disabled) { background: color-mix(in srgb, var(--text-secondary) 10%, transparent); color: var(--text-primary); }
-  &:disabled { opacity: 0.25; cursor: not-allowed; }
+    &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+        color: var(--text-primary);
+    }
+    &:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
 }
 
 .paginationNum {
-  min-width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.12s;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover { background: color-mix(in srgb, var(--text-secondary) 8%, transparent); color: var(--text-primary); }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 8%, transparent);
+        color: var(--text-primary);
+    }
 }
 
 .paginationNumActive {
-  background: var(--accent);
-  color: #fff;
+    background: var(--accent);
+    color: #fff;
 
-  &:hover { background: var(--accent); color: #fff; }
+    &:hover {
+        background: var(--accent);
+        color: #fff;
+    }
 }
 
 // Card Grid
 .animeGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .animeCard {
-  display: flex;
-  align-items: stretch;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: stretch;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
+    &:hover {
+        border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
 }
 
 .animeCardPoster {
-  width: 72px;
-  min-height: 96px;
-  flex-shrink: 0;
-  position: relative;
-  background: color-mix(in srgb, var(--text-secondary) 6%, transparent);
+    width: 72px;
+    min-height: 96px;
+    flex-shrink: 0;
+    position: relative;
+    background: color-mix(in srgb, var(--text-secondary) 6%, transparent);
 }
 
 .animeCardPosterImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .animeCardPosterEmpty {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  opacity: 0.3;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    opacity: 0.3;
 }
 
 .animeCardRating {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 .animeCardBody {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
 }
 
 .animeCardTop {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .animeCardId {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent);
-  opacity: 0.7;
-  letter-spacing: 0.3px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.7;
+    letter-spacing: 0.3px;
 }
 
 .animeCardTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .animeCardAlt {
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .animeCardMeta {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
 }
 
 .animeCardTag {
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-  color: var(--text-secondary);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .animeCardGenres {
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .animeCardActions {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 10px;
-  flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 10px;
+    flex-shrink: 0;
 }
 
-.animeEditBtn, .animeDeleteBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.12s;
+.animeEditBtn,
+.animeDeleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+        color: var(--text-primary);
+    }
 }
 
 .animeDeleteBtn:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .animeTableEmpty {
-  padding: 60px 16px;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 13px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+    padding: 60px 16px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
 }
 
 // ── Delete Modal ──
 
 .deleteOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  display: flex;
-  justify-content: center;
-  padding-top: 15vh;
-  animation: overlayIn 0.2s ease;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    padding-top: 15vh;
+    animation: overlayIn 0.2s ease;
 }
 
 @keyframes overlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .deleteModal {
-  position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 28px 32px 24px;
-  width: 380px;
-  max-width: 90vw;
-  text-align: center;
-  align-self: flex-start;
-  animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px 24px;
+    width: 380px;
+    max-width: 90vw;
+    text-align: center;
+    align-self: flex-start;
+    animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-24px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(-24px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .deleteModalClose {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.12s;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+        color: var(--text-primary);
+    }
 }
 
 .deleteModalIcon {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 12px;
-  color: #ef4444;
-  opacity: 0.8;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+    color: #ef4444;
+    opacity: 0.8;
 }
 
 .deleteModalTitle {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px;
 }
 
 .deleteModalText {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0 0 20px;
-  line-height: 1.5;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    line-height: 1.5;
 
-  strong {
-    color: var(--text-primary);
-  }
+    strong {
+        color: var(--text-primary);
+    }
 }
 
 .deleteModalActions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
 }
 
 .deleteModalCancel {
-  padding: 9px 20px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.12s;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover { color: var(--text-primary); border-color: var(--text-secondary); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover {
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 .deleteModalConfirm {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 20px;
-  border-radius: 8px;
-  border: none;
-  background: #ef4444;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: none;
+    background: #ef4444;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.12s;
 
-  &:hover { opacity: 0.85; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover {
+        opacity: 0.85;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 // ── Create/Edit Anime Page ──
 
 .createAnimePage {
-  min-height: 100vh;
-  padding: calc(var(--header-height, 90px) + 24px) 32px 40px;
+    min-height: 100vh;
+    padding: calc(var(--header-height, 90px) + 24px) 32px 40px;
 }
 
 .createAnimeContainer {
-  max-width: 860px;
-  margin: 0 auto;
+    max-width: 860px;
+    margin: 0 auto;
 }
 
 .createAnimeTopBar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
 }
 
 .createAnimeBack {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover {
-    color: var(--text-primary);
-    border-color: var(--text-secondary);
-  }
+    &:hover {
+        color: var(--text-primary);
+        border-color: var(--text-secondary);
+    }
 }
 
 .createAnimeTitle {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
 }
 
 .createAnimeGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .createAnimePosterPreview {
-  margin-bottom: 16px;
+    margin-bottom: 16px;
 
-  img {
-    width: 120px;
-    height: 170px;
-    border-radius: 8px;
-    object-fit: cover;
-    border: 1px solid var(--border);
-  }
+    img {
+        width: 120px;
+        height: 170px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--border);
+    }
 }
 
 .createAnimeActions {
-  display: flex;
-  gap: 8px;
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
 }
 
 // ── User Manager ──
 
 .userGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .userCard {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.15s;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--text-secondary) 30%, var(--border));
-  }
+    &:hover {
+        border-color: color-mix(
+            in srgb,
+            var(--text-secondary) 30%,
+            var(--border)
+        );
+    }
 }
 
 .userCardAvatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  opacity: 0.5;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    opacity: 0.5;
 }
 
 .userCardAvatarImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .userCardBody {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .userCardTop {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
 .userCardId {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent);
-  opacity: 0.7;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.7;
 }
 
 .userCardName {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .userCardUsername {
-  font-size: 12px;
-  color: var(--text-secondary);
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .userCardInfo {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 
 .userCardEmail {
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.7;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.7;
 }
 
 .userCardDate {
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.5;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.5;
 }
 
 .userCardActions {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 .userActionBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+        color: var(--text-primary);
+    }
 }
 
 .userActionBtnEdit {
-  color: #3b82f6;
-  &:hover { background: rgba(59, 130, 246, 0.1); }
+    color: #3b82f6;
+    &:hover {
+        background: rgba(59, 130, 246, 0.1);
+    }
 }
 
 .userActionBtnDanger {
-  color: #ef4444;
-  &:hover { background: rgba(239, 68, 68, 0.1); }
+    color: #ef4444;
+    &:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
 }
 
 .userCardRole {
-  flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .userRoleTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
 }
 
 .userRoleTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
 .userRoleBtn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
 
-  &:hover {
-    opacity: 0.8;
-  }
+    &:hover {
+        opacity: 0.8;
+    }
 }
 
 .roleDropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 6px;
-  min-width: 160px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  z-index: 50;
-  animation: roleDropIn 0.15s ease;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    min-width: 160px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    z-index: 50;
+    animation: roleDropIn 0.15s ease;
 }
 
 @keyframes roleDropIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .roleDropdownItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 7px 10px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.1s;
 
-  &:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--role-color, var(--text-secondary)) 10%, transparent);
-  }
+    &:hover:not(:disabled) {
+        background: color-mix(
+            in srgb,
+            var(--role-color, var(--text-secondary)) 10%,
+            transparent
+        );
+    }
 
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
 }
 
 .roleDropdownItemActive {
-  font-weight: 700;
+    font-weight: 700;
 }
 
 .roleDropdownDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 // ═══════════════════════════════════════
@@ -1132,870 +1218,1160 @@
 // ═══════════════════════════════════════
 
 .episodeSelector {
-  margin-bottom: 24px;
+    margin-bottom: 24px;
 }
 
 .episodeSelectorLabel {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .episodeDropdownWrap {
-  position: relative;
+    position: relative;
 }
 
 .episodeDropdownBtn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s;
 
-  &:hover {
-    border-color: var(--accent);
-  }
+    &:hover {
+        border-color: var(--accent);
+    }
 }
 
 .episodeDropdownSelected {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .episodeDropdownPlaceholder {
-  color: var(--text-muted);
+    color: var(--text-muted);
 }
 
 .episodeChevronOpen {
-  transform: rotate(180deg);
-  transition: transform 0.2s;
+    transform: rotate(180deg);
+    transition: transform 0.2s;
 }
 
 .episodeDropdownList {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  z-index: 50;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    z-index: 50;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
 .episodeDropdownSearch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
 
-  input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    outline: none;
-    color: var(--text-primary);
-    font-size: 13px;
+    input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 13px;
 
-    &::placeholder {
-      color: var(--text-muted);
+        &::placeholder {
+            color: var(--text-muted);
+        }
     }
-  }
 }
 
 .episodeDropdownItems {
-  max-height: 280px;
-  overflow-y: auto;
+    max-height: 280px;
+    overflow-y: auto;
 }
 
 .episodeDropdownEmpty {
-  padding: 16px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-muted);
+    padding: 16px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
 .episodeDropdownItem {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.1s;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
 }
 
 .episodeDropdownItemActive {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .episodeDropdownPoster {
-  width: 32px;
-  height: 44px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
+    width: 32px;
+    height: 44px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .episodeDropdownInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
 }
 
 .episodeDropdownTitle {
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .episodeDropdownAlt {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 // ── Episode Form ──
 
 .episodeForm {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
 }
 
 .episodeFormTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 16px;
 }
 
 .episodeFormGrid {
-  display: grid;
-  grid-template-columns: 100px 1fr 120px;
-  gap: 12px;
+    display: grid;
+    grid-template-columns: 100px 1fr 120px;
+    gap: 12px;
 }
 
 .episodeFormField {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
-  label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-
-  input, select {
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-primary);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-
-    &:focus {
-      border-color: var(--accent);
+    label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
     }
 
-    &::placeholder {
-      color: var(--text-muted);
-    }
-  }
+    input,
+    select {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text-primary);
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.15s;
 
-  select {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    padding-right: 28px;
+        &:focus {
+            border-color: var(--accent);
+        }
 
-    option {
-      background: var(--bg-card, #1a1a1a);
-      color: var(--text-primary, #e5e5e5);
-      padding: 6px 10px;
+        &::placeholder {
+            color: var(--text-muted);
+        }
     }
-  }
+
+    select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 28px;
+
+        option {
+            background: var(--bg-card, #1a1a1a);
+            color: var(--text-primary, #e5e5e5);
+            padding: 6px 10px;
+        }
+    }
 }
 
 .episodeVideoRow {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
 }
 
 .episodeUploadBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: border-color 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        border-color 0.15s,
+        color 0.15s;
 
-  &:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+    &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
 }
 
 .episodeUploadStatus {
-  font-size: 11px;
-  color: var(--accent);
-  margin-top: 4px;
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 4px;
 }
 
 .episodeError {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, #ef4444 10%, transparent);
-  color: #ef4444;
-  font-size: 12px;
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: color-mix(in srgb, #ef4444 10%, transparent);
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .episodeSuccess {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: color-mix(in srgb, #10b981 10%, transparent);
-  color: #10b981;
-  font-size: 12px;
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: color-mix(in srgb, #10b981 10%, transparent);
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .episodeAddBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 16px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
 
-  &:hover:not(:disabled) {
-    opacity: 0.85;
-  }
+    &:hover:not(:disabled) {
+        opacity: 0.85;
+    }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 }
 
 // ── Episode List ──
 
 .episodeListSection {
-  margin-top: 8px;
+    margin-top: 8px;
 }
 
 .episodeListHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
 
-  h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-  }
+    h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
 }
 
 .epStudioFilter {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .epStudioFilterBtn {
-  padding: 5px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
 
-  &:hover {
-    border-color: var(--accent);
-    color: var(--text-primary);
-  }
+    &:hover {
+        border-color: var(--accent);
+        color: var(--text-primary);
+    }
 }
 
 .epStudioFilterBtnActive {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
 }
 
 .episodeSearchWrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-muted);
 
-  input {
-    border: none;
-    background: transparent;
-    outline: none;
-    color: var(--text-primary);
-    font-size: 12px;
-    width: 120px;
+    input {
+        border: none;
+        background: transparent;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 12px;
+        width: 120px;
 
-    &::placeholder {
-      color: var(--text-muted);
+        &::placeholder {
+            color: var(--text-muted);
+        }
     }
-  }
 }
 
 .episodeSearchClear {
-  cursor: pointer;
-  opacity: 0.5;
+    cursor: pointer;
+    opacity: 0.5;
 
-  &:hover {
-    opacity: 1;
-  }
+    &:hover {
+        opacity: 1;
+    }
 }
 
 .episodeEmpty {
-  padding: 32px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--text-muted);
-  border: 1px dashed var(--border);
-  border-radius: 10px;
+    padding: 32px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
 }
 
 .episodeList {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .episodeCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
 
-  &:hover {
-    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-  }
+    &:hover {
+        border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    }
 }
 
 .episodeNumber {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
 }
 
 .episodeInfo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: visible;
-  min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: visible;
+    min-width: 0;
 }
 
 .episodeCardTitle {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: ellipsis;
-  position: relative;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: ellipsis;
+    position: relative;
 }
 
 .episodeDuration {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: "Geist Mono", ui-monospace, monospace;
 }
 
 .episodePlayLink {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  color: var(--accent);
-  transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--accent);
+    transition: background 0.1s;
 
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 15%, transparent);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--accent) 15%, transparent);
+    }
 }
 
 .episodeDeleteBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color 0.1s, background 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        color 0.1s,
+        background 0.1s;
 
-  &:hover {
-    color: #ef4444;
-    background: color-mix(in srgb, #ef4444 10%, transparent);
-  }
+    &:hover {
+        color: #ef4444;
+        background: color-mix(in srgb, #ef4444 10%, transparent);
+    }
 }
 
 // ── Studio Row ──
 
 .epStudioRow {
-  display: flex;
-  gap: 6px;
+    display: flex;
+    gap: 6px;
 
-  select {
-    flex: 1;
-    min-width: 0;
-  }
+    select {
+        flex: 1;
+        min-width: 0;
+    }
 }
 
 .epStudioDropdown {
-  position: relative;
-  flex: 1;
-  min-width: 0;
+    position: relative;
+    flex: 1;
+    min-width: 0;
 }
 
 .epStudioDropdownTrigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s;
 
-  &:hover {
-    border-color: var(--accent);
-  }
+    &:hover {
+        border-color: var(--accent);
+    }
 
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 .epStudioDropdownMenu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 30;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
 }
 
 .epStudioDropdownItem {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 
-  &:not(:last-child) {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  }
+    &:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
 }
 
 .epStudioDropdownItemActive {
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .epStudioDropdownSelect {
-  flex: 1;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.1s;
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.1s;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
 
-  .epStudioDropdownItemActive & {
-    color: var(--accent);
-    font-weight: 600;
-  }
+    .epStudioDropdownItemActive & {
+        color: var(--accent);
+        font-weight: 600;
+    }
 }
 
 .epStudioDropdownDelete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-right: 4px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.1s, color 0.1s;
-  flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-right: 4px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        background 0.1s,
+        color 0.1s;
+    flex-shrink: 0;
 
-  &:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-  }
+    &:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+    }
 }
 
 .epStudioAddBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  min-width: 30px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    min-width: 30px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        color 0.15s,
+        background 0.15s;
 
-  &:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-  }
+    &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
 }
 
 // ── Studio Badge ──
 
 .epStudioBadge {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
-  font-size: 10px;
-  font-weight: 600;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-  vertical-align: middle;
-  letter-spacing: 0.3px;
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+    vertical-align: middle;
+    letter-spacing: 0.3px;
 }
 
 // ── Drop Zone ──
 
 .epDropZone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 32px 16px;
-  margin-top: 12px;
-  border-radius: 12px;
-  border: 2px dashed var(--border);
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px 16px;
+    margin-top: 12px;
+    border-radius: 12px;
+    border: 2px dashed var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        border-color 0.2s,
+        background 0.2s,
+        color 0.2s;
 
-  &:hover {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 5%, transparent);
-    color: var(--accent);
-  }
+    &:hover {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 5%, transparent);
+        color: var(--accent);
+    }
 }
 
 .epDropZoneActive {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  color: var(--accent);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
 }
 
 .epDropZoneUploading {
-  pointer-events: none;
-  border-color: var(--accent);
-  color: var(--accent);
+    pointer-events: none;
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .epDropZoneText {
-  font-size: 13px;
-  font-weight: 500;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .epDropZoneHint {
-  font-size: 11px;
-  opacity: 0.5;
+    font-size: 11px;
+    opacity: 0.5;
 }
 
 // ── Upload Progress ──
 
 .epUploadProgress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 320px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 320px;
 }
 
 .epUploadProgressBar {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
 }
 
 .epUploadProgressFill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #fff));
-  transition: width 0.3s ease;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(
+        90deg,
+        var(--accent),
+        color-mix(in srgb, var(--accent) 70%, #fff)
+    );
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .epUploadPercent {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 38px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 38px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 // ── Processing Animation ──
 
 .epProcessing {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  max-width: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    max-width: 160px;
 }
 
 .epProcessingBar {
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
-  overflow: hidden;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
 }
 
 .epProcessingFill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.5s ease, background 0.3s ease;
+    height: 100%;
+    border-radius: 2px;
+    transition:
+        width 0.5s ease,
+        background 0.3s ease;
 }
 
 .epProcessingLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: #f59e0b;
+    font-size: 11px;
+    font-weight: 500;
+    color: #f59e0b;
 }
 
 // ── Episode Thumb ──
 
 .episodeThumb {
-  width: 56px;
-  height: 32px;
-  border-radius: 4px;
-  overflow: hidden;
-  flex-shrink: 0;
+    width: 56px;
+    height: 32px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 .episodeThumbImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .episodeThumbPlaceholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
 }
 
 .episodeStatus {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
 }
 
 .episodePreviewBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: color 0.1s, background 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        color 0.1s,
+        background 0.1s;
 
-  &:hover {
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
-  }
+    &:hover {
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
 }
 
 // ── Episode Modal ──
 
 .epModal {
-  width: 90vw;
-  max-width: 900px;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    width: 90vw;
+    max-width: 900px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
 
 .epModalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
 
-  h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
+    h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
 }
 
 .epModalActions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .epModalFullscreen,
 .epModalClose {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.1s, color 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        background 0.1s,
+        color 0.1s;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary);
+    }
 }
 
 .epModalVideo {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: block;
+}
+
+// ── Banner Manager ─────────────────────────────────────────────────────────
+
+.bannerSlideList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.bannerSlideCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+}
+
+.bannerSlidePoster {
+    width: 90px;
+    height: 54px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-body, #0a0a0c);
+}
+
+.bannerSlidePosterImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bannerSlidePosterEmpty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    opacity: 0.4;
+}
+
+.bannerSlideInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.bannerSlideTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bannerSlideMeta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.bannerSlideBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.bannerSlideBadgeActive {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+}
+
+.bannerSlideBadgeHidden {
+    background: rgba(100, 100, 120, 0.2);
+    color: var(--text-secondary);
+}
+
+.bannerSlideActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.bannerOrderBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}
+
+.bannerEditBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        border-color: #a855f7;
+        color: #a855f7;
+    }
+}
+
+.bannerDeleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+}
+
+.bannerImageRow {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.bannerImageInput {
+    flex: 1;
+}
+
+.bannerUploadBtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.bannerToggleRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.bannerToggle {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+
+        &:checked + .bannerToggleSlider {
+            background: var(--accent);
+        }
+
+        &:checked + .bannerToggleSlider::before {
+            transform: translateX(18px);
+        }
+    }
+}
+
+.bannerToggleSlider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &::before {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        left: 3px;
+        top: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.2s;
+    }
+}
+
+.bannerToggleLabel {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.bannerColorRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    input[type="color"] {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        cursor: pointer;
+        padding: 2px;
+        flex-shrink: 0;
+    }
 }

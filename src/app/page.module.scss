@@ -3,950 +3,1341 @@
 // ========================================
 
 .main {
-  padding-top: var(--header-height);
-  display: flex;
-  flex-direction: column;
-  gap: var(--section-gap);
-  padding-bottom: 80px;
+    padding-top: var(--header-height);
+    display: flex;
+    flex-direction: column;
+    gap: var(--section-gap);
+    padding-bottom: 80px;
 }
 
 // ---------- Container ----------
 .container {
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--container-padding);
-  width: 100%;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
+    width: 100%;
 }
 
 // ---------- Section Headers ----------
 .sectionHeader {
-  margin-bottom: 28px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
 }
 
 .scrollArrows {
-  display: flex;
-  gap: 8px;
+    display: flex;
+    gap: 8px;
 }
 
 .scrollArrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary);
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: none;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary);
+    }
 }
 
 .sectionTitle {
-  font-size: 20px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: color var(--tr-fast);
-
-  svg {
-    opacity: 0.5;
-    transition: transform var(--tr-fast), opacity var(--tr-fast);
-  }
-
-  &:hover {
-    color: var(--accent);
+    font-size: 20px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: color var(--tr-fast);
 
     svg {
-      transform: translateX(3px);
-      opacity: 1;
+        opacity: 0.5;
+        transition:
+            transform var(--tr-fast),
+            opacity var(--tr-fast);
     }
-  }
+
+    &:hover {
+        color: var(--accent);
+
+        svg {
+            transform: translateX(3px);
+            opacity: 1;
+        }
+    }
 }
 
 .sectionSubtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-top: 4px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
 }
 
 // =============================================
 // HERO BANNER
 // =============================================
 .hero {
-  padding-top: 24px;
+    padding-top: 24px;
 }
 
 .banner {
-  position: relative;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 2px solid var(--border-color);
-  background-size: cover;
-  background-position: center;
-  transition: border-color 0.35s ease, background-image 0.35s ease;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+    position: relative;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    background-size: cover;
+    background-position: center;
+    transition:
+        border-color 0.35s ease,
+        background-image 0.35s ease;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
 }
 
 .bannerOverlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to right, rgba(10, 10, 14, 0.95) 0%, rgba(10, 10, 14, 0.75) 50%, rgba(10, 10, 14, 0.3) 100%),
-    linear-gradient(to top, rgba(10, 10, 14, 0.9) 0%, transparent 50%);
-  z-index: 1;
-  pointer-events: none;
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            to right,
+            rgba(10, 10, 14, 0.95) 0%,
+            rgba(10, 10, 14, 0.75) 50%,
+            rgba(10, 10, 14, 0.3) 100%
+        ),
+        linear-gradient(to top, rgba(10, 10, 14, 0.9) 0%, transparent 50%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 .bannerSlide {
-  position: relative;
-  z-index: 2;
-  padding: 40px 48px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  animation: fadeIn 0.35s ease;
-  flex: 1;
-  justify-content: flex-end;
-  overflow: hidden;
+    position: relative;
+    z-index: 2;
+    padding: 40px 48px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeIn 0.35s ease;
+    flex: 1;
+    justify-content: flex-end;
+    overflow: hidden;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .bannerTitle {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.2;
-  color: var(--text-primary);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text-primary);
 }
 
 .bannerMeta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
 
-  span + span::before {
-    content: '•';
-    margin-right: 6px;
-    color: var(--text-muted);
-  }
+    span + span::before {
+        content: "•";
+        margin-right: 6px;
+        color: var(--text-muted);
+    }
 }
 
 .bannerGenres {
-  font-size: 13px;
-  color: var(--text-muted);
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
 .bannerText {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  max-width: 620px;
-  margin-top: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 620px;
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .bannerActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
 }
 
 .bannerPlayBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--tr-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--tr-fast);
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.16);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.16);
+    }
 }
 
 .bannerIconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background var(--tr-fast), color var(--tr-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+        background var(--tr-fast),
+        color var(--tr-fast);
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary);
+    }
 }
 
 .bannerNav {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px 0 18px;
-  position: relative;
-  z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 0 18px;
+    position: relative;
+    z-index: 2;
 }
 
 .bannerArrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-secondary);
-  border: none;
-  transition: all var(--tr-fast);
-  cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: none;
+    transition: all var(--tr-fast);
+    cursor: pointer;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--text-primary);
+    }
 }
 
 .bannerDot {
-  width: 24px;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.1);
-  transition: all var(--tr);
-  cursor: pointer;
-  border: none;
+    width: 24px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all var(--tr);
+    cursor: pointer;
+    border: none;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
 }
 
 .bannerDotActive {
-  composes: bannerDot;
-  background: var(--accent);
-  width: 32px;
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+    composes: bannerDot;
+    background: var(--accent);
+    width: 32px;
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
 }
 
 // =============================================
 // EPISODES SECTION
 // =============================================
 .episodesRow {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-top: 10px;
-  padding-bottom: 12px;
-  scroll-snap-type: x mandatory;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-top: 10px;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
 
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .episodeCard {
-  display: block;
-  flex: 0 0 158px;
-  scroll-snap-align: start;
-  cursor: pointer;
-  color: inherit;
-  transition: transform 0.22s ease;
+    display: block;
+    flex: 0 0 158px;
+    scroll-snap-align: start;
+    cursor: pointer;
+    color: inherit;
+    transition: transform 0.22s ease;
 
-  &:hover {
-    transform: translateY(-7px);
+    &:hover {
+        transform: translateY(-7px);
 
-    .episodePoster {
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-      border-color: rgba(255, 255, 255, 0.1);
+        .episodePoster {
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .episodePosterOverlay {
+            opacity: 1;
+        }
     }
-
-    .episodePosterOverlay {
-      opacity: 1;
-    }
-  }
 }
 
 // ─── Poster shell ───
 .episodePoster {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  position: relative;
-  overflow: hidden;
-  background: #18181c;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: box-shadow 0.22s ease, border-color 0.22s ease;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    background: #18181c;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition:
+        box-shadow 0.22s ease,
+        border-color 0.22s ease;
 }
 
 // Poster image
 .episodePosterImg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
 }
 
 // Subtle sheen for depth
 .episodePoster::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 50%),
-    linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 100%);
-  z-index: 1;
-  pointer-events: none;
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0%, transparent 50%),
+        linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+    z-index: 1;
+    pointer-events: none;
 }
 
 // Thin genre-colored accent line at top
 .episodeAccentBar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  z-index: 2;
-  opacity: 0.9;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 2;
+    opacity: 0.9;
 }
 
 // Rating chip — top-right
 .episodeRating {
-  position: absolute;
-  top: 10px;
-  right: 8px;
-  z-index: 3;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
-  padding: 2px 6px;
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    z-index: 3;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 2px 6px;
 }
 
 // Hover play overlay
 .episodePosterOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-  z-index: 4;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.38);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    z-index: 4;
 }
 
 .episodePlayBtn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  padding-left: 3px;
-  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    padding-left: 3px;
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease,
+        border-color 0.15s ease;
 
-  &:hover {
-    background: rgba(168, 85, 247, 0.5);
-    border-color: rgba(168, 85, 247, 0.7);
-    transform: scale(1.1);
-  }
+    &:hover {
+        background: rgba(168, 85, 247, 0.5);
+        border-color: rgba(168, 85, 247, 0.7);
+        transform: scale(1.1);
+    }
 
-  &:active {
-    transform: scale(0.96);
-  }
+    &:active {
+        transform: scale(0.96);
+    }
 }
 
 // Episode label — bottom-left, accent-colored
 .episodeBadge {
-  position: absolute;
-  bottom: 9px;
-  left: 9px;
-  z-index: 3;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+    position: absolute;
+    bottom: 9px;
+    left: 9px;
+    z-index: 3;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
 }
 
 // ─── Info block ───
 .episodeInfo {
-  padding: 0 2px;
+    padding: 0 2px;
 }
 
 .episodeTitle {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-  margin-bottom: 4px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text-primary);
 }
 
 .episodeMeta {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 3px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
 }
 
 .episodeGenres {
-  font-size: 11px;
-  font-weight: 500;
-  opacity: 0.85;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.85;
 }
 
 // =============================================
 // SUPPORT BANNER
 // =============================================
 .supportSection {
-  composes: container;
+    composes: container;
 }
 
 .supportBanner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 40px;
-  background: #111114;
-  border-radius: 16px;
-  padding: 40px 48px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    background: #111114;
+    border-radius: 16px;
+    padding: 40px 48px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    overflow: hidden;
 }
 
 // Purple ambient glow — top left
 .supportGlow1 {
-  position: absolute;
-  top: -60px;
-  left: -40px;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 65%);
-  pointer-events: none;
-  z-index: 0;
+    position: absolute;
+    top: -60px;
+    left: -40px;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 // Pink ambient glow — bottom right
 .supportGlow2 {
-  position: absolute;
-  bottom: -80px;
-  right: 80px;
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, var(--accent-pink-soft) 0%, transparent 65%);
-  pointer-events: none;
-  z-index: 0;
+    position: absolute;
+    bottom: -80px;
+    right: 80px;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(
+        circle,
+        var(--accent-pink-soft) 0%,
+        transparent 65%
+    );
+    pointer-events: none;
+    z-index: 0;
 }
 
 // Left content
 .supportContent {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 0;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
 }
 
 // Small label badge
 .supportLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  border-radius: 6px;
-  padding: 4px 10px;
-  margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-bottom: 16px;
 }
 
 .supportTitle {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
 }
 
 .supportTitleAccent {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+    background: linear-gradient(
+        135deg,
+        var(--accent) 0%,
+        var(--accent-hover) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .supportText {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 20px;
-  max-width: 420px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 420px;
 }
 
 // Perks list
 .supportPerks {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 28px;
-
-  li {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
 
-    &::before {
-      content: '';
-      flex-shrink: 0;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8l2.5 2.5L12 5.5' stroke='%23a855f7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 14px;
+    li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--text-secondary);
+
+        &::before {
+            content: "";
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+            border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 8l2.5 2.5L12 5.5' stroke='%23a855f7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 14px;
+        }
     }
-  }
 }
 
 // CTA button
 .supportBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 28px;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 28px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 
-  &:hover {
-    background: color-mix(in srgb, var(--accent) 18%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    color: var(--accent-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px var(--accent-soft);
-  }
+    &:hover {
+        background: color-mix(in srgb, var(--accent) 18%, transparent);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+        color: var(--accent-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px var(--accent-soft);
+    }
 
-  &:active {
-    transform: translateY(0);
-    box-shadow: none;
-  }
+    &:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
 }
 
 // Right decorative block
 .supportDeco {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  width: 140px;
-  height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 // Pulsing ring
 .supportDecoRing {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  animation: pulse-ring 3s ease-in-out infinite;
-
-  &::before {
-    content: '';
     position: absolute;
-    inset: 14px;
+    inset: 0;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
-  }
+    border: 1.5px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    animation: pulse-ring 3s ease-in-out infinite;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border-radius: 50%;
+        border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+    }
 }
 
 @keyframes pulse-ring {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.06); opacity: 0.6; }
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.06);
+        opacity: 0.6;
+    }
 }
 
 .supportDecoHeart {
-  color: var(--accent);
-  opacity: 0.5;
-  filter: drop-shadow(0 0 20px var(--accent-soft));
-  animation: pulse-heart 3s ease-in-out infinite;
+    color: var(--accent);
+    opacity: 0.5;
+    filter: drop-shadow(0 0 20px var(--accent-soft));
+    animation: pulse-heart 3s ease-in-out infinite;
 }
 
 @keyframes pulse-heart {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.08); opacity: 0.7; }
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.08);
+        opacity: 0.7;
+    }
 }
 
 // =============================================
 // SCHEDULE SECTION
 // =============================================
 .scheduleHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 // ─── Segmented tabs ───
 .scheduleTabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 3px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 3px;
 }
 
 .scheduleTab {
-  padding: 7px 18px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-muted);
-  transition: color 0.15s ease, background 0.15s ease;
+    padding: 7px 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition:
+        color 0.15s ease,
+        background 0.15s ease;
 
-  &:hover {
-    color: var(--text-primary);
-  }
+    &:hover {
+        color: var(--text-primary);
+    }
 }
 
 .scheduleTabActive {
-  composes: scheduleTab;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  font-weight: 600;
+    composes: scheduleTab;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 // ─── List ───
 .scheduleList {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .scheduleItem {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-radius: 10px;
-  background: #111114;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.18s ease, border-color 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: #111114;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease;
 
-  &:hover {
-    background: #18181c;
-    border-color: rgba(255, 255, 255, 0.09);
+    &:hover {
+        background: #18181c;
+        border-color: rgba(255, 255, 255, 0.09);
 
-    .scheduleItemActions {
-      opacity: 1;
+        .scheduleItemActions {
+            opacity: 1;
+        }
     }
-  }
 }
 
 // Thin left accent bar
 .scheduleItemBar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: 0 2px 2px 0;
-  opacity: 0.85;
-  flex-shrink: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    opacity: 0.85;
+    flex-shrink: 0;
 }
 
 // Dim index number
 .scheduleItemIdx {
-  font-size: 18px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.08);
-  letter-spacing: -0.03em;
-  min-width: 28px;
-  flex-shrink: 0;
-  line-height: 1;
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.08);
+    letter-spacing: -0.03em;
+    min-width: 28px;
+    flex-shrink: 0;
+    line-height: 1;
 }
 
 // Main content
 .scheduleItemMain {
-  flex: 1;
-  min-width: 0;
+    flex: 1;
+    min-width: 0;
 }
 
 .scheduleItemTitle {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .scheduleItemSub {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
 }
 
 .scheduleItemEp {
-  font-size: 12px;
-  font-weight: 600;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .scheduleItemMeta {
-  font-size: 11px;
-  color: var(--text-muted);
+    font-size: 11px;
+    color: var(--text-muted);
 }
 
 // Genre chips
 .scheduleItemTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
 }
 
 .scheduleItemTag {
-  font-size: 10.5px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 5px;
-  padding: 2px 8px;
-  letter-spacing: 0.01em;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 5px;
+    padding: 2px 8px;
+    letter-spacing: 0.01em;
 }
 
 // Right-side actions
 .scheduleItemActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity 0.18s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.18s ease;
 }
 
 .scheduleItemTime {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 5px;
-  padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 5px;
+    padding: 3px 8px;
 }
 
 .scheduleItemList {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-muted);
-  transition: background 0.15s ease, color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
 }
 
 .scheduleItemPlay {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  background: transparent;
-  border: 1px solid;
-  transition: background 0.15s ease, opacity 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid;
+    transition:
+        background 0.15s ease,
+        opacity 0.15s ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.05);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+// ── Banner Action Buttons (Anime type) ─────────────────────────────────────
+
+.bannerActionBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.13);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.bannerActionBtnFav {
+    background: rgba(250, 204, 21, 0.12);
+    border-color: rgba(250, 204, 21, 0.4);
+    color: #facc15;
+
+    &:hover:not(:disabled) {
+        background: rgba(250, 204, 21, 0.2);
+        border-color: rgba(250, 204, 21, 0.6);
+        color: #facc15;
+    }
+}
+
+.bannerActionBtnActive {
+    background: rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #a855f7;
+
+    &:hover:not(:disabled) {
+        background: rgba(168, 85, 247, 0.2);
+        border-color: rgba(168, 85, 247, 0.6);
+        color: #a855f7;
+    }
+}
+
+// Collection dropdown
+.bannerCollectionWrap {
+    position: relative;
+}
+
+.bannerCollectionMenu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    min-width: 170px;
+    background: var(--bg-card, #18181f);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 20;
+    animation: collMenuIn 0.15s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes collMenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bannerCollectionItem {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 9px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+    text-align: left;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+    }
+}
+
+.bannerCollectionItemActive {
+    color: #a855f7;
+    background: rgba(168, 85, 247, 0.08);
+}
+
+.bannerCollectionCheck {
+    margin-left: auto;
+    color: #a855f7;
+}
+
+// ── PROMO slide styles ───────────────────────────────────────────────────────
+
+.bannerPromo {
+    // Promo slides can have a slightly different look
+}
+
+.bannerOverlayPromo {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(10, 10, 14, 0.96) 0%,
+            rgba(10, 10, 14, 0.7) 55%,
+            rgba(10, 10, 14, 0.35) 100%
+        ),
+        linear-gradient(to top, rgba(10, 10, 14, 0.9) 0%, transparent 60%);
+}
+
+.bannerPromoSlide {
+    position: relative;
+    z-index: 2;
+    padding: 48px 52px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeIn 0.35s ease;
+    flex: 1;
+    justify-content: center;
+    max-width: 600px;
+}
+
+.bannerPromoBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #a855f7;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    align-self: flex-start;
+}
+
+.bannerPromoTitle {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.bannerPromoText {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    max-width: 500px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bannerPromoBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    align-self: flex-start;
+    margin-top: 4px;
+    transition:
+        opacity 0.2s,
+        transform 0.15s;
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.35);
+
+    &:hover {
+        opacity: 0.88;
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
 }
 
 // ---------- Responsive ----------
 @media (max-width: 768px) {
-  .main {
-    gap: 32px;
-  }
+    .main {
+        gap: 32px;
+    }
 
-  .container {
-    padding: 0 16px;
-  }
+    .container {
+        padding: 0 16px;
+    }
 
-  .bannerSlide {
-    padding: 28px 24px;
-  }
+    .bannerSlide {
+        padding: 28px 24px;
+    }
 
-  .bannerTitle {
-    font-size: 20px;
-  }
+    .bannerTitle {
+        font-size: 20px;
+    }
 
-  // Support banner — stack vertically
-  .supportBanner {
-    flex-direction: column;
-    padding: 28px 24px;
-    gap: 24px;
-  }
+    // Support banner — stack vertically
+    .supportBanner {
+        flex-direction: column;
+        padding: 28px 24px;
+        gap: 24px;
+    }
 
-  .supportDeco {
-    display: none; // hide decorative heart on mobile
-  }
+    .supportDeco {
+        display: none; // hide decorative heart on mobile
+    }
 
-  .supportTitle {
-    font-size: 22px;
-  }
+    .supportTitle {
+        font-size: 22px;
+    }
 
-  .supportText {
-    max-width: 100%;
-  }
+    .supportText {
+        max-width: 100%;
+    }
 
-  // Schedule — hide actions, tighten layout
-  .scheduleItem {
-    padding: 12px 14px;
-    gap: 10px;
-  }
+    // Schedule — hide actions, tighten layout
+    .scheduleItem {
+        padding: 12px 14px;
+        gap: 10px;
+    }
 
-  .scheduleItemIdx {
-    display: none;
-  }
+    .scheduleItemIdx {
+        display: none;
+    }
 
-  .scheduleItemActions {
-    display: none;
-  }
+    .scheduleItemActions {
+        display: none;
+    }
 
-  .scheduleItemTitle {
-    font-size: 13px;
-  }
+    .scheduleItemTitle {
+        font-size: 13px;
+    }
 
-  .episodeCard {
-    flex: 0 0 130px;
-  }
+    .episodeCard {
+        flex: 0 0 130px;
+    }
 }
 
 /* Mobile responsive pass */
 @media (max-width: 768px) {
-  .main { gap: 38px; padding-bottom: 56px; }
-  .container { padding: 0 18px; }
-  .hero { padding-top: 18px; }
-  .banner { height: min(450px, calc(100dvh - var(--header-height) - 44px)); min-height: 430px; border-radius: 18px; background-position: center; }
-  .bannerOverlay { background: linear-gradient(to top, rgba(8,8,10,.95) 0%, rgba(8,8,10,.56) 58%, rgba(8,8,10,.28) 100%); }
-  .bannerSlide { padding: 28px 28px 18px; gap: 10px; justify-content: center; }
-  .bannerTitle { font-size: clamp(24px, 7vw, 30px); line-height: 1.12; max-width: 92%; }
-  .bannerMeta, .bannerGenres { font-size: 14px; flex-wrap: wrap; }
-  .bannerText { font-size: 15px; line-height: 1.7; -webkit-line-clamp: 4; }
-  .bannerActions { gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-  .bannerPlayBtn { min-height: 48px; padding: 12px 22px; border-radius: 14px; font-size: 15px; }
-  .bannerIconBtn { width: 48px; height: 48px; border-radius: 14px; }
-  .bannerNav { padding: 10px 0 18px; gap: 14px; }
-  .bannerArrow { width: 42px; height: 42px; border-radius: 12px; }
-  .sectionHeader { align-items: center; margin-bottom: 18px; gap: 16px; }
-  .sectionTitle { font-size: 24px; line-height: 1.15; }
-  .sectionSubtitle { font-size: 15px; max-width: 270px; }
-  .scrollArrow { width: 40px; height: 40px; border-radius: 12px; }
-  .episodesRow { gap: 16px; padding-left: 2px; padding-right: 18px; scroll-padding-left: 18px; }
-  .episodeCard { flex: 0 0 150px; }
-  .episodeTitle { font-size: 14px; }
-  .episodeMeta, .episodeGenres { font-size: 12px; }
-  .supportBanner { flex-direction: column; align-items: flex-start; padding: 28px 22px; gap: 22px; }
-  .supportDeco { display: none; }
-  .supportTitle { font-size: 24px; }
-  .supportText { max-width: 100%; font-size: 15px; }
-  .supportBtn { width: 100%; justify-content: center; min-height: 48px; }
-  .scheduleHeader { align-items: flex-start; }
-  .scheduleTabs { width: 100%; overflow-x: auto; }
-  .scheduleTab, .scheduleTabActive { flex: 1; text-align: center; padding: 9px 12px; }
-  .scheduleItem { padding: 14px 14px; gap: 10px; }
-  .scheduleItemIdx, .scheduleItemActions { display: none; }
-  .scheduleItemTitle { font-size: 14px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .main {
+        gap: 38px;
+        padding-bottom: 56px;
+    }
+    .container {
+        padding: 0 18px;
+    }
+    .hero {
+        padding-top: 18px;
+    }
+    .banner {
+        height: min(450px, calc(100dvh - var(--header-height) - 44px));
+        min-height: 430px;
+        border-radius: 18px;
+        background-position: center;
+    }
+    .bannerOverlay {
+        background: linear-gradient(
+            to top,
+            rgba(8, 8, 10, 0.95) 0%,
+            rgba(8, 8, 10, 0.56) 58%,
+            rgba(8, 8, 10, 0.28) 100%
+        );
+    }
+    .bannerSlide {
+        padding: 28px 28px 18px;
+        gap: 10px;
+        justify-content: center;
+    }
+    .bannerTitle {
+        font-size: clamp(24px, 7vw, 30px);
+        line-height: 1.12;
+        max-width: 92%;
+    }
+    .bannerMeta,
+    .bannerGenres {
+        font-size: 14px;
+        flex-wrap: wrap;
+    }
+    .bannerText {
+        font-size: 15px;
+        line-height: 1.7;
+        -webkit-line-clamp: 4;
+    }
+    .bannerActions {
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+    .bannerPlayBtn {
+        min-height: 48px;
+        padding: 12px 22px;
+        border-radius: 14px;
+        font-size: 15px;
+    }
+    .bannerIconBtn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+    }
+    .bannerNav {
+        padding: 10px 0 18px;
+        gap: 14px;
+    }
+    .bannerArrow {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+    .sectionHeader {
+        align-items: center;
+        margin-bottom: 18px;
+        gap: 16px;
+    }
+    .sectionTitle {
+        font-size: 24px;
+        line-height: 1.15;
+    }
+    .sectionSubtitle {
+        font-size: 15px;
+        max-width: 270px;
+    }
+    .scrollArrow {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+    .episodesRow {
+        gap: 16px;
+        padding-left: 2px;
+        padding-right: 18px;
+        scroll-padding-left: 18px;
+    }
+    .episodeCard {
+        flex: 0 0 150px;
+    }
+    .episodeTitle {
+        font-size: 14px;
+    }
+    .episodeMeta,
+    .episodeGenres {
+        font-size: 12px;
+    }
+    .supportBanner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 28px 22px;
+        gap: 22px;
+    }
+    .supportDeco {
+        display: none;
+    }
+    .supportTitle {
+        font-size: 24px;
+    }
+    .supportText {
+        max-width: 100%;
+        font-size: 15px;
+    }
+    .supportBtn {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+    }
+    .scheduleHeader {
+        align-items: flex-start;
+    }
+    .scheduleTabs {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .scheduleTab,
+    .scheduleTabActive {
+        flex: 1;
+        text-align: center;
+        padding: 9px 12px;
+    }
+    .scheduleItem {
+        padding: 14px 14px;
+        gap: 10px;
+    }
+    .scheduleItemIdx,
+    .scheduleItemActions {
+        display: none;
+    }
+    .scheduleItemTitle {
+        font-size: 14px;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
 }
 
 @media (max-width: 420px) {
-  .container { padding: 0 14px; }
-  .banner { min-height: 420px; }
-  .bannerSlide { padding: 24px 28px 16px; }
-  .episodeCard { flex-basis: 145px; }
+    .container {
+        padding: 0 14px;
+    }
+    .banner {
+        min-height: 420px;
+    }
+    .bannerSlide {
+        padding: 24px 28px 16px;
+    }
+    .episodeCard {
+        flex-basis: 145px;
+    }
 }

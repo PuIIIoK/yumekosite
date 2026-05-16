@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,47 +11,44 @@ import {
   ListPlus,
   Sparkles,
   Star,
-  ListVideo,
-  ChevronDown,
+  Check,
+  BookOpen,
+  Clock,
+  Pause,
+  X,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
 import { type AnimePreview, getAccent as getAccentFn } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
 // ── Banner Slides ──────────────────────────────────
-const bannerSlides = [
-  {
-    title: "Ангел по соседству меня ужасно балует 2",
-    season: "Весна",
-    year: "2026",
-    rating: "16+",
-    genres: "Романтика • Школа",
-    text: "После того как Аманэ и Махиру признались друг другу в чувствах на глазах у всей школы, их жизнь из тихой соседской идиллии превращается в официальный роман под пристальным вниманием окружающих. Теперь, когда маски сброшены, героям предстоит учиться быть настоящей парой не только за закрытыми дверями квартир, но и в глазах общества.",
-    image:
-      "https://media.myshows.me/shows/1920/d/4e/d4ea4fa7ee4c87c170c8783010f9b30e.jpg",
-    borderColor: "rgba(255, 255, 255, 0.35)",
-  },
-  {
-    title:
-      "Добро пожаловать в класс превосходства 4: Второй год — Первый семестр",
-    season: "Весна",
-    year: "2026",
-    rating: "16+",
-    genres: "Драма • Психологическое • Триллер • Школа",
-    text: 'Аянокоджи и его одноклассники начинают свой второй год обучения в школе "Кёдо Икусей". Впереди их ждёт серия непростых экзаменов, а также знакомство с новой группой довольно своеобразных первогодок. Ученикам придётся быстро найти общий язык друг с другом, потому что первый экзамен объединит их классы в пары для письменного теста. Соли во всё это добавляет то, что за плохие результаты могут быть исключены только второгодки.',
-    image: "/elite_class.png",
-    borderColor: "rgba(220, 38, 38, 0.6)",
-  },
-  {
-    title: "Поддержите проект",
-    season: "",
-    year: "",
-    rating: "",
-    genres: "",
-    text: "Yumeko существует благодаря вашей поддержке. Если вам нравится то, что мы делаем — вы можете помочь нам развиваться. Каждый вклад важен для нашей команды.",
-    image: "",
-  },
+interface BannerSlide {
+  id: number;
+  title: string;
+  season: string;
+  year: string;
+  rating: string;
+  genres: string;
+  text: string;
+  image: string;
+  borderColor: string;
+  buttonLink: string;
+  buttonLabel: string;
+  sortOrder: number;
+  active: boolean;
+  type: string; // "anime" | "promo"
+  animeId: number | null;
+  badge: string;
+}
+
+const COLLECTION_STATUSES = [
+  { key: "watching", label: "Смотрю", Icon: Play },
+  { key: "planned", label: "Планирую", Icon: BookOpen },
+  { key: "completed", label: "Просмотрено", Icon: Check },
+  { key: "onhold", label: "Отложено", Icon: Pause },
+  { key: "dropped", label: "Брошено", Icon: X },
 ];
 
 const getAccent = getAccentFn;
@@ -153,9 +150,18 @@ const scheduleData: Record<string, ScheduleItem[]> = {
 // Component
 // ═════════════════════════════════════════════════════
 export default function Home() {
+  const { user } = useAuth();
   const [slide, setSlide] = useState(0);
   const [activeDay, setActiveDay] = useState("today");
   const [newEpisodes, setNewEpisodes] = useState<AnimePreview[]>([]);
+  const [bannerSlides, setBannerSlides] = useState<BannerSlide[]>([]);
+
+  // Collection / favorites state for current slide
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState<string | null>(null);
+  const [showCollectionMenu, setShowCollectionMenu] = useState(false);
+  const [collectionLoading, setCollectionLoading] = useState(false);
+  const collectionMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/anime`)
@@ -164,10 +170,101 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetch(`${API_URL}/api/banners`)
+      .then((r) => r.json())
+      .then((data: BannerSlide[]) => setBannerSlides(data))
+      .catch(() => {});
+  }, []);
+
+  // Fetch collection status when slide or user changes
+  useEffect(() => {
+    const current = bannerSlides[slide];
+    if (!user || !current?.animeId || current.type !== "anime") {
+      setIsFavorite(false);
+      setCollectionStatus(null);
+      return;
+    }
+    fetch(
+      `${API_URL}/api/collections/${user.username}/anime/${current.animeId}`,
+    )
+      .then((r) => r.json())
+      .then((data: { statuses: string[] }) => {
+        setIsFavorite(data.statuses?.includes("favorites") ?? false);
+        const listStatus =
+          data.statuses?.find((s) =>
+            ["watching", "planned", "completed", "onhold", "dropped"].includes(
+              s,
+            ),
+          ) ?? null;
+        setCollectionStatus(listStatus);
+      })
+      .catch(() => {});
+  }, [slide, bannerSlides, user]);
+
+  // Close collection menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        collectionMenuRef.current &&
+        !collectionMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowCollectionMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggleFavorite = async () => {
+    const current = bannerSlides[slide];
+    if (!user || !current?.animeId) return;
+    setCollectionLoading(true);
+    try {
+      await fetch(
+        `${API_URL}/api/collections/${user.username}/anime/${current.animeId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "favorites" }),
+        },
+      );
+      setIsFavorite((v) => !v);
+    } catch {}
+    setCollectionLoading(false);
+  };
+
+  const toggleCollectionStatus = async (status: string) => {
+    const current = bannerSlides[slide];
+    if (!user || !current?.animeId) return;
+    setCollectionLoading(true);
+    try {
+      const res = await fetch(
+        `${API_URL}/api/collections/${user.username}/anime/${current.animeId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        },
+      );
+      const data = await res.json();
+      const listStatus =
+        (data.statuses as string[])?.find((s) =>
+          ["watching", "planned", "completed", "onhold", "dropped"].includes(s),
+        ) ?? null;
+      setCollectionStatus(listStatus);
+    } catch {}
+    setCollectionLoading(false);
+    setShowCollectionMenu(false);
+  };
+
   const prevSlide = () =>
     setSlide((s) => (s === 0 ? bannerSlides.length - 1 : s - 1));
   const nextSlide = () =>
     setSlide((s) => (s === bannerSlides.length - 1 ? 0 : s + 1));
+
+  const currentSlide = bannerSlides[slide];
+  const isAnime = currentSlide?.type === "anime" || !currentSlide?.type;
 
   const days = [
     { key: "yesterday", label: "Вчера" },
@@ -180,93 +277,128 @@ export default function Home() {
       <Header />
       <main className={styles.main}>
         {/* ── Hero Banner ── */}
-        <section className={`${styles.hero} ${styles.container}`}>
-          <div
-            className={styles.banner}
-            style={{
-              ...(bannerSlides[slide].image
-                ? { backgroundImage: `url(${bannerSlides[slide].image})` }
-                : {}),
-              ...(bannerSlides[slide].borderColor
-                ? { borderColor: bannerSlides[slide].borderColor }
-                : {}),
-            }}
-          >
-            <div className={styles.bannerOverlay} />
-            <div className={styles.bannerSlide} key={slide}>
-              <h2 className={styles.bannerTitle}>
-                {bannerSlides[slide].title}
-              </h2>
-              {(bannerSlides[slide].season ||
-                bannerSlides[slide].year ||
-                bannerSlides[slide].rating) && (
-                <div className={styles.bannerMeta}>
-                  {bannerSlides[slide].season && (
-                    <span>{bannerSlides[slide].season}</span>
+        {bannerSlides.length > 0 && (
+          <section className={`${styles.hero} ${styles.container}`}>
+            <div
+              className={`${styles.banner} ${!isAnime ? styles.bannerPromo : ""}`}
+              style={{
+                ...(currentSlide?.image
+                  ? { backgroundImage: `url(${currentSlide.image})` }
+                  : {}),
+                ...(currentSlide?.borderColor
+                  ? { borderColor: currentSlide.borderColor }
+                  : {}),
+              }}
+            >
+              <div
+                className={`${styles.bannerOverlay} ${!isAnime ? styles.bannerOverlayPromo : ""}`}
+              />
+
+              {/* ── ANIME slide ── */}
+              {isAnime && (
+                <div className={styles.bannerSlide} key={slide}>
+                  <h2 className={styles.bannerTitle}>{currentSlide?.title}</h2>
+                  {(currentSlide?.season ||
+                    currentSlide?.year ||
+                    currentSlide?.rating) && (
+                    <div className={styles.bannerMeta}>
+                      {currentSlide?.season && (
+                        <span>{currentSlide.season}</span>
+                      )}
+                      {currentSlide?.year && <span>{currentSlide.year}</span>}
+                      {currentSlide?.rating && (
+                        <span>{currentSlide.rating}</span>
+                      )}
+                    </div>
                   )}
-                  {bannerSlides[slide].year && (
-                    <span>{bannerSlides[slide].year}</span>
+                  {currentSlide?.genres && (
+                    <div className={styles.bannerGenres}>
+                      {currentSlide.genres}
+                    </div>
                   )}
-                  {bannerSlides[slide].rating && (
-                    <span>{bannerSlides[slide].rating}</span>
+                  <p className={styles.bannerText}>{currentSlide?.text}</p>
+
+                  <div className={styles.bannerActions}>
+                    {currentSlide?.animeId ? (
+                      <Link
+                        href={`/realeses/anime-page/${currentSlide.animeId}`}
+                        className={styles.bannerPlayBtn}
+                      >
+                        <Play size={16} />{" "}
+                        {currentSlide.buttonLabel || "Смотреть"}
+                      </Link>
+                    ) : currentSlide?.buttonLink ? (
+                      <Link
+                        href={currentSlide.buttonLink}
+                        className={styles.bannerPlayBtn}
+                      >
+                        <Play size={16} />{" "}
+                        {currentSlide.buttonLabel || "Смотреть"}
+                      </Link>
+                    ) : (
+                      <button className={styles.bannerPlayBtn}>
+                        <Play size={16} />{" "}
+                        {currentSlide?.buttonLabel || "Смотреть"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── PROMO slide ── */}
+              {!isAnime && (
+                <div className={styles.bannerPromoSlide} key={slide}>
+                  {currentSlide?.badge && (
+                    <div className={styles.bannerPromoBadge}>
+                      <Sparkles size={12} />
+                      {currentSlide.badge}
+                    </div>
+                  )}
+                  <h2 className={styles.bannerPromoTitle}>
+                    {currentSlide?.title}
+                  </h2>
+                  <p className={styles.bannerPromoText}>{currentSlide?.text}</p>
+                  {currentSlide?.buttonLink && (
+                    <Link
+                      href={currentSlide.buttonLink}
+                      className={styles.bannerPromoBtn}
+                    >
+                      <Heart size={15} />
+                      {currentSlide.buttonLabel || "Подробнее"}
+                    </Link>
                   )}
                 </div>
               )}
-              {bannerSlides[slide].genres && (
-                <div className={styles.bannerGenres}>
-                  {bannerSlides[slide].genres}
-                </div>
-              )}
-              <p className={styles.bannerText}>{bannerSlides[slide].text}</p>
-              <div className={styles.bannerActions}>
-                <button className={styles.bannerPlayBtn}>
-                  <Play size={16} /> Смотреть
-                </button>
+
+              <div className={styles.bannerNav}>
                 <button
-                  className={styles.bannerIconBtn}
-                  aria-label="В избранное"
+                  className={styles.bannerArrow}
+                  onClick={prevSlide}
+                  aria-label="Назад"
                 >
-                  <Star size={18} />
+                  <ChevronLeft size={18} />
                 </button>
+                {bannerSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    className={
+                      i === slide ? styles.bannerDotActive : styles.bannerDot
+                    }
+                    onClick={() => setSlide(i)}
+                    aria-label={`Слайд ${i + 1}`}
+                  />
+                ))}
                 <button
-                  className={styles.bannerIconBtn}
-                  aria-label="В коллекцию"
+                  className={styles.bannerArrow}
+                  onClick={nextSlide}
+                  aria-label="Вперёд"
                 >
-                  <ListVideo size={18} />
-                </button>
-                <button className={styles.bannerIconBtn} aria-label="Ещё">
-                  <ChevronDown size={18} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             </div>
-            <div className={styles.bannerNav}>
-              <button
-                className={styles.bannerArrow}
-                onClick={prevSlide}
-                aria-label="Назад"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              {bannerSlides.map((_, i) => (
-                <button
-                  key={i}
-                  className={
-                    i === slide ? styles.bannerDotActive : styles.bannerDot
-                  }
-                  onClick={() => setSlide(i)}
-                  aria-label={`Слайд ${i + 1}`}
-                />
-              ))}
-              <button
-                className={styles.bannerArrow}
-                onClick={nextSlide}
-                aria-label="Вперёд"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ── New Episodes ── */}
         <section className={styles.container}>
