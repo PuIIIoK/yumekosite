@@ -107,7 +107,7 @@ export default function BannerManager() {
 
   const handleField = (
     field: keyof SlideFormData,
-    value: string | boolean | number,
+    value: string | boolean | number | null,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
