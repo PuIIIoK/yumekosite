@@ -400,17 +400,19 @@ export default function EpisodeManager() {
       }
     };
 
-    // Файл 100% отправлен, ждём ответа сервера
+    // Файл 100% отправлен — сбрасываем UI загрузки, эпизод появится в списке
     xhr.upload.onloadend = () => {
-      setUploadPhase("processing");
+      setUploading(false);
+      setUploadPercent(0);
+      setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
+      setTimeout(() => setSuccess(null), 4000);
+      fetchEpisodes(animeId);
     };
 
     xhr.onload = async () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         setForm(emptyForm);
         await fetchEpisodes(animeId);
-        setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
-        setTimeout(() => setSuccess(null), 4000);
       } else {
         try {
           const data = JSON.parse(xhr.responseText);
@@ -419,8 +421,6 @@ export default function EpisodeManager() {
           setError("Ошибка загрузки");
         }
       }
-      setUploading(false);
-      setUploadPercent(0);
     };
 
     xhr.onerror = () => {
