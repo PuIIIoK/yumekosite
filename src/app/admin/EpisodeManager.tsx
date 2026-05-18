@@ -400,18 +400,20 @@ export default function EpisodeManager() {
       }
     };
 
-    // Файл 100% отправлен — сбрасываем UI загрузки, эпизод появится в списке
+    // Файл 100% отправлен — показываем фазу обработки на сервере
     xhr.upload.onloadend = () => {
-      setUploading(false);
-      setUploadPercent(0);
-      setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
-      setTimeout(() => setSuccess(null), 4000);
-      fetchEpisodes(animeId);
+      setUploadPercent(100);
+      setUploadPhase("processing");
     };
 
     xhr.onload = async () => {
+      setUploading(false);
+      setUploadPercent(0);
+      setUploadPhase("uploading");
       if (xhr.status >= 200 && xhr.status < 300) {
         setForm(emptyForm);
+        setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
+        setTimeout(() => setSuccess(null), 4000);
         await fetchEpisodes(animeId);
       } else {
         try {
@@ -427,6 +429,7 @@ export default function EpisodeManager() {
       setError("Сетевая ошибка");
       setUploading(false);
       setUploadPercent(0);
+      setUploadPhase("uploading");
     };
 
     xhr.send(fd);
@@ -843,7 +846,9 @@ export default function EpisodeManager() {
                     </span>
                   </div>
                   <span className={styles.epDropZoneText}>
-                    Загрузка видео...
+                    {uploadPhase === "processing"
+                      ? "Обработка на сервере..."
+                      : "Загрузка видео..."}
                   </span>
                 </>
               ) : (
