@@ -990,6 +990,13 @@ export default function Header() {
             >
               Релизы
             </Link>
+            <Link
+              href="/contact"
+              className={`${styles.navLink} ${pathname === "/contact" ? styles.navLinkActive : ""}`}
+              aria-current={pathname === "/contact" ? "page" : undefined}
+            >
+              Связаться
+            </Link>
           </nav>
         </div>
 
