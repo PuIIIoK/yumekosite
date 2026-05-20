@@ -380,19 +380,20 @@ export default function EpisodeManager() {
     setUploadPhase("uploading");
     setError(null);
 
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("animeId", String(selectedAnime.id));
-    fd.append("number", String(num));
-    if (form.title.trim()) fd.append("title", form.title.trim());
-    fd.append("studio", form.studio);
-    // grantXpUserId — для начисления XP залившему
-    if (user?.id) fd.append("grantXpUserId", String(user.id));
-
     const animeId = selectedAnime.id;
 
+    // Query params вместо FormData — файл идёт raw потоком на диск сервера
+    const params = new URLSearchParams();
+    params.set("animeId", String(animeId));
+    params.set("number", String(num));
+    if (form.title.trim()) params.set("title", form.title.trim());
+    params.set("studio", form.studio);
+    if (user?.id) params.set("grantXpUserId", String(user.id));
+
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_URL}/api/episodes/upload`);
+    xhr.open("POST", `${API_URL}/api/episodes/upload?${params.toString()}`);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.setRequestHeader("X-Filename", file.name);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
@@ -432,7 +433,7 @@ export default function EpisodeManager() {
       setUploadPhase("uploading");
     };
 
-    xhr.send(fd);
+    xhr.send(file);
   };
 
   const handleUploadEpisode = async (
