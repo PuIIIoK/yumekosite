@@ -389,11 +389,10 @@ export default function EpisodeManager() {
     if (form.title.trim()) params.set("title", form.title.trim());
     params.set("studio", form.studio);
     if (user?.id) params.set("grantXpUserId", String(user.id));
+    params.set("filename", file.name);
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_URL}/api/episodes/upload?${params.toString()}`);
-    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
-    xhr.setRequestHeader("X-Filename", file.name);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
