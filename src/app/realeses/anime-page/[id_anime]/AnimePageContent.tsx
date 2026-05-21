@@ -75,7 +75,7 @@ export default function AnimePageContent({
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
   const [epView, setEpView] = useState<"list" | "grid">("grid");
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
-  const genreTags = anime.genres.split(" • ");
+  const genreTags = anime.genres.split(",").map((g) => g.trim()).filter(Boolean);
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
   const [voiceCast, setVoiceCast] = useState<
     {

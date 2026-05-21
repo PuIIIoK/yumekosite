@@ -560,7 +560,7 @@ export default function Home() {
             <div className={styles.scheduleList}>
               {scheduleData[activeDay].map((item, idx) => {
                 const accent = getAccent(item.rating);
-                const tags = item.genres.split(" • ");
+                const tags = item.genres.split(",").map((t: string) => t.trim()).filter(Boolean);
                 return (
                   <div key={item.id} className={styles.scheduleItem}>
                     {/* Left accent bar */}

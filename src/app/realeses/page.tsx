@@ -23,7 +23,7 @@ const CATEGORY_TABS: { key: TypeFilter; label: string }[] = [
 
 function matchesType(a: AnimeDetails, type: TypeFilter): boolean {
   if (type === "all") return true;
-  const genres = a.genres ? a.genres.split(" • ").map((g) => g.trim()) : [];
+  const genres = a.genres ? a.genres.split(",").map((g) => g.trim()).filter(Boolean) : [];
   const fmt = a.format?.trim() ?? "";
 
   const isCartoon = genres.includes("Мультфильм") || fmt === "Мультфильм";
