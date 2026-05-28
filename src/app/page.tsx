@@ -405,15 +405,15 @@ export default function Home() {
           <div className={styles.sectionHeader}>
             <div>
               <Link href="/realeses" className={styles.sectionTitle}>
-                Новые аниме <ArrowRight size={18} />
+                Новые релизы <ArrowRight size={18} />
               </Link>
               <p className={styles.sectionSubtitle}>
-                Последние добавленные аниме на сайте
+                Последние добавленные релизы на сайте
               </p>
             </div>
             <div className={styles.sectionHeaderRight}>
               <Link href="/realeses" className={styles.sectionAllLink}>
-                Все аниме <ArrowRight size={13} />
+                Все релизы <ArrowRight size={13} />
               </Link>
               <div className={styles.scrollArrows}>
                 <button
