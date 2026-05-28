@@ -26,6 +26,41 @@
     justify-content: space-between;
 }
 
+.sectionHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.sectionAllLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    text-decoration: none;
+    transition: color var(--tr-fast);
+
+    svg {
+        opacity: 0.6;
+        transition:
+            transform var(--tr-fast),
+            opacity var(--tr-fast);
+    }
+
+    &:hover {
+        color: var(--accent);
+
+        svg {
+            transform: translateX(2px);
+            opacity: 1;
+        }
+    }
+}
+
 .scrollArrows {
     display: flex;
     gap: 8px;
@@ -1184,68 +1219,72 @@
         padding-top: 18px;
     }
     .banner {
-        height: min(450px, calc(100dvh - var(--header-height) - 44px));
-        min-height: 430px;
-        border-radius: 18px;
-        background-position: center;
+        height: 300px;
+        border-radius: 16px;
+        background-position: center top;
     }
     .bannerOverlay {
         background: linear-gradient(
             to top,
-            rgba(8, 8, 10, 0.95) 0%,
-            rgba(8, 8, 10, 0.56) 58%,
-            rgba(8, 8, 10, 0.28) 100%
+            rgba(8, 8, 10, 0.97) 0%,
+            rgba(8, 8, 10, 0.65) 52%,
+            rgba(8, 8, 10, 0.15) 100%
         );
     }
     .bannerSlide {
-        padding: 28px 28px 18px;
-        gap: 10px;
-        justify-content: center;
+        padding: 0 20px 14px;
+        gap: 5px;
+        justify-content: flex-end;
     }
     .bannerTitle {
-        font-size: clamp(24px, 7vw, 30px);
-        line-height: 1.12;
-        max-width: 92%;
+        font-size: clamp(18px, 5.5vw, 22px);
+        line-height: 1.2;
+        max-width: 90%;
     }
-    .bannerMeta,
+    .bannerMeta {
+        font-size: 12px;
+    }
     .bannerGenres {
-        font-size: 14px;
-        flex-wrap: wrap;
+        display: none;
     }
     .bannerText {
-        font-size: 15px;
-        line-height: 1.7;
-        -webkit-line-clamp: 4;
+        display: none;
     }
     .bannerActions {
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
-        margin-top: 16px;
+        margin-top: 10px;
     }
     .bannerPlayBtn {
-        min-height: 48px;
-        padding: 12px 22px;
-        border-radius: 14px;
-        font-size: 15px;
+        min-height: 40px;
+        padding: 9px 16px;
+        border-radius: 12px;
+        font-size: 14px;
     }
     .bannerIconBtn {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
     }
     .bannerNav {
-        padding: 10px 0 18px;
-        gap: 14px;
+        padding: 8px 0 14px;
+        gap: 12px;
     }
     .bannerArrow {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
     }
     .sectionHeader {
         align-items: center;
         margin-bottom: 18px;
-        gap: 16px;
+        gap: 12px;
+    }
+    .sectionHeaderRight {
+        gap: 10px;
+    }
+    .scrollArrows {
+        display: none;
     }
     .sectionTitle {
         font-size: 24px;
@@ -1332,10 +1371,10 @@
         padding: 0 14px;
     }
     .banner {
-        min-height: 420px;
+        height: 270px;
     }
     .bannerSlide {
-        padding: 24px 28px 16px;
+        padding: 0 16px 12px;
     }
     .episodeCard {
         flex-basis: 145px;

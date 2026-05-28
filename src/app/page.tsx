@@ -400,38 +400,43 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── New Episodes ── */}
+        {/* ── New Anime ── */}
         <section className={styles.container}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2 className={styles.sectionTitle}>
-                Новые эпизоды <ArrowRight size={18} />
-              </h2>
+              <Link href="/realeses" className={styles.sectionTitle}>
+                Новые аниме <ArrowRight size={18} />
+              </Link>
               <p className={styles.sectionSubtitle}>
-                Самые новые и свежие эпизоды в любимой озвучке
+                Последние добавленные аниме на сайте
               </p>
             </div>
-            <div className={styles.scrollArrows}>
-              <button
-                className={styles.scrollArrow}
-                onClick={() => {
-                  const el = document.getElementById("epRow");
-                  if (el) el.scrollBy({ left: -300, behavior: "smooth" });
-                }}
-                aria-label="Назад"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                className={styles.scrollArrow}
-                onClick={() => {
-                  const el = document.getElementById("epRow");
-                  if (el) el.scrollBy({ left: 300, behavior: "smooth" });
-                }}
-                aria-label="Вперёд"
-              >
-                <ChevronRight size={18} />
-              </button>
+            <div className={styles.sectionHeaderRight}>
+              <Link href="/realeses" className={styles.sectionAllLink}>
+                Все аниме <ArrowRight size={13} />
+              </Link>
+              <div className={styles.scrollArrows}>
+                <button
+                  className={styles.scrollArrow}
+                  onClick={() => {
+                    const el = document.getElementById("epRow");
+                    if (el) el.scrollBy({ left: -300, behavior: "smooth" });
+                  }}
+                  aria-label="Назад"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  className={styles.scrollArrow}
+                  onClick={() => {
+                    const el = document.getElementById("epRow");
+                    if (el) el.scrollBy({ left: 300, behavior: "smooth" });
+                  }}
+                  aria-label="Вперёд"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -560,7 +565,10 @@ export default function Home() {
             <div className={styles.scheduleList}>
               {scheduleData[activeDay].map((item, idx) => {
                 const accent = getAccent(item.rating);
-                const tags = item.genres.split(",").map((t: string) => t.trim()).filter(Boolean);
+                const tags = item.genres
+                  .split(",")
+                  .map((t: string) => t.trim())
+                  .filter(Boolean);
                 return (
                   <div key={item.id} className={styles.scheduleItem}>
                     {/* Left accent bar */}

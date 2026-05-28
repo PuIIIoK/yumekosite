@@ -52,8 +52,7 @@ export default function CreateAnimePage() {
 }
 
 const SEASONS = ["Зима", "Весна", "Лето", "Осень"];
-const ANIME_FORMATS = ["ТВ", "OVA", "ONA", "Спешл"];
-const OTHER_FORMATS = ["Сериал", "Фильм", "Мультфильм", "Дорама"];
+const SERIAL_FORMATS = ["ТВ", "OVA", "ONA", "Аниме", "Спешл"];
 const STATUSES = ["Онгоинг", "Выходит", "Завершён", "Анонс"];
 const RATINGS = ["0+", "6+", "12+", "16+", "18+"];
 const ALL_GENRES = [
@@ -181,7 +180,7 @@ function CreateAnimeContent() {
   const editId = searchParams.get("id");
   const isEdit = !!editId;
 
-  const [contentType, setContentType] = useState<"anime" | "other">("anime");
+  const [contentType, setContentType] = useState<"film" | "serial">("film");
   const [form, setForm] = useState<AnimeForm>({ ...EMPTY_ANIME });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -249,6 +248,8 @@ function CreateAnimeContent() {
             badges: data.badges || [],
             relatedIds: data.relatedIds || [],
           });
+          // Определяем тип контента при редактировании
+          setContentType(data.format === "Фильм" ? "film" : "serial");
           setLoading(false);
         })
         .catch(() => {
@@ -434,9 +435,9 @@ function CreateAnimeContent() {
             <h1 className={styles.pageTitle}>
               {isEdit
                 ? "Редактировать"
-                : contentType === "anime"
-                  ? "Новое аниме"
-                  : "Новый контент"}
+                : contentType === "film"
+                  ? "Новое кино"
+                  : "Новый сериал"}
             </h1>
             <div className={styles.topBarRight}>
               <button
@@ -482,23 +483,23 @@ function CreateAnimeContent() {
             <div className={styles.contentTypeSwitch}>
               <button
                 type="button"
-                className={`${styles.contentTypeBtn} ${contentType === "anime" ? styles.contentTypeBtnActive : ""}`}
+                className={`${styles.contentTypeBtn} ${contentType === "film" ? styles.contentTypeBtnActive : ""}`}
                 onClick={() => {
-                  setContentType("anime");
-                  setField("format", "ТВ");
+                  setContentType("film");
+                  setField("format", "Фильм");
                 }}
               >
-                Аниме
+                Кино
               </button>
               <button
                 type="button"
-                className={`${styles.contentTypeBtn} ${contentType === "other" ? styles.contentTypeBtnActive : ""}`}
+                className={`${styles.contentTypeBtn} ${contentType === "serial" ? styles.contentTypeBtnActive : ""}`}
                 onClick={() => {
-                  setContentType("other");
-                  setField("format", "Сериал");
+                  setContentType("serial");
+                  setField("format", "ТВ");
                 }}
               >
-                Кино и сериалы
+                Сериалы
               </button>
             </div>
           )}
@@ -595,7 +596,11 @@ function CreateAnimeContent() {
                       className={styles.fieldInput}
                       value={form.title}
                       onChange={(e) => setField("title", e.target.value)}
-                      placeholder={contentType === "anime" ? "Магическая битва" : "Во все тяжкие"}
+                      placeholder={
+                        contentType === "film"
+                          ? "Интерстеллар"
+                          : "Во все тяжкие"
+                      }
                     />
                   </div>
                   <div className={styles.fieldGroup}>
@@ -604,7 +609,9 @@ function CreateAnimeContent() {
                       className={styles.fieldInput}
                       value={form.altTitle}
                       onChange={(e) => setField("altTitle", e.target.value)}
-                      placeholder={contentType === "anime" ? "Jujutsu Kaisen" : "Breaking Bad"}
+                      placeholder={
+                        contentType === "film" ? "Interstellar" : "Breaking Bad"
+                      }
                     />
                   </div>
                 </div>
@@ -614,7 +621,7 @@ function CreateAnimeContent() {
                     className={styles.fieldInput}
                     value={form.studio}
                     onChange={(e) => setField("studio", e.target.value)}
-                    placeholder={contentType === "anime" ? "MAPPA" : "Netflix"}
+                    placeholder="Netflix / HBO"
                   />
                 </div>
               </section>
@@ -622,14 +629,16 @@ function CreateAnimeContent() {
               {/* Section: параметры */}
               <section className={styles.section}>
                 <h3 className={styles.sectionTitle}>Параметры</h3>
-                <div className={styles.fieldGroup}>
-                  <label className={styles.fieldLabel}>Формат</label>
-                  <PillSelect
-                    options={contentType === "anime" ? ANIME_FORMATS : OTHER_FORMATS}
-                    value={form.format}
-                    onChange={(v) => setField("format", v)}
-                  />
-                </div>
+                {contentType !== "film" && (
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Формат</label>
+                    <PillSelect
+                      options={SERIAL_FORMATS}
+                      value={form.format}
+                      onChange={(v) => setField("format", v)}
+                    />
+                  </div>
+                )}
                 <div className={styles.fieldGroup}>
                   <label className={styles.fieldLabel}>Статус</label>
                   <PillSelect
