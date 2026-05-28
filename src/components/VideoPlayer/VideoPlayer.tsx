@@ -164,9 +164,11 @@ export default function VideoPlayer({
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    // Detect mobile by screen width, not touch capability
-    // Many Windows desktops/laptops report maxTouchPoints > 0 even with mouse
-    const mql = window.matchMedia("(max-width: 768px) and (pointer: coarse)");
+    // Detect mobile by primary pointer type: coarse = touch device (phone/tablet).
+    // Using pointer: coarse without a width limit so landscape phones (>768px)
+    // also get the mobile UI. Desktop touchscreens have pointer: fine (mouse
+    // is primary), so they are unaffected.
+    const mql = window.matchMedia("(pointer: coarse)");
     setIsMobile(mql.matches);
 
     const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
