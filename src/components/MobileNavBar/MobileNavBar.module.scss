@@ -1,0 +1,155 @@
+// ========================================
+// Mobile Navigation Bar
+// ========================================
+
+.mobileNavBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(10, 10, 12, 0.97);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 0;
+    display: none; // Only visible on mobile
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.navInner {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    height: 60px;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.navItem {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 1;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.4);
+    transition:
+        color 0.2s ease,
+        transform 0.15s ease;
+    overflow: hidden;
+    cursor: pointer;
+
+    &:active {
+        transform: scale(0.92);
+    }
+}
+
+.navIcon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+
+    svg {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+.navIconGlow {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    background: rgba(168, 85, 247, 0.15);
+    opacity: 0.5;
+    filter: blur(6px);
+    animation: iconGlowPulse 2s ease-in-out infinite;
+    z-index: 0;
+}
+
+@keyframes iconGlowPulse {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.55;
+        transform: scale(1.08);
+    }
+}
+
+.navLabel {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.navIndicator {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+    animation: indicatorSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes indicatorSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scaleX(0.4);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scaleX(1);
+    }
+}
+
+// Active state
+.navItemActive {
+    color: var(--accent);
+
+    .navIcon {
+        svg {
+            transform: scale(1.05);
+        }
+    }
+
+    .navLabel {
+        font-weight: 600;
+        opacity: 1;
+    }
+}
+
+// Show on mobile only
+@media (max-width: 768px) {
+    .mobileNavBar {
+        display: block;
+    }
+}
+
+// Safe area for devices with home indicator (iPhone X+)
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobileNavBar {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .navInner {
+        height: 60px;
+        padding-bottom: 0;
+    }
+}

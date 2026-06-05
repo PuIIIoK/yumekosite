@@ -7,7 +7,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--section-gap);
-    padding-bottom: 80px;
+    padding-bottom: calc(var(--mobile-nav-height, 64px) + 16px);
+
+    @media (min-width: 769px) {
+        padding-bottom: 80px;
+    }
 }
 
 // ---------- Container ----------
@@ -1209,11 +1213,11 @@
 /* Mobile responsive pass */
 @media (max-width: 768px) {
     .main {
-        gap: 38px;
-        padding-bottom: 56px;
+        gap: 28px;
+        padding-bottom: calc(var(--mobile-nav-height, 64px) + 16px);
     }
     .container {
-        padding: 0 18px;
+        padding: 0 16px;
     }
     .hero {
         padding-top: 18px;
@@ -1287,33 +1291,37 @@
         display: none;
     }
     .sectionTitle {
-        font-size: 24px;
-        line-height: 1.15;
+        font-size: 18px;
+        line-height: 1.2;
     }
     .sectionSubtitle {
-        font-size: 15px;
-        max-width: 270px;
+        font-size: 13px;
+        max-width: 220px;
     }
     .scrollArrow {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
     }
     .episodesRow {
-        gap: 16px;
-        padding-left: 2px;
-        padding-right: 18px;
-        scroll-padding-left: 18px;
+        gap: 10px;
+        padding-left: 0;
+        padding-right: 16px;
+        scroll-padding-left: 16px;
     }
     .episodeCard {
-        flex: 0 0 150px;
+        flex: 0 0 118px;
+
+        &:hover {
+            transform: none; // Disable hover effect on mobile
+        }
     }
     .episodeTitle {
-        font-size: 14px;
+        font-size: 12px;
     }
     .episodeMeta,
     .episodeGenres {
-        font-size: 12px;
+        font-size: 11px;
     }
     .supportBanner {
         flex-direction: column;

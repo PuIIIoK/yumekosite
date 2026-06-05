@@ -3538,3 +3538,173 @@
         max-height: 250px;
     }
 }
+
+// ========================================
+// Mobile Responsive Styles
+// ========================================
+@media (max-width: 768px) {
+    .inner {
+        padding: 0 14px;
+    }
+
+    // Hide left section (logo + nav) on mobile
+    .left {
+        display: none;
+    }
+
+    // Hide right section (support, bookmarks, profile) on mobile
+    .right {
+        display: none;
+    }
+
+    // Search bar takes full width on mobile
+    .searchBar {
+        display: flex;
+        position: static;
+        transform: none;
+        min-width: unset;
+        width: 100%;
+        max-width: 100%;
+        padding: 9px 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.07);
+    }
+
+    .searchBarHidden {
+        opacity: 0;
+        transform: scale(0.94) translateY(-6px);
+        pointer-events: none;
+    }
+}
+
+// Extra small devices
+@media (max-width: 480px) {
+    .inner {
+        padding: 0 12px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .right {
+        gap: 6px;
+    }
+
+    .iconBtn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .avatarGuest,
+    .avatarAuth {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+// ─── Landscape phone ───────────────────────────────────────────────────────────
+// На горизонтальном телефоне мобильный хедер (только поиск) остаётся
+@media (max-width: 900px) and (orientation: landscape) {
+    .inner {
+        padding: 0 16px;
+    }
+
+    .left {
+        display: none;
+    }
+
+    .right {
+        display: none;
+    }
+
+    .searchBar {
+        position: static;
+        transform: none;
+        min-width: unset;
+        width: 100%;
+        max-width: 100%;
+        padding: 8px 14px;
+        border-radius: 10px;
+    }
+
+    .searchBarHidden {
+        opacity: 0;
+        transform: scale(0.94) translateY(-6px);
+        pointer-events: none;
+    }
+}
+
+// ─── Small tablet (769px – 960px) ─────────────────────────────────────────────
+@media (min-width: 769px) and (max-width: 960px) {
+    .inner {
+        padding: 0 20px;
+    }
+
+    .searchBar {
+        min-width: 240px;
+        max-width: 260px;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .navLink {
+        font-size: 13.5px;
+        padding: 6px 9px;
+    }
+
+    // Скрываем кнопку поддержки — не влезает
+    .supportLink {
+        display: none;
+    }
+
+    // Скрываем разделитель
+    .divider {
+        display: none;
+    }
+
+    .logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .left {
+        gap: 16px;
+    }
+}
+
+// ─── Medium tablet (961px – 1100px) ───────────────────────────────────────────
+@media (min-width: 961px) and (max-width: 1100px) {
+    .inner {
+        padding: 0 24px;
+    }
+
+    .searchBar {
+        min-width: 340px;
+        max-width: 380px;
+        font-size: 13.5px;
+    }
+
+    .navLink {
+        font-size: 14.5px;
+        padding: 6px 11px;
+    }
+
+    .supportLink {
+        padding: 8px 14px;
+        font-size: 13.5px;
+    }
+}
+
+// ─── Large tablet / small desktop (1101px – 1280px) ───────────────────────────
+@media (min-width: 1101px) and (max-width: 1280px) {
+    .inner {
+        padding: 0 28px;
+    }
+
+    .searchBar {
+        min-width: 400px;
+    }
+}

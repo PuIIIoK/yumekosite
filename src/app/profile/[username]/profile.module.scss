@@ -1,4 +1,4 @@
-// =============================================
+﻿// =============================================
 // PROFILE PAGE — POSTMODERN
 // Brutalist typography + asymmetric grid + mono
 // =============================================
@@ -8,6 +8,7 @@
     max-width: 1240px;
     margin: 0 auto;
     padding: 32px 32px 120px;
+    padding-top: 100px;
     animation: profilePageIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -1882,6 +1883,7 @@
     .hero {
         grid-template-columns: 1fr;
         gap: 32px;
+        margin-top: 16px;
     }
 
     .heroRight {
@@ -1917,13 +1919,16 @@
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .profileWrap {
-        padding: 20px 18px 80px;
+        padding-top: 60px !important;
     }
+}
 
+@media (max-width: 600px) {
     .hero {
         padding: 32px 22px;
+        margin-top: 16px;
     }
 
     .metaLeft,
@@ -1937,6 +1942,32 @@
 
     .statCell {
         padding: 24px 18px;
+    }
+
+    .contentGrid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .colMain {
+        display: contents;
+    }
+
+    .colSide {
+        display: contents;
+    }
+
+    .colMain > .section:nth-child(1) {
+        order: 1;
+    }
+
+    .colSide > .section {
+        order: 2;
+    }
+
+    .colMain > .section:nth-child(2) {
+        order: 3;
     }
 }
 
@@ -2589,32 +2620,32 @@
     white-space: nowrap;
 }
 
-/* Mobile responsive pass */
+
+
+/* ===========================================
+   MOBILE & TABLET RESPONSIVE PASS
+   =========================================== */
+
+/* ─── MOBILE PORTRAIT (≤ 768px) ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .profileWrap {
         width: 100%;
         max-width: 100%;
-        padding: 18px 14px 72px;
+        padding: 14px 14px calc(var(--mobile-nav-height, 60px) + 24px);
     }
+
+    /* Metabar скрываем — слишком большой на мобиле */
     .metaBar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 14px;
-        font-size: 10px;
-        letter-spacing: 0.1em;
+        display: none;
     }
-    .metaLeft,
-    .metaRight {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
+
     .hero,
     .heroPrivileged {
-        grid-template-columns: 1fr;
-        gap: 24px;
-        padding: 28px 20px;
-        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 20px 18px;
+        margin-top: 8px;
         border-radius: 18px;
         box-shadow: none;
         animation: fadeUp 0.5s ease both;
@@ -2623,83 +2654,114 @@
     .heroBorderGlow {
         display: none;
     }
+
+    /* Аватар + level badge идут первыми (горизонтально) */
+    .heroRight {
+        order: -1;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+    .avatarFrame {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        flex-shrink: 0;
+        &:hover {
+            transform: none;
+            box-shadow: none;
+        }
+    }
+    .avatarFrame::before {
+        inset: 4px;
+        border-radius: 13px;
+    }
+    .avatarInitial {
+        font-size: 36px;
+    }
+    .avatarImg {
+        border-radius: 14px;
+    }
+    .levelBadge {
+        flex: 1;
+        width: auto;
+        max-width: 130px;
+        padding: 5px 10px;
+        align-self: flex-start;
+    }
+    .levelBadgeNum {
+        font-size: 15px;
+    }
+    .editBtn {
+        align-self: flex-start;
+        padding: 8px 12px;
+        font-size: 10px;
+        letter-spacing: 0.06em;
+    }
+
+    /* Левая часть — имя и мета */
+    .heroLeft {
+        gap: 8px;
+    }
     .displayName {
-        font-size: clamp(32px, 11vw, 50px);
-        line-height: 0.95;
+        font-size: clamp(28px, 9.5vw, 44px);
+        line-height: 0.92;
         word-break: break-word;
     }
     .displayNameSub {
-        font-size: clamp(22px, 7vw, 34px);
+        font-size: clamp(18px, 6.5vw, 30px);
         -webkit-text-stroke: 1px var(--text-primary);
     }
     .handleLine {
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
     }
     .handle {
-        font-size: 13px;
+        font-size: 12px;
     }
     .heroSubRow {
-        gap: 8px;
+        gap: 6px;
+        flex-wrap: wrap;
     }
     .adminBadge,
     .roleBadge {
-        font-size: 10px;
-        padding: 3px 8px;
+        font-size: 9px;
+        padding: 3px 7px;
     }
     .verifiedBadge {
-        font-size: 10px;
+        font-size: 9px;
     }
     .bodyText {
-        font-size: 14px;
-    }
-    .heroRight {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-    }
-    .avatarFrame {
-        width: 100px;
-        height: 100px;
-        border-radius: 18px;
-    }
-
-    .levelBadge {
-        width: 100px;
-        padding: 5px 10px;
-    }
-
-    .levelBadgeNum {
-        font-size: 16px;
-    }
-    .avatarFrame::before {
-        inset: 5px;
-        border-radius: 14px;
-    }
-    .avatarInitial {
-        font-size: 48px;
-    }
-    .editBtn {
-        padding: 10px 14px;
-        font-size: 11px;
+        font-size: 13px;
+        line-height: 1.55;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
     .addFriendBtn {
-        padding: 8px 16px;
-        font-size: 11px;
-        margin-top: 10px;
+        padding: 8px 14px;
+        font-size: 10px;
+        margin-top: 8px;
+        letter-spacing: 0.05em;
     }
+
+    /* Статистика 2 колонки */
     .statsGrid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 8px;
+        margin-top: 12px;
     }
     .statCell {
-        padding: 18px 14px;
-        min-height: 100px;
+        padding: 14px 12px;
+        min-height: 90px;
         border-radius: 14px;
     }
     .statValue {
-        font-size: clamp(28px, 10vw, 44px);
+        font-size: clamp(26px, 9vw, 40px);
     }
     .statIndex {
         font-size: 9px;
@@ -2707,49 +2769,53 @@
     .statLabel {
         font-size: 10px;
     }
+
+    /* Контент в одну колонку */
     .contentGrid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 10px;
+        margin-top: 12px;
     }
     .section {
-        padding: 22px 18px;
+        padding: 18px 16px;
         border-radius: 16px;
     }
     .sectionHeader {
-        gap: 10px;
-        margin-bottom: 16px;
+        gap: 8px;
+        margin-bottom: 14px;
         flex-wrap: wrap;
     }
     .sectionTitle {
-        font-size: 16px;
+        font-size: 15px;
     }
     .sectionIndex {
         font-size: 10px;
     }
     .activityItem {
-        gap: 12px;
-        padding: 12px 0;
+        gap: 10px;
+        padding: 10px 0;
     }
     .activityPoster {
-        width: 34px;
-        height: 48px;
+        width: 32px;
+        height: 44px;
     }
     .infoRow {
         align-items: flex-start;
-        gap: 12px;
+        gap: 10px;
     }
     .infoValue {
         text-align: right;
+        font-size: 13px;
     }
     .footerMark {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
-        padding: 14px 16px;
-        font-size: 11px;
+        gap: 4px;
+        padding: 12px 14px;
+        font-size: 10px;
     }
 
-    // Modals — bottom sheet style
+    /* Модалки — bottom sheet */
     .bookmarksModal,
     .friendsModal {
         top: auto;
@@ -2769,66 +2835,52 @@
         animation: mobileSheetOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
     @keyframes mobileSheetIn {
-        from {
-            opacity: 0;
-            transform: translateY(28px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(28px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
     @keyframes mobileSheetOut {
-        from {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateY(28px);
-        }
+        from { opacity: 1; transform: translateY(0); }
+        to   { opacity: 0; transform: translateY(28px); }
     }
     .bookmarksHeader,
     .friendsHeader {
-        padding: 16px;
-        gap: 12px;
+        padding: 14px 16px;
+        gap: 10px;
     }
     .bookmarksBody,
     .friendsBody {
-        padding: 16px;
+        padding: 14px 16px;
     }
     .bookmarksTabs {
         overflow-x: auto;
         scrollbar-width: none;
-    }
-    .bookmarksTabs::-webkit-scrollbar {
-        display: none;
+        &::-webkit-scrollbar { display: none; }
     }
     .bookmarksTabBtn {
-        padding: 10px 14px;
+        padding: 8px 12px;
         white-space: nowrap;
-        font-size: 13px;
+        font-size: 12px;
     }
     .bookmarksGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
     }
     .bookmarkCardTitle {
-        font-size: 12px;
+        font-size: 11px;
     }
     .friendsGrid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        gap: 10px;
     }
     .friendCardBanner {
-        height: 96px;
+        height: 80px;
     }
     .friendCardBody {
         padding: 10px 12px;
-        gap: 10px;
+        gap: 8px;
     }
     .friendName {
-        font-size: 14px;
+        font-size: 13px;
     }
     .friendHandle {
         font-size: 11px;
@@ -2838,36 +2890,215 @@
         padding: 2px 6px;
     }
     .searchClose {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
     }
 }
 
+/* ─── SMALL PHONE (≤ 420px) ─────────────────────────────────────────────────── */
 @media (max-width: 420px) {
     .profileWrap {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: calc(var(--mobile-nav-height, 60px) + 24px);
     }
     .hero,
     .heroPrivileged {
-        padding: 22px 16px;
+        padding: 18px 14px;
+    }
+    .avatarFrame {
+        width: 72px;
+        height: 72px;
+        border-radius: 14px;
+    }
+    .levelBadge {
+        max-width: 110px;
+    }
+    .levelBadgeNum {
+        font-size: 13px;
     }
     .statsGrid {
-        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .statCell {
+        padding: 12px 8px;
+        min-height: 82px;
+    }
+    .statValue {
+        font-size: clamp(22px, 8.5vw, 36px);
+    }
+    .bookmarksGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .friendsTabBtn {
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+    .section {
+        padding: 16px 12px;
+    }
+    .displayName {
+        font-size: clamp(24px, 9vw, 38px);
+    }
+    .displayNameSub {
+        font-size: clamp(16px, 6vw, 26px);
+    }
+    .contentGrid {
+        gap: 8px;
     }
     .heroRight {
         flex-direction: column;
         align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+/* ─── LANDSCAPE PHONE (горизонтальное расположение) ─────────────────────────── */
+@media (max-width: 900px) and (orientation: landscape) {
+    .profileWrap {
+        padding: 10px 20px calc(var(--mobile-nav-height, 60px) + 16px);
+    }
+    .metaBar {
+        display: none;
+    }
+    .hero,
+    .heroPrivileged {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        padding: 18px 22px;
+        margin-top: 8px;
+        border-radius: 16px;
+    }
+    .heroRight {
+        order: 0;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        width: auto;
+        margin-bottom: 0;
     }
     .avatarFrame {
-        width: 90px;
-        height: 90px;
+        width: 80px;
+        height: 80px;
+        border-radius: 14px;
+        &:hover { transform: none; }
     }
-    .bookmarksGrid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .avatarInitial {
+        font-size: 36px;
     }
-    .friendsTabBtn {
-        font-size: 12px;
-        padding: 6px 14px;
+    .levelBadge {
+        flex: unset;
+        width: 80px;
+        max-width: unset;
+        padding: 4px 8px;
+    }
+    .levelBadgeNum {
+        font-size: 14px;
+    }
+    .editBtn {
+        padding: 7px 10px;
+        font-size: 10px;
+    }
+    .displayName {
+        font-size: clamp(24px, 5.5vw, 42px);
+    }
+    .displayNameSub {
+        font-size: clamp(16px, 3.5vw, 28px);
+    }
+    .statsGrid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .statCell {
+        padding: 12px 8px;
+        min-height: 72px;
+    }
+    .statValue {
+        font-size: clamp(20px, 4vw, 32px);
+    }
+    .contentGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .section {
+        padding: 16px 14px;
+    }
+    .heroLeft {
+        gap: 6px;
+    }
+    .heroSubRow {
+        gap: 4px;
+    }
+    .bodyText {
+        -webkit-line-clamp: 2;
+    }
+}
+
+/* ─── TABLET PORTRAIT (769px – 1024px) ──────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .profileWrap {
+        width: 100%;
+        max-width: 100%;
+        padding: 24px 24px 80px;
+    }
+    .metaBar {
+        font-size: 10px;
+        padding: 10px 16px;
+    }
+    .hero,
+    .heroPrivileged {
+        gap: 32px;
+        padding: 36px 28px;
+    }
+    .avatarFrame {
+        width: 140px;
+        height: 140px;
+    }
+    .avatarInitial {
+        font-size: 68px;
+    }
+    .displayName {
+        font-size: clamp(40px, 6.5vw, 72px);
+    }
+    .displayNameSub {
+        font-size: clamp(26px, 4.5vw, 48px);
+    }
+    .statsGrid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+    .statCell {
+        padding: 20px 14px;
+    }
+    .contentGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    .levelBadge {
+        width: 140px;
+    }
+}
+
+/* ─── TABLET LANDSCAPE / SMALL DESKTOP (1025px – 1240px) ────────────────────── */
+@media (min-width: 1025px) and (max-width: 1240px) {
+    .profileWrap {
+        width: 100%;
+        max-width: 100%;
+        padding: 28px 28px 80px;
+    }
+    .hero,
+    .heroPrivileged {
+        gap: 36px;
+        padding: 40px 32px;
+    }
+    .statsGrid {
+        gap: 12px;
+    }
+    .contentGrid {
+        gap: 18px;
     }
 }

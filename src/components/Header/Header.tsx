@@ -970,7 +970,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        {/* Left */}
+        {/* Left - hidden on mobile */}
         <div className={styles.left}>
           <Link href="/" className={styles.logo}>
             <video
@@ -1000,7 +1000,7 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Center — Search */}
+        {/* Center — Search (full width on mobile) */}
         <button
           className={`${styles.searchBar} ${searchOpen ? styles.searchBarHidden : ""}`}
           onClick={() => setSearchOpen(true)}
@@ -1009,7 +1009,7 @@ export default function Header() {
           <span>Поиск</span>
         </button>
 
-        {/* Right */}
+        {/* Right - hidden on mobile */}
         <div className={styles.right}>
           <Link href="/support" className={styles.supportLink}>
             <Heart size={15} strokeWidth={2.5} />

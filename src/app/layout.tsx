@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { StatusProvider } from "@/context/StatusContext";
 import ParticleCanvas from "@/components/ParticleCanvas/ParticleCanvas";
 import LevelUpModal from "@/components/LevelUpModal/LevelUpModal";
+import MobileNavBarContainer from "@/components/MobileNavBar/MobileNavBarContainer";
 import "./globals.scss";
 
 const geistSans = Geist({
@@ -62,6 +63,7 @@ export default function RootLayout({
             <StatusProvider>
               {children}
               <LevelUpModal />
+              <MobileNavBarContainer />
             </StatusProvider>
           </AuthProvider>
         </AppearanceProvider>
