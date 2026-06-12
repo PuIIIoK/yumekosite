@@ -324,10 +324,110 @@
 
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 640px) {
+    .comments {
+        gap: 16px;
+        padding: 4px 0 24px;
+    }
+
+    .authPrompt {
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+
+    .authPromptBtn {
+        margin-left: 0;
+        padding: 7px 12px;
+        font-size: 12px;
+        flex-shrink: 0;
+    }
+
+    .newComment {
+        gap: 10px;
+    }
+
+    .commentAvatar {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .commentAvatarSm {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .newCommentBox {
+        gap: 6px;
+    }
+
+    .textarea {
+        min-height: 64px;
+        padding: 10px 12px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    .textareaSmall {
+        min-height: 52px;
+        padding: 9px 10px;
+    }
+
+    .formActions {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .btnPrimary,
+    .btnGhost,
+    .reactionBtn,
+    .actionBtn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .commentList {
+        gap: 14px;
+    }
+
+    .commentCard {
+        gap: 10px;
+    }
+
+    .commentHeader {
+        gap: 6px;
+        margin-bottom: 3px;
+    }
+
+    .commentAuthor {
+        font-size: 12px;
+    }
+
+    .commentTime,
+    .editedBadge {
+        font-size: 10px;
+    }
+
+    .commentText {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .commentActions {
+        gap: 4px;
+        margin-top: 6px;
+    }
+
+    .actionSep {
+        height: 10px;
+    }
+
     .repliesSection {
-        margin-left: 20px;
+        margin-left: 12px;
     }
     .replyFormWrap {
-        margin-left: 20px;
+        margin-left: 12px;
     }
 }

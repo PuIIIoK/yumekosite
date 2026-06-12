@@ -1082,7 +1082,7 @@
     top: auto;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: calc(var(--mobile-nav-height, 60px) + env(safe-area-inset-bottom) + 4px);
     transform: none;
     min-width: auto;
     max-width: none;
@@ -1125,11 +1125,11 @@
     top: auto;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: calc(var(--mobile-nav-height, 60px) + env(safe-area-inset-bottom) + 4px);
     transform: none;
     width: 100%;
-    max-height: 70vh;
-    border-radius: 20px 20px 0 0;
+    max-height: 80vh;
+    border-radius: 20px 20px 12px 12px;
     border: none;
     box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
     overflow-y: auto;
@@ -1166,7 +1166,7 @@
   }
 
   .settingsPane {
-    max-height: calc(65vh - 60px);
+    max-height: calc(80vh - 68px);
   }
 
   .settingsToggleRow {

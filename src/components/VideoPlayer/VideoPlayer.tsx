@@ -8,7 +8,47 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import Hls from "hls.js";
+import { Client as StompClient, type IMessage } from "@stomp/stompjs";
 import { API_URL } from "@/config/hosts";
+
+// WS URL derives from API_URL (http→ws, https→wss)
+const WS_URL = API_URL.replace(/^http/, "ws");
+
+// ─── Segment buffer (filled by WS, consumed by hls.js loader) ───────────────
+/**
+ * Build blob URLs for each variant playlist and rewrite the master m3u8
+ * so hls.js loads everything locally — zero HTTP for playlists.
+ * Segments still go through HTTP to our API proxy (never CDN).
+ *
+ * Returns: { masterBlobUrl, revoke() }
+ */
+function makeBlobPlaylists(
+  masterM3u8: string,
+  variantPlaylists: Record<string, string>,
+): { masterBlobUrl: string; revoke: () => void } {
+  const blobUrls: string[] = [];
+  let rewrittenMaster = masterM3u8;
+
+  for (const [variant, content] of Object.entries(variantPlaylists)) {
+    const blob = new Blob([content], { type: "application/vnd.apple.mpegurl" });
+    const blobUrl = URL.createObjectURL(blob);
+    blobUrls.push(blobUrl);
+    // Replace the variant playlist URL in master with the local blob URL
+    rewrittenMaster = rewrittenMaster.replace(
+      new RegExp(`https?://[^\\s]+/${variant}/playlist\.m3u8`, "g"),
+      blobUrl,
+    );
+  }
+
+  const masterBlob = new Blob([rewrittenMaster], { type: "application/vnd.apple.mpegurl" });
+  const masterBlobUrl = URL.createObjectURL(masterBlob);
+  blobUrls.push(masterBlobUrl);
+
+  return {
+    masterBlobUrl,
+    revoke: () => blobUrls.forEach(u => URL.revokeObjectURL(u)),
+  };
+}
 import {
   Play,
   Pause,
@@ -149,6 +189,12 @@ export default function VideoPlayer({
   const speedBeforeHold = useRef(1);
   const spaceHeld = useRef(false);
   const mouseHeld = useRef(false);
+
+  // HLS session state
+  const hlsSessionIdRef  = useRef<string | null>(null);
+  const hlsVariantRef    = useRef<string>("360p"); // current variant for WS
+  const stompClientRef   = useRef<StompClient | null>(null);
+  const segmentCacheRef  = useRef<Map<string, Uint8Array>>(new Map());
 
   // Mobile gesture state
   const [isMobile, setIsMobile] = useState(false);
@@ -399,10 +445,10 @@ export default function VideoPlayer({
     [userId, currentEpisodeId],
   );
 
-  // ── HLS setup ──
+  // ── HLS setup (REST session init + STOMP prefetch + cached loader) ──
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
+    if (!video || !src || !currentEpisodeId) return;
 
     setLoading(true);
     setPlaying(false);
@@ -410,49 +456,157 @@ export default function VideoPlayer({
     setDuration(0);
     resumeFetched.current = false;
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({ startLevel: -1 });
+    // Clear previous segment cache (no residual data between episodes)
+    segmentCacheRef.current.clear();
+
+    let destroyed = false;
+    let stomp: StompClient | null = null;
+    let hls: Hls | null = null;
+
+    let cleanup = () => {
+      destroyed = true;
+      if (stomp) { stomp.deactivate(); stompClientRef.current = null; }
+      if (hls)   { hls.destroy();    hlsRef.current = null; }
+      segmentCacheRef.current.clear();
+      const sid = hlsSessionIdRef.current;
+      if (sid) {
+        // fetch with keepalive=true survives page unload (like sendBeacon but supports DELETE)
+        fetch(`${API_URL}/api/hls/session/${sid}`, { method: "DELETE", keepalive: true }).catch(() => {});
+        hlsSessionIdRef.current = null;
+      }
+    };
+
+    (async () => {
+      // ── Step 1: REST — create HLS session (returns playlist content inline) ──
+      let sessionId: string;
+      let variants: string[];
+      let masterM3u8: string;
+      let variantPlaylists: Record<string, string>;
+
+      try {
+        const res = await fetch(
+          `${API_URL}/api/hls/session/${currentEpisodeId}`,
+          { method: "POST" },
+        );
+        if (!res.ok) throw new Error(`Session init failed: ${res.status}`);
+        const body = await res.json();
+        sessionId        = body.sessionId;
+        variants         = body.variants ?? [];
+        masterM3u8       = body.masterM3u8 ?? "";
+        variantPlaylists = body.variantPlaylists ?? {};
+      } catch (err) {
+        console.error("[HLS] session init failed, falling back to src:", err);
+        if (!destroyed && Hls.isSupported()) {
+          hls = new Hls({ startLevel: -1 });
+          hlsRef.current = hls;
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+            setQualities(data.levels.map((l, i) => ({ index: i, label: `${l.height}p`, height: l.height })));
+            setCurrentQuality(-1);
+            if (!resumeFetched.current) {
+              resumeFetched.current = true;
+              fetchAndResume(video).then(() => { if (autoPlay) video.play().catch(() => {}); });
+            }
+          });
+        }
+        return;
+      }
+
+      if (destroyed) return;
+      hlsSessionIdRef.current = sessionId;
+
+      const initVariant = variants.length > 0 ? variants[0] : "360p";
+      hlsVariantRef.current = initVariant;
+
+      // Build blob URLs for all variant playlists and rewrite master m3u8 to reference them.
+      // hls.js loads playlists from blobs (zero HTTP), segments go through our API proxy.
+      const { masterBlobUrl, revoke: revokePlaylists } = makeBlobPlaylists(masterM3u8, variantPlaylists);
+
+      // ── Step 2: STOMP WebSocket — subscribe for segment prefetch ──
+      stomp = new StompClient({
+        brokerURL: `${WS_URL}/ws/hls/websocket`,
+        reconnectDelay: 0,
+        onConnect: () => {
+          if (destroyed) return;
+          stompClientRef.current = stomp;
+
+          stomp!.subscribe(`/topic/hls/${sessionId}`, (frame: IMessage) => {
+            if (destroyed) return;
+            try {
+              const msg = JSON.parse(frame.body);
+              if (msg.type === "segment" && msg.data) {
+                const raw = atob(msg.data);
+                const buf = new Uint8Array(raw.length);
+                for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+                segmentCacheRef.current.set(msg.segKey, buf);
+
+                stomp!.publish({
+                  destination: "/app/hls/consumed",
+                  body: JSON.stringify({ sessionId, variant: msg.variant, index: msg.index }),
+                });
+              }
+            } catch (e) {
+              console.warn("[HLS-WS] parse error", e);
+            }
+          });
+
+          stomp!.publish({
+            destination: "/app/hls/subscribe",
+            body: JSON.stringify({ sessionId, variant: initVariant, startSegment: 0 }),
+          });
+        },
+        onDisconnect: () => { stompClientRef.current = null; },
+        onStompError: (f) => console.error("[HLS-WS] STOMP error", f),
+      });
+      stomp.activate();
+
+      // ── Step 3: hls.js — pLoader from memory, fLoader polls WS cache ──
+      if (!Hls.isSupported()) {
+        video.src = masterBlobUrl;
+        video.addEventListener("loadedmetadata", () => {
+          fetchAndResume(video).then(() => { if (autoPlay) video.play().catch(() => {}); });
+        });
+        return;
+      }
+
+      hls = new Hls({ startLevel: -1 });
       hlsRef.current = hls;
-      hls.loadSource(src);
+      hls.loadSource(masterBlobUrl);
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-        const levels = data.levels.map((l, i) => ({
-          index: i,
-          label: `${l.height}p`,
-          height: l.height,
-        }));
+        const levels = data.levels.map((l, i) => ({ index: i, label: `${l.height}p`, height: l.height }));
         setQualities(levels);
         setCurrentQuality(-1);
         if (!resumeFetched.current) {
           resumeFetched.current = true;
-          fetchAndResume(video).then(() => {
-            if (autoPlay) video.play().catch(() => {});
-          });
+          fetchAndResume(video).then(() => { if (autoPlay) video.play().catch(() => {}); });
         } else {
           if (autoPlay) video.play().catch(() => {});
         }
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
-        if (currentQuality === -1) {
-          // still auto
-        }
-      });
-
-      return () => {
-        hls.destroy();
-        hlsRef.current = null;
-      };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
-      video.addEventListener("loadedmetadata", () => {
-        fetchAndResume(video).then(() => {
-          if (autoPlay) video.play().catch(() => {});
+        const level = hls!.levels[data.level];
+        if (!level) return;
+        const variant = `${level.height}p`;
+        if (variant === hlsVariantRef.current) return;
+        hlsVariantRef.current = variant;
+        const segIdx = Math.max(0, Math.floor((video.currentTime - 5) / 10));
+        stompClientRef.current?.publish({
+          destination: "/app/hls/quality",
+          body: JSON.stringify({ sessionId, variant, startSegment: segIdx }),
         });
       });
-    }
-  }, [src]);
+
+      // Revoke all blob URLs on destroy
+      const origCleanup = cleanup;
+      cleanup = () => { revokePlaylists(); origCleanup(); };
+    })();
+
+    return () => cleanup();
+  }, [src, currentEpisodeId]);
 
   // ── Video events ──
   useEffect(() => {

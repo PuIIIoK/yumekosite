@@ -932,25 +932,25 @@
 
   .hero {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 18px;
   }
 
   .poster {
-    max-width: 220px;
+    max-width: 200px;
   }
 
   .title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .infoRow dt {
-    width: 100px;
+    width: 92px;
   }
 
   .epRow {
-    grid-template-columns: 32px minmax(0, 1fr) auto;
-    gap: 10px;
-    padding: 10px 12px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 9px 10px;
   }
 
   .epRowWatched {
@@ -958,17 +958,17 @@
   }
 
   .relatedTimelineHeader {
-    padding: 16px;
+    padding: 14px;
   }
 
   .relatedTimelineRow {
-    grid-template-columns: 64px minmax(0, 1fr);
-    gap: 12px;
-    padding: 12px;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
   }
 
   .relatedTimelinePoster {
-    width: 64px;
+    width: 56px;
   }
 
   .relatedTimelineIndex {
@@ -982,59 +982,76 @@
 
 /* Mobile responsive pass */
 @media (max-width: 768px) {
-  .main { padding-top: calc(var(--header-height) + 14px); padding-bottom: 60px; }
-  .container { padding: 0 14px; }
-  .breadcrumb { margin-bottom: 18px; font-size: 12px; gap: 4px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .main { padding-top: calc(var(--header-height) + 12px); padding-bottom: calc(var(--mobile-nav-height, 60px) + env(safe-area-inset-bottom) + 20px); }
+  .container { padding: 0 12px; }
+  .breadcrumb { margin-bottom: 14px; font-size: 11px; gap: 4px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
   .breadcrumb::-webkit-scrollbar { display: none; }
-  .breadcrumb span { max-width: 180px; }
-  .hero { grid-template-columns: 1fr; gap: 20px; }
-  .poster { max-width: 100%; min-height: 320px; border-radius: 14px; margin: 0 auto; width: 200px; }
+  .breadcrumb span { max-width: 150px; }
+  .hero { grid-template-columns: 1fr; gap: 16px; }
+  .poster { max-width: 100%; min-height: 260px; border-radius: 14px; margin: 0 auto; width: 170px; }
   .posterTop { top: 8px; left: 8px; right: 8px; }
-  .heroInfo { gap: 12px; }
-  .title { font-size: clamp(22px, 6vw, 30px); line-height: 1.15; }
-  .altTitle { font-size: 13px; }
-  .heroBadges { gap: 6px; flex-wrap: wrap; }
-  .statusBadge, .formatBadge { font-size: 11px; padding: 4px 12px; }
-  .infoRow { font-size: 12px; gap: 8px; padding: 4px 0; }
-  .infoRow dt { width: 90px; font-size: 11px; }
-  .actions { gap: 8px; flex-wrap: wrap; }
-  .collectionBtn { height: 44px; font-size: 14px; border-radius: 14px; flex: 1; justify-content: center; }
-  .collectionDropdown { position: fixed; top: auto; left: 12px; right: 12px; bottom: 12px; min-width: auto; border-radius: 18px; z-index: 1000; }
-  .iconBtn { width: 44px; height: 44px; }
-  .descBlock { padding-top: 20px; margin-top: 20px; }
-  .description { font-size: 14px; line-height: 1.75; }
-  .tabsRow { margin-top: 4px; margin-bottom: 18px; flex-wrap: wrap; gap: 8px; }
+  .epTag, .ratingTag { padding: 3px 8px; font-size: 10px; }
+  .heroInfo { gap: 10px; }
+  .title { font-size: clamp(20px, 5.8vw, 26px); line-height: 1.12; }
+  .altTitle { font-size: 12px; margin-top: -6px; }
+  .heroBadges { gap: 5px; flex-wrap: wrap; }
+  .statusBadge, .formatBadge { font-size: 10px; padding: 4px 10px; }
+  .infoRow { font-size: 11px; gap: 8px; padding: 3px 0; }
+  .infoRow dt { width: 82px; font-size: 10.5px; }
+  .actions { gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .collectionBtn { height: 42px; font-size: 13px; border-radius: 12px; flex: 1; justify-content: center; }
+  .collectionDropdown { position: fixed; top: auto; left: 10px; right: 10px; bottom: 10px; min-width: auto; border-radius: 16px; z-index: 1000; }
+  .iconBtn { width: 42px; height: 42px; }
+  .descBlock { padding-top: 16px; margin-top: 16px; }
+  .description { font-size: 13px; line-height: 1.65; }
+  .tabsRow { margin-top: 2px; margin-bottom: 14px; flex-wrap: wrap; gap: 6px; }
   .tabs { overflow-x: auto; scrollbar-width: none; width: 100%; }
   .tabs::-webkit-scrollbar { display: none; }
-  .tab, .tabActive { padding: 10px 16px; font-size: 13px; white-space: nowrap; }
+  .tab, .tabActive { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
   .viewToggle { display: none; }
   .studioTabs { gap: 4px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   .studioTabs::-webkit-scrollbar { display: none; }
-  .studioTab { padding: 6px 14px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .studioTab { padding: 5px 12px; font-size: 11px; white-space: nowrap; flex-shrink: 0; }
   .episodesList { border-radius: 12px; }
-  .epRow { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; }
-  .epNumber { font-size: 13px; }
-  .epRowTitle { font-size: 13px; }
-  .epRowDuration { font-size: 11px; }
+  .epRow { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; padding: 9px 10px; }
+  .epNumber { font-size: 12px; }
+  .epRowTitle { font-size: 12px; }
+  .epRowDuration { font-size: 10px; }
   .epRowWatched { display: none; }
-  .episodesGrid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-  .epCard { border-radius: 12px; }
+  .episodesGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .epCard { border-radius: 10px; }
+  .epCardThumb { aspect-ratio: 16 / 9; padding: 6px; }
+  .epCardInfo { gap: 1px; }
+  .epCardTitle { font-size: 11px; }
+  .epCardNum { font-size: 13px; }
+  .epCardDuration { font-size: 9px; padding: 3px 6px; bottom: 8px; right: 8px; }
+  .epCardWatched, .epCardCurrentLabel { top: 8px; right: 8px; font-size: 9px; padding: 2px 6px; }
   .relatedTimeline { border-radius: 14px; }
-  .relatedTimelineRow { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 12px; }
-  .relatedTimelinePoster { width: 64px; }
+  .relatedTimelineRow { grid-template-columns: 56px minmax(0, 1fr); gap: 10px; padding: 10px; }
+  .relatedTimelinePoster { width: 56px; }
   .relatedTimelineIndex { display: none; }
-  .relatedTimelineName { font-size: 14px; }
-  .relatedTimelineAlt { font-size: 12px; }
-  .emptyTab { padding: 32px 16px; font-size: 13px; }
-  .voiceCastSection { padding: 16px; }
+  .relatedTimelineName { font-size: 13px; }
+  .relatedTimelineAlt { font-size: 11px; }
+  .emptyTab { padding: 26px 14px; font-size: 12px; }
+  .voiceCastSection { padding: 14px; margin-top: 18px; }
   .voiceCastGrid { grid-template-columns: 1fr; }
-  .voiceCastItem { padding: 8px 10px; font-size: 12px; }
+  .voiceCastItem { padding: 7px 10px; font-size: 11px; }
 }
 
 @media (max-width: 420px) {
-  .poster { width: 180px; min-height: 280px; }
-  .episodesGrid { grid-template-columns: 1fr; }
+  .hero { gap: 14px; }
+  .poster { width: 160px; min-height: 240px; }
+  .title { font-size: 20px; }
+  .infoRow { gap: 6px; }
+  .infoRow dt { width: 76px; }
+  .episodesGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .epCardThumb { aspect-ratio: 16 / 9; padding: 5px; }
+  .epCardTitle { font-size: 10px; }
+  .epCardNum { font-size: 12px; }
+  .epCardDuration { font-size: 8px; padding: 3px 5px; }
+  .voiceCastSection { padding: 12px; }
 }
+
 
 // ── Voice Cast ──
 .voiceCastSection {

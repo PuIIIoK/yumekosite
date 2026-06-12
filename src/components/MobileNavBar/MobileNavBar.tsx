@@ -30,10 +30,10 @@ export default function MobileNavBar() {
   }, [pathname]);
 
   const getProfileHref = () => {
-    if (user?.username) {
+    if (isAuthenticated && user?.username) {
       return `/profile/${user.username}`;
     }
-    return "/profile";
+    return "/";
   };
 
   const NAV_ITEMS: NavItem[] = [
@@ -63,6 +63,11 @@ export default function MobileNavBar() {
               key={item.key}
               href={item.href}
               className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
+              onClick={(e) => {
+                if (item.key !== "profile" || isAuthenticated) return;
+                e.preventDefault();
+                window.dispatchEvent(new Event("yumeko:open-auth"));
+              }}
             >
               <div className={styles.navIcon}>
                 <item.Icon size={22} strokeWidth={isActive ? 2.5 : 2} />

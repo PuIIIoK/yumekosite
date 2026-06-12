@@ -568,6 +568,12 @@ export default function Header() {
   }, [authMode, authOpen]);
 
   useEffect(() => {
+    const openAuth = () => setAuthOpen(true);
+    window.addEventListener("yumeko:open-auth", openAuth);
+    return () => window.removeEventListener("yumeko:open-auth", openAuth);
+  }, []);
+
+  useEffect(() => {
     const anyModalOpen = searchOpen || settingsOpen || authOpen;
     if (!anyModalOpen) return;
 
