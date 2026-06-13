@@ -26,6 +26,7 @@ import UserStatusIndicator from "@/components/UserStatus/UserStatusIndicator";
 import styles from "./profile.module.scss";
 import { API_URL } from "@/config/hosts";
 import type { AnimeDetails } from "@/data/anime";
+import { isAnimeHidden } from "@/data/anime";
 import { getAccent } from "@/data/anime";
 
 const STATUS_LABELS: Record<string, string> = {
