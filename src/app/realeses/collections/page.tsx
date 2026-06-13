@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
-import { type AnimePreview, getAccent } from "@/data/anime";
+import { type AnimePreview, getAccent, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./collections.module.scss";
 
@@ -121,6 +121,7 @@ export default function CollectionsPage() {
         const map: Record<number, AnimePreview> = {};
         if (Array.isArray(animeData)) {
           for (const a of animeData) {
+            if (isAnimeHidden(a)) continue;
             map[a.id] = a;
           }
         }
@@ -128,10 +129,12 @@ export default function CollectionsPage() {
 
         // Enrich collection items with anime data
         const enriched = Array.isArray(collData)
-          ? collData.map((item) => ({
-              ...item,
-              anime: item.anime ?? map[item.animeId],
-            }))
+          ? collData
+              .map((item) => ({
+                ...item,
+                anime: item.anime ?? map[item.animeId],
+              }))
+              .filter((item) => item.anime && !isAnimeHidden(item.anime))
           : [];
         setCollectionItems(enriched);
       })

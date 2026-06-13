@@ -248,7 +248,9 @@ export default function ProfilePage() {
   useEffect(() => {
     fetch(`${API_URL}/api/anime`)
       .then((r) => r.json())
-      .then((d: AnimeDetails[]) => setAnimeCatalog(d))
+      .then((d: AnimeDetails[]) =>
+        setAnimeCatalog(d.filter((anime) => !isAnimeHidden(anime))),
+      )
       .catch(() => {});
   }, []);
 

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header/Header";
-import { type AnimePreview, getAccent as getAccentFn } from "@/data/anime";
+import { type AnimePreview, getAccent as getAccentFn, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
@@ -166,7 +166,9 @@ export default function Home() {
   useEffect(() => {
     fetch(`${API_URL}/api/anime`)
       .then((r) => r.json())
-      .then((data: AnimePreview[]) => setNewEpisodes(data))
+      .then((data: AnimePreview[]) =>
+        setNewEpisodes(data.filter((anime) => !isAnimeHidden(anime))),
+      )
       .catch(() => {});
   }, []);
 

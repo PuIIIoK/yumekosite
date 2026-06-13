@@ -32,7 +32,7 @@ import {
   Wifi,
   ChevronLeft,
 } from "lucide-react";
-import { type AnimeDetails, getAccent } from "@/data/anime";
+import { type AnimeDetails, getAccent, isAnimeHidden } from "@/data/anime";
 import {
   useAppearance,
   ACCENT_COLORS,
@@ -70,7 +70,9 @@ export default function Header() {
   useEffect(() => {
     fetch(`${API_URL}/api/anime`)
       .then((r) => r.json())
-      .then((data: AnimeDetails[]) => setAnimeCatalog(data))
+      .then((data: AnimeDetails[]) =>
+        setAnimeCatalog(data.filter((anime) => !isAnimeHidden(anime))),
+      )
       .catch(() => {});
   }, []);
   const [userResults, setUserResults] = useState<any[]>([]);
@@ -880,9 +882,10 @@ export default function Header() {
       const q = searchQuery.toLowerCase();
       const results = animeCatalog.filter(
         (a) =>
-          a.title.toLowerCase().includes(q) ||
-          (a.altTitle && a.altTitle.toLowerCase().includes(q)) ||
-          (a.genres && a.genres.toLowerCase().includes(q)),
+          !isAnimeHidden(a) &&
+          (a.title.toLowerCase().includes(q) ||
+            (a.altTitle && a.altTitle.toLowerCase().includes(q)) ||
+            (a.genres && a.genres.toLowerCase().includes(q))),
       );
       setSearchResults(results);
 
@@ -3602,7 +3605,9 @@ export default function Header() {
                   );
                 }
                 const ids = collectionMap[bookmarksTab] || [];
-                const items = animeCatalog.filter((a) => ids.includes(a.id));
+                const items = animeCatalog.filter(
+                  (a) => ids.includes(a.id) && !isAnimeHidden(a),
+                );
                 if (items.length === 0) {
                   return (
                     <div className={styles.bookmarksEmpty}>

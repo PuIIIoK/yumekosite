@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
-import { fetchAnimeById, getAccent } from "@/data/anime";
+import { fetchAnimeById, getAccent, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import EpisodePlayerContent from "./EpisodePlayerContent";
 import type { Metadata } from "next";
@@ -17,14 +17,20 @@ type EpisodePageProps = {
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const { id_anime, id_episode } = await params;
   const anime = await fetchAnimeById(id_anime);
-  if (!anime) return { title: "Не найдено" };
+  if (!anime || isAnimeHidden(anime)) return { title: "Не найдено" };
 
+  const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
   let episodeTitle = "";
   try {
     const res = await fetch(`${API_URL}/api/episodes/${id_anime}`, { cache: "no-store" });
     if (res.ok) {
       const episodes = await res.json();
-      const ep = episodes.find((e: { id: number }) => String(e.id) === id_episode);
+      const ep = episodes.find(
+        (e: { id: number; studio?: string; status?: string }) =>
+          String(e.id) === id_episode &&
+          e.status === "ready" &&
+          !hiddenStudios.includes(e.studio || "YumekoStudio"),
+      );
       if (ep) episodeTitle = ep.title || `Эпизод ${ep.number}`;
     }
   } catch {}
@@ -38,7 +44,9 @@ export async function generateMetadata({ params }: EpisodePageProps): Promise<Me
 export default async function EpisodePage({ params }: EpisodePageProps) {
   const { id_anime, id_episode } = await params;
   const anime = await fetchAnimeById(id_anime);
-  if (!anime) notFound();
+  if (!anime || isAnimeHidden(anime)) notFound();
+
+  const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
 
   let episodes: {
     id: number;
@@ -59,7 +67,11 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
   try {
     const res = await fetch(`${API_URL}/api/episodes/${id_anime}`, { cache: "no-store" });
     if (res.ok) {
-      episodes = await res.json();
+      episodes = (await res.json()).filter(
+        (ep: { studio?: string; status?: string }) =>
+          ep.status === "ready" &&
+          !hiddenStudios.includes(ep.studio || "YumekoStudio"),
+      );
     }
   } catch {}
 

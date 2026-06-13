@@ -8,6 +8,8 @@ export interface AnimePreview {
   rating: string;
   genres: string;
   poster: string;
+  isHidden?: boolean;
+  hiddenStudio?: string | null;
 }
 
 export interface AnimeDetails extends AnimePreview {
@@ -33,6 +35,25 @@ export const ratingAccent: Record<string, string> = {
 };
 
 export const getAccent = (rating: string) => ratingAccent[rating] ?? "#f97316";
+
+export function parseHiddenStudios(hiddenStudio?: string | null): string[] {
+  return (hiddenStudio ?? "")
+    .split(/[,;\n]/)
+    .map((studio) => studio.trim())
+    .filter(Boolean);
+}
+
+export function isAnimeHidden(anime?: Pick<AnimePreview, "isHidden"> | null) {
+  return !!anime?.isHidden;
+}
+
+export function isStudioHiddenForAnime(
+  anime?: Pick<AnimePreview, "hiddenStudio"> | null,
+  studio?: string | null,
+) {
+  if (!studio) return false;
+  return parseHiddenStudios(anime?.hiddenStudio).includes(studio);
+}
 
 let _cache: AnimeDetails[] | null = null;
 let _cacheTime = 0;
@@ -64,7 +85,9 @@ export async function fetchAnimeById(id: string | number): Promise<AnimeDetails 
 
 export async function getNewEpisodes(): Promise<AnimePreview[]> {
   const catalog = await fetchAnimeCatalog();
-  return catalog.map(({ id, title, ep, meta, rating, genres, poster }) => ({
-    id, title, ep, meta, rating, genres, poster,
-  }));
+  return catalog
+    .filter((anime) => !isAnimeHidden(anime))
+    .map(({ id, title, ep, meta, rating, genres, poster, isHidden, hiddenStudio }) => ({
+      id, title, ep, meta, rating, genres, poster, isHidden, hiddenStudio,
+    }));
 }

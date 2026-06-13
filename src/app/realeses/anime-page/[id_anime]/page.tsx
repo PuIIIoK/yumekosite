@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
-import { fetchAnimeCatalog, fetchAnimeById, getAccent } from "@/data/anime";
+import { fetchAnimeCatalog, fetchAnimeById, getAccent, isAnimeHidden } from "@/data/anime";
 import AnimePageContent, { type DbEpisode } from "./AnimePageContent";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
@@ -112,7 +112,7 @@ type AnimePageProps = {
 export async function generateMetadata({ params }: AnimePageProps): Promise<Metadata> {
   const { id_anime } = await params;
   const anime = await fetchAnimeById(id_anime);
-  if (!anime) return { title: "Релиз не найден" };
+  if (!anime || isAnimeHidden(anime)) return { title: "Релиз не найден" };
   const ogImage = `/og/${anime.id}.jpg`;
   return {
     title: anime.title,
@@ -139,7 +139,7 @@ export default async function AnimePage({ params }: AnimePageProps) {
   const { id_anime } = await params;
   const anime = await fetchAnimeById(id_anime);
 
-  if (!anime) {
+  if (!anime || isAnimeHidden(anime)) {
     notFound();
   }
 

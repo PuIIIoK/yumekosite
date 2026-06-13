@@ -13,9 +13,7 @@ import {
   Link2,
   Loader2,
   Check,
-  Plus,
-  Trash2,
-  Mic,
+  EyeOff,
 } from "lucide-react";
 import { API_URL } from "@/config/hosts";
 import styles from "./createAnime.module.scss";
@@ -39,6 +37,8 @@ const EMPTY_ANIME = {
   status: "Онгоинг",
   badges: [] as string[],
   relatedIds: [] as number[],
+  isHidden: false,
+  hiddenStudio: "",
 };
 
 type AnimeForm = typeof EMPTY_ANIME;
@@ -191,23 +191,6 @@ function CreateAnimeContent() {
   const [dragOver, setDragOver] = useState(false);
   const [posterUrlInput, setPosterUrlInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [voiceCast, setVoiceCast] = useState<
-    {
-      id: number;
-      studio: string;
-      actorName: string;
-      actorUsername?: string;
-      actorDisplayName?: string;
-      actorHasAvatar?: boolean;
-      actorRoleColor?: string;
-      characterName: string;
-    }[]
-  >([]);
-  const [vcStudio, setVcStudio] = useState("YumekoStudio");
-  const [vcActor, setVcActor] = useState("");
-  const [vcUsername, setVcUsername] = useState("");
-  const [vcCharacter, setVcCharacter] = useState("");
-  const [vcSaving, setVcSaving] = useState(false);
 
   useEffect(() => {
     const maxPri = Math.max(
@@ -221,10 +204,6 @@ function CreateAnimeContent() {
       return;
     }
     if (isEdit) {
-      fetch(`${API_URL}/api/voice-cast/${editId}`)
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data) => setVoiceCast(data))
-        .catch(() => {});
       fetch(`${API_URL}/api/anime/${editId}`)
         .then((r) => r.json())
         .then((data) => {
@@ -247,6 +226,8 @@ function CreateAnimeContent() {
             status: data.status || "",
             badges: data.badges || [],
             relatedIds: data.relatedIds || [],
+            isHidden: Boolean(data.isHidden),
+            hiddenStudio: data.hiddenStudio || "",
           });
           // Определяем тип контента при редактировании
           setContentType(data.format === "Фильм" ? "film" : "serial");
@@ -261,7 +242,7 @@ function CreateAnimeContent() {
     }
   }, [auth, router, editId, isEdit]);
 
-  const setField = (key: keyof AnimeForm, value: string) => {
+  const setField = (key: keyof AnimeForm, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     if (key === "poster") setPosterError(false);
   };
@@ -717,278 +698,69 @@ function CreateAnimeContent() {
                 </div>
               </section>
 
-              {/* Section: озвучка */}
-              {isEdit && (
-                <section className={styles.section}>
-                  <h3 className={styles.sectionTitle}>
-                    <Mic
-                      size={16}
-                      style={{ marginRight: 6, verticalAlign: -2 }}
-                    />
-                    Работа над релизом
-                  </h3>
-                  <div
+              {/* Section: видимость */}
+              <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>
+                  <EyeOff
+                    size={16}
+                    style={{ marginRight: 6, verticalAlign: -2 }}
+                  />
+                  Видимость
+                </h3>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 12,
+                  }}
+                >
+                  <label
                     style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr 1fr 1fr auto",
+                      display: "flex",
                       gap: 12,
+                      alignItems: "flex-start",
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      border: "1px solid var(--border)",
+                      background: "rgba(255,255,255,0.02)",
+                      cursor: "pointer",
                     }}
                   >
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.fieldLabel}>
-                        Студия озвучки
-                      </label>
-                      <input
-                        className={styles.fieldInput}
-                        value={vcStudio}
-                        onChange={(e) => setVcStudio(e.target.value)}
-                        placeholder="YumekoStudio"
-                      />
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.isHidden)}
+                      onChange={(e) =>
+                        setField("isHidden", e.target.checked)
+                      }
+                      style={{ marginTop: 3, accentColor: "var(--accent)" }}
+                    />
+                    <div>
+                      <div className={styles.fieldLabel} style={{ marginBottom: 4 }}>
+                        Скрыть аниме
+                      </div>
+                      <div className={styles.fieldHint}>
+                        Тайтл не будет отображаться в каталоге, поиске и на
+                        публичной странице релиза.
+                      </div>
                     </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.fieldLabel}>
-                        Профиль (@username)
-                      </label>
-                      <input
-                        className={styles.fieldInput}
-                        value={vcUsername}
-                        onChange={(e) =>
-                          setVcUsername(e.target.value.replace("@", ""))
-                        }
-                        placeholder="username"
-                      />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.fieldLabel}>Имя актёра</label>
-                      <input
-                        className={styles.fieldInput}
-                        value={vcActor}
-                        onChange={(e) => setVcActor(e.target.value)}
-                        placeholder="Hirst"
-                      />
-                    </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.fieldLabel}>Персонаж</label>
-                      <input
-                        className={styles.fieldInput}
-                        value={vcCharacter}
-                        onChange={(e) => setVcCharacter(e.target.value)}
-                        placeholder="Ко Ямори"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            if (
-                              !vcActor.trim() ||
-                              !vcCharacter.trim() ||
-                              !vcStudio.trim()
-                            )
-                              return;
-                            setVcSaving(true);
-                            fetch(`${API_URL}/api/voice-cast`, {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                animeId: Number(editId),
-                                studio: vcStudio.trim(),
-                                actorName: vcActor.trim(),
-                                actorUsername: vcUsername.trim() || null,
-                                characterName: vcCharacter.trim(),
-                              }),
-                            })
-                              .then((r) => (r.ok ? r.json() : null))
-                              .then(() => {
-                                setVcActor("");
-                                setVcCharacter("");
-                                setVcUsername("");
-                                fetch(`${API_URL}/api/voice-cast/${editId}`)
-                                  .then((r) => (r.ok ? r.json() : []))
-                                  .then((data) => setVoiceCast(data))
-                                  .catch(() => {});
-                              })
-                              .catch(() => {})
-                              .finally(() => setVcSaving(false));
-                          }
-                        }}
-                      />
-                    </div>
-                    <div
-                      className={styles.fieldGroup}
-                      style={{ display: "flex", alignItems: "flex-end" }}
-                    >
-                      <button
-                        className={styles.urlBtn}
-                        disabled={
-                          vcSaving || !vcActor.trim() || !vcCharacter.trim()
-                        }
-                        style={{ height: 36, width: 36 }}
-                        onClick={() => {
-                          if (
-                            !vcActor.trim() ||
-                            !vcCharacter.trim() ||
-                            !vcStudio.trim()
-                          )
-                            return;
-                          setVcSaving(true);
-                          fetch(`${API_URL}/api/voice-cast`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                              animeId: Number(editId),
-                              studio: vcStudio.trim(),
-                              actorName: vcActor.trim(),
-                              actorUsername: vcUsername.trim() || null,
-                              characterName: vcCharacter.trim(),
-                            }),
-                          })
-                            .then((r) => (r.ok ? r.json() : null))
-                            .then(() => {
-                              setVcActor("");
-                              setVcCharacter("");
-                              setVcUsername("");
-                              fetch(`${API_URL}/api/voice-cast/${editId}`)
-                                .then((r) => (r.ok ? r.json() : []))
-                                .then((data) => setVoiceCast(data))
-                                .catch(() => {});
-                            })
-                            .catch(() => {})
-                            .finally(() => setVcSaving(false));
-                        }}
-                      >
-                        {vcSaving ? (
-                          <Loader2 size={14} className={styles.saveSpin} />
-                        ) : (
-                          <Plus size={14} />
-                        )}
-                      </button>
+                  </label>
+
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>
+                      Скрыть студию озвучки
+                    </label>
+                    <input
+                      className={styles.fieldInput}
+                      value={form.hiddenStudio}
+                      onChange={(e) => setField("hiddenStudio", e.target.value)}
+                      placeholder="YumekoStudio, Studio A"
+                    />
+                    <div className={styles.fieldHint}>
+                      Через запятую можно указать несколько студий. Их эпизоды и
+                      озвучка будут скрыты на публичных страницах.
                     </div>
                   </div>
-                  {voiceCast.length > 0 &&
-                    (() => {
-                      const studios = [
-                        ...new Set(voiceCast.map((vc) => vc.studio)),
-                      ].sort();
-                      return studios.map((studio) => {
-                        const items = voiceCast.filter(
-                          (vc) => vc.studio === studio,
-                        );
-                        return (
-                          <div key={studio} style={{ marginTop: 12 }}>
-                            <p
-                              style={{
-                                fontSize: 12,
-                                color: "var(--text-muted)",
-                                marginBottom: 6,
-                              }}
-                            >
-                              {studio}
-                            </p>
-                            {items.map((vc) => (
-                              <div
-                                key={vc.id}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  padding: "8px 0",
-                                  borderBottom:
-                                    "1px solid rgba(255,255,255,0.04)",
-                                }}
-                              >
-                                {vc.actorUsername && vc.actorHasAvatar ? (
-                                  <img
-                                    src={`${API_URL}/api/media/${vc.actorUsername}/avatar`}
-                                    alt=""
-                                    style={{
-                                      width: 28,
-                                      height: 28,
-                                      borderRadius: 6,
-                                      objectFit: "cover",
-                                      border: vc.actorRoleColor
-                                        ? `2px solid ${vc.actorRoleColor}`
-                                        : "2px solid rgba(255,255,255,0.1)",
-                                    }}
-                                  />
-                                ) : (
-                                  <div
-                                    style={{
-                                      width: 28,
-                                      height: 28,
-                                      borderRadius: 6,
-                                      background: "rgba(255,255,255,0.06)",
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 6,
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontWeight: 600,
-                                        fontSize: 13,
-                                        color:
-                                          vc.actorRoleColor ||
-                                          "var(--text-primary)",
-                                      }}
-                                    >
-                                      {vc.actorDisplayName || vc.actorName}
-                                    </span>
-                                    {vc.actorUsername && (
-                                      <span
-                                        style={{
-                                          fontSize: 11,
-                                          color: "var(--text-muted)",
-                                        }}
-                                      >
-                                        @{vc.actorUsername}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      color: "var(--text-muted)",
-                                    }}
-                                  >
-                                    {"\u2192"} {vc.characterName}
-                                  </span>
-                                </div>
-                                <button
-                                  style={{
-                                    background: "none",
-                                    border: "none",
-                                    color: "var(--text-muted)",
-                                    cursor: "pointer",
-                                    padding: 4,
-                                  }}
-                                  onClick={() => {
-                                    fetch(
-                                      `${API_URL}/api/voice-cast/${vc.id}`,
-                                      { method: "DELETE" },
-                                    )
-                                      .then(() =>
-                                        setVoiceCast((prev) =>
-                                          prev.filter((v) => v.id !== vc.id),
-                                        ),
-                                      )
-                                      .catch(() => {});
-                                  }}
-                                >
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      });
-                    })()}
-                </section>
-              )}
+                </div>
+              </section>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Header from "@/components/Header/Header";
-import { type AnimeDetails, getAccent } from "@/data/anime";
+import { type AnimeDetails, getAccent, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./catalog.module.scss";
 
@@ -62,7 +62,10 @@ export default function CatalogPage() {
           fetch(`${API_URL}/api/voice-cast/studio-map`),
           fetch(`${API_URL}/api/episodes/studio-map`),
         ]);
-        if (ar.ok) setAnime(await ar.json());
+        if (ar.ok) {
+          const data: AnimeDetails[] = await ar.json();
+          setAnime(data.filter((anime) => !isAnimeHidden(anime)));
+        }
         const vcMap: Record<string, number[]> = vcr.ok ? await vcr.json() : {};
         const epMap: Record<string, number[]> = epr.ok ? await epr.json() : {};
         const merged: Record<string, number[]> = { ...vcMap };

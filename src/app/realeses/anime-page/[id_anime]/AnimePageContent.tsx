@@ -19,7 +19,7 @@ import {
   XCircle,
   Mic,
 } from "lucide-react";
-import { getAccent, type AnimeDetails } from "@/data/anime";
+import { getAccent, type AnimeDetails, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 import Comments from "./Comments";
@@ -140,14 +140,18 @@ export default function AnimePageContent({
   };
 
   useEffect(() => {
-    if (anime.relatedIds.length === 0) return;
+    if (isAnimeHidden(anime) || anime.relatedIds.length === 0) return;
     Promise.all(
       anime.relatedIds.map((id) =>
         fetch(`${API_URL}/api/anime/${id}`)
           .then((r) => (r.ok ? r.json() : null))
           .catch(() => null),
       ),
-    ).then((items) => setRelatedItems(items.filter(Boolean)));
+    ).then((items) =>
+      setRelatedItems(
+        items.filter((item): item is AnimeDetails => Boolean(item) && !isAnimeHidden(item)),
+      ),
+    );
   }, [anime.relatedIds]);
 
   useEffect(() => {
@@ -157,7 +161,13 @@ export default function AnimePageContent({
       .catch(() => {});
   }, [anime.id]);
 
-  const readyEpisodes = dbEpisodes.filter((db) => db.status === "ready");
+  const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
+  const readyEpisodes = dbEpisodes.filter(
+    (db) => db.status === "ready" && !hiddenStudios.includes(db.studio || "YumekoStudio"),
+  );
+  const visibleVoiceCast = voiceCast.filter(
+    (vc) => !hiddenStudios.includes(vc.studio),
+  );
   const studioSet = [
     ...new Set(readyEpisodes.map((db) => db.studio || "YumekoStudio")),
   ];
@@ -674,14 +684,14 @@ export default function AnimePageContent({
 
       {/* ── Voice Cast ── */}
       {tab === "episodes" &&
-        voiceCast.length > 0 &&
+        visibleVoiceCast.length > 0 &&
         (() => {
-          const castStudios = [...new Set(voiceCast.map((vc) => vc.studio))];
+          const castStudios = [...new Set(visibleVoiceCast.map((vc) => vc.studio))];
           const showStudio =
             activeStudio && castStudios.includes(activeStudio)
               ? activeStudio
               : castStudios[0];
-          const filtered = voiceCast.filter((vc) => vc.studio === showStudio);
+          const filtered = visibleVoiceCast.filter((vc) => vc.studio === showStudio);
           if (filtered.length === 0) return null;
           return (
             <div className={styles.voiceCastSection}>
