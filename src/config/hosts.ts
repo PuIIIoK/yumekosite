@@ -17,3 +17,8 @@ export const API_URL = normalizeApiUrl(rawApiUrl);
 
 // ─── CDN Configuration ───
 export const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL || "https://cdn.yumeko.ru";
+
+// ─── Conversion Service ───
+// Сервис загрузки и конвертации эпизодов (тяжёлые видео-операции)
+export const CONV_URL =
+  process.env.NEXT_PUBLIC_CONV_URL || "https://conv.yumeko.ru";

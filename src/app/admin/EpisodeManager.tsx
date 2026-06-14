@@ -21,7 +21,7 @@ import {
   Pencil,
 } from "lucide-react";
 import Hls from "hls.js";
-import { API_URL } from "@/config/hosts";
+import { API_URL, CONV_URL } from "@/config/hosts";
 import type { AnimeDetails } from "@/data/anime";
 import styles from "./admin.module.scss";
 
@@ -392,7 +392,7 @@ export default function EpisodeManager() {
     params.set("filename", file.name);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_URL}/api/episodes/upload?${params.toString()}`);
+    xhr.open("POST", `${CONV_URL}/api/episodes/upload?${params.toString()}`);
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) {
