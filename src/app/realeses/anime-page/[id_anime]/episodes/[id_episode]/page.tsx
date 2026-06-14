@@ -4,6 +4,7 @@ import { fetchAnimeById, getAccent, parseHiddenStudios, isAnimeHidden } from "@/
 import { API_URL } from "@/config/hosts";
 import EpisodePlayerContent from "./EpisodePlayerContent";
 import type { Metadata } from "next";
+import HiddenAnimePage from "@/app/realeses/anime-page/[id_anime]/HiddenAnimePage";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ type EpisodePageProps = {
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const { id_anime, id_episode } = await params;
   const anime = await fetchAnimeById(id_anime);
-  if (!anime || isAnimeHidden(anime)) return { title: "Не найдено" };
+  if (!anime || isAnimeHidden(anime)) return { title: "Релиз недоступен" };
 
   const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
   let episodeTitle = "";
@@ -44,7 +45,12 @@ export async function generateMetadata({ params }: EpisodePageProps): Promise<Me
 export default async function EpisodePage({ params }: EpisodePageProps) {
   const { id_anime, id_episode } = await params;
   const anime = await fetchAnimeById(id_anime);
-  if (!anime || isAnimeHidden(anime)) notFound();
+  if (!anime) notFound();
+
+  // Проверяем, скрыт ли релиз
+  if (isAnimeHidden(anime)) {
+    return <HiddenAnimePage />;
+  }
 
   const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
 

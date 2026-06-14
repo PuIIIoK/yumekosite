@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header/Header";
 import { fetchAnimeCatalog, fetchAnimeById, getAccent, isAnimeHidden } from "@/data/anime";
 import AnimePageContent, { type DbEpisode } from "./AnimePageContent";
+import HiddenAnimePage from "./HiddenAnimePage";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 
@@ -139,8 +140,13 @@ export default async function AnimePage({ params }: AnimePageProps) {
   const { id_anime } = await params;
   const anime = await fetchAnimeById(id_anime);
 
-  if (!anime || isAnimeHidden(anime)) {
+  if (!anime) {
     notFound();
+  }
+
+  // Проверяем, скрыт ли релиз
+  if (isAnimeHidden(anime)) {
+    return <HiddenAnimePage />;
   }
 
   const accent = getAccent(anime.rating);
