@@ -57,8 +57,6 @@ interface VoiceCast {
   characterName: string;
 }
 
-const DEFAULT_STUDIOS = ["YumekoStudio"];
-const STUDIOS_KEY = "yumeko_studios";
 const emptyForm: EpisodeForm = {
   number: "",
   title: "",
@@ -157,33 +155,42 @@ export default function EpisodeManager() {
   const [editVcUsername, setEditVcUsername] = useState("");
   const [editVcCharacter, setEditVcCharacter] = useState("");
   const [editVcSaving, setEditVcSaving] = useState(false);
-  const [studios, setStudios] = useState<string[]>(DEFAULT_STUDIOS);
-  const [addingStudio, setAddingStudio] = useState(false);
-  const [studioDropdownOpen, setStudioDropdownOpen] = useState(false);
-  const [newStudioName, setNewStudioName] = useState("");
+  const [studios, setStudios] = useState<string[]>([]);
+  const [loadingStudios, setLoadingStudios] = useState(true);
   const [editStudioEpId, setEditStudioEpId] = useState<number | null>(null);
   const [editStudioSaving, setEditStudioSaving] = useState(false);
-  const newStudioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STUDIOS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as string[];
-        const merged = [...new Set([...DEFAULT_STUDIOS, ...parsed])];
-        setStudios(merged);
-      }
-    } catch {}
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/api/anime`);
-        const data = await res.json();
-        setAnimeList(data);
-      } catch {}
-      setLoading(false);
+        const [animeRes, studioRes] = await Promise.all([
+          fetch(`${API_URL}/api/anime`),
+          fetch(`${API_URL}/api/studios`),
+        ]);
+
+        if (animeRes.ok) {
+          const data = await animeRes.json();
+          setAnimeList(data);
+        }
+
+        if (studioRes.ok) {
+          const studioData = await studioRes.json();
+          const names = Array.isArray(studioData)
+            ? studioData.map((s: { name?: string }) => s.name).filter((n): n is string => Boolean(n))
+            : [];
+          setStudios(["YumekoStudio", ...new Set(names)]);
+        } else {
+          setStudios(["YumekoStudio"]);
+        }
+      } catch {
+        setStudios(["YumekoStudio"]);
+      } finally {
+        setLoading(false);
+        setLoadingStudios(false);
+      }
     })();
   }, []);
 
@@ -656,139 +663,17 @@ export default function EpisodeManager() {
               </div>
               <div className={styles.episodeFormField}>
                 <label>Студия</label>
-                {addingStudio ? (
-                  <div className={styles.epStudioRow}>
-                    <input
-                      ref={newStudioRef}
-                      value={newStudioName}
-                      onChange={(e) => setNewStudioName(e.target.value)}
-                      placeholder="Название студии"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && newStudioName.trim()) {
-                          const trimmed = newStudioName.trim();
-                          if (!studios.includes(trimmed)) {
-                            const updated = [...studios, trimmed];
-                            setStudios(updated);
-                            localStorage.setItem(
-                              STUDIOS_KEY,
-                              JSON.stringify(updated),
-                            );
-                          }
-                          setForm({ ...form, studio: trimmed });
-                          setNewStudioName("");
-                          setAddingStudio(false);
-                        }
-                        if (e.key === "Escape") {
-                          setNewStudioName("");
-                          setAddingStudio(false);
-                        }
-                      }}
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      className={styles.epStudioAddBtn}
-                      onClick={() => {
-                        if (newStudioName.trim()) {
-                          const trimmed = newStudioName.trim();
-                          if (!studios.includes(trimmed)) {
-                            const updated = [...studios, trimmed];
-                            setStudios(updated);
-                            localStorage.setItem(
-                              STUDIOS_KEY,
-                              JSON.stringify(updated),
-                            );
-                          }
-                          setForm({ ...form, studio: trimmed });
-                        }
-                        setNewStudioName("");
-                        setAddingStudio(false);
-                      }}
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.epStudioAddBtn}
-                      onClick={() => {
-                        setNewStudioName("");
-                        setAddingStudio(false);
-                      }}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className={styles.epStudioRow}>
-                    <div className={styles.epStudioDropdown}>
-                      <button
-                        type="button"
-                        className={styles.epStudioDropdownTrigger}
-                        onClick={() =>
-                          setStudioDropdownOpen(!studioDropdownOpen)
-                        }
-                      >
-                        <span>{form.studio}</span>
-                        <ChevronDown size={14} />
-                      </button>
-                      {studioDropdownOpen && (
-                        <div className={styles.epStudioDropdownMenu}>
-                          {studios.map((s) => (
-                            <div
-                              key={s}
-                              className={`${styles.epStudioDropdownItem} ${form.studio === s ? styles.epStudioDropdownItemActive : ""}`}
-                            >
-                              <button
-                                type="button"
-                                className={styles.epStudioDropdownSelect}
-                                onClick={() => {
-                                  setForm({ ...form, studio: s });
-                                  setStudioDropdownOpen(false);
-                                }}
-                              >
-                                {s}
-                              </button>
-                              {!DEFAULT_STUDIOS.includes(s) && (
-                                <button
-                                  type="button"
-                                  className={styles.epStudioDropdownDelete}
-                                  title={`Удалить ${s}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const updated = studios.filter(
-                                      (st) => st !== s,
-                                    );
-                                    setStudios(updated);
-                                    localStorage.setItem(
-                                      STUDIOS_KEY,
-                                      JSON.stringify(updated),
-                                    );
-                                    if (form.studio === s) {
-                                      setForm({
-                                        ...form,
-                                        studio: updated[0] || "YumekoStudio",
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <X size={12} />
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className={styles.epStudioAddBtn}
-                      title="Добавить студию"
-                      onClick={() => setAddingStudio(true)}
-                    >
-                      <Plus size={14} />
-                    </button>
-                  </div>
-                )}
+                <select
+                  value={form.studio}
+                  onChange={(e) => setForm({ ...form, studio: e.target.value })}
+                  className={styles.episodeFormSelect}
+                >
+                  {studios.map((studio) => (
+                    <option key={studio} value={studio}>
+                      {studio}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

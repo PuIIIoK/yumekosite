@@ -18,11 +18,13 @@ import {
   PanelLeftClose,
   PanelLeft,
   LayoutDashboard,
+  Handshake,
 } from "lucide-react";
 import AnimeManager from "./AnimeManager";
 import UserManager from "./UserManager";
 import EpisodeManager from "./EpisodeManager";
 import BannerManager from "./BannerManager";
+import StudioManager from "./StudioManager";
 import styles from "./admin.module.scss";
 
 const ADMIN_SECTIONS = [
@@ -48,6 +50,13 @@ const ADMIN_SECTIONS = [
     minPriority: 90,
   },
   {
+    id: "studios",
+    title: "Коллаборация",
+    icon: Handshake,
+    color: "#ef4444",
+    minPriority: 120,
+  },
+  {
     id: "users",
     title: "Пользователи",
     icon: Users,
@@ -70,6 +79,7 @@ function AdminContent({ section }: { section: string }) {
   if (section === "banner") return <BannerManager />;
   if (section === "anime") return <AnimeManager />;
   if (section === "episodes") return <EpisodeManager />;
+  if (section === "studios") return <StudioManager />;
   if (section === "users") return <UserManager />;
   const matched = ADMIN_SECTIONS.find((s) => s.id === section);
   if (!matched) return null;
