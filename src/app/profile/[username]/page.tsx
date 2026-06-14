@@ -525,6 +525,16 @@ export default function ProfilePage() {
   }
 
   const isOwner = auth.user?.username.toLowerCase() === username.toLowerCase();
+  const [userStudio, setUserStudio] = useState<{id: number; name: string} | null>(null);
+  
+  useEffect(() => {
+    if (isOwner) {
+      fetch(`${API_URL}/api/studios/head/${username}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => setUserStudio(data))
+        .catch(() => setUserStudio(null));
+    }
+  }, [username, isOwner]);
 
   const nameWords = profileUser.displayName.split(/\s+/);
   const nameFirstLine = nameWords[0];
@@ -682,6 +692,15 @@ export default function ProfilePage() {
                   </>
                 )}
               </button>
+            )}
+            {isOwner && userStudio && (
+              <Link
+                href={`/studio/${userStudio.id}`}
+                className={styles.myTeamBtn}
+              >
+                <Users size={15} strokeWidth={2.2} />
+                Моя команда
+              </Link>
             )}
           </div>
 

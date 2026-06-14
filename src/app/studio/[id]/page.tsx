@@ -5,8 +5,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header/Header";
 import { API_URL } from "@/config/hosts";
-import { Globe, Mail, Users } from "lucide-react";
+import { Globe, Mail, Users, Edit3 } from "lucide-react";
 import styles from "./studio.module.scss";
+import { useAuth } from "@/context/AuthContext";
 
 interface StudioData {
   id: number;
@@ -24,9 +25,12 @@ interface StudioData {
 export default function StudioPage() {
   const params = useParams();
   const id = (params?.id as string) ?? "";
+  const { user } = useAuth();
   const [studio, setStudio] = useState<StudioData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  const isHead = user?.username?.toLowerCase() === studio?.headUsername?.toLowerCase();
 
   useEffect(() => {
     fetch(`${API_URL}/api/studios/${id}`)
@@ -56,7 +60,12 @@ export default function StudioPage() {
           <div className={styles.headerInfo}>
             <div className={styles.nameRow}>
               <h1 className={styles.name}>{studio.name}</h1>
-              {studio.isCollaboration && <span className={styles.badge}>Коллаборация</span>}
+              {isHead && (
+                <Link href={`/studio/${studio.id}/edit`} className={styles.editBtn}>
+                  <Edit3 size={14} />
+                  Редактировать
+                </Link>
+              )}
             </div>
             {studio.description && <p className={styles.desc}>{studio.description}</p>}
             <div className={styles.meta}>
