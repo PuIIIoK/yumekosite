@@ -17,8 +17,10 @@ interface Studio {
   id: number;
   name: string;
   description: string | null;
-  logo: string | null;
-  website: string | null;
+  headUsername: string | null;
+  avatar: string | null;
+  banner: string | null;
+  socials: string | null;
   contact: string | null;
   isCollaboration: boolean;
 }
@@ -26,6 +28,7 @@ interface Studio {
 export default function StudioManager() {
   const auth = useAuth();
   const [studios, setStudios] = useState<Studio[]>([]);
+  const [showInactive, setShowInactive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -33,8 +36,10 @@ export default function StudioManager() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    logo: "",
-    website: "",
+    headUsername: "",
+    avatar: "",
+    banner: "",
+    socials: "",
     contact: "",
     isCollaboration: true,
   });
@@ -75,8 +80,10 @@ export default function StudioManager() {
         setFormData({
           name: "",
           description: "",
-          logo: "",
-          website: "",
+          headUsername: "",
+          avatar: "",
+          banner: "",
+          socials: "",
           contact: "",
           isCollaboration: true,
         });
@@ -138,8 +145,10 @@ export default function StudioManager() {
     setFormData({
       name: studio.name,
       description: studio.description || "",
-      logo: studio.logo || "",
-      website: studio.website || "",
+      headUsername: studio.headUsername || "",
+      avatar: studio.avatar || "",
+      banner: studio.banner || "",
+      socials: studio.socials || "",
       contact: studio.contact || "",
       isCollaboration: studio.isCollaboration,
     });
@@ -150,16 +159,32 @@ export default function StudioManager() {
     setFormData({
       name: "",
       description: "",
-      logo: "",
-      website: "",
+      headUsername: "",
+      avatar: "",
+      banner: "",
+      socials: "",
       contact: "",
       isCollaboration: true,
     });
   };
 
+  const filteredStudios = showInactive
+    ? studios
+    : studios.filter((s) => s.isCollaboration);
+
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Коллаборация</h1>
+      <div className={styles.toolbar}>
+        <h1 className={styles.title}>Коллаборация</h1>
+        <label className={styles.toggleRow}>
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+          />
+          <span>Показывать неактивные</span>
+        </label>
+      </div>
       
       {(error || success) && (
         <div className={`${styles.message} ${error ? styles.error : styles.success}`}>
@@ -201,29 +226,50 @@ export default function StudioManager() {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Логотип (URL)</label>
+          <label className={styles.formLabel}>Глава студии (@username)</label>
           <input
             type="text"
-            value={formData.logo}
-            onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+            value={formData.headUsername}
+            onChange={(e) => setFormData({ ...formData, headUsername: e.target.value })}
             className={styles.formInput}
-            placeholder="https://example.com/logo.png"
+            placeholder="@username"
           />
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Сайт</label>
+          <label className={styles.formLabel}>Аватар (URL)</label>
           <input
             type="text"
-            value={formData.website}
-            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+            value={formData.avatar}
+            onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
             className={styles.formInput}
-            placeholder="https://example.com"
+            placeholder="https://example.com/avatar.png"
           />
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Контакт</label>
+          <label className={styles.formLabel}>Баннер (URL)</label>
+          <input
+            type="text"
+            value={formData.banner}
+            onChange={(e) => setFormData({ ...formData, banner: e.target.value })}
+            className={styles.formInput}
+            placeholder="https://example.com/banner.jpg"
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Соцсети</label>
+          <textarea
+            value={formData.socials}
+            onChange={(e) => setFormData({ ...formData, socials: e.target.value })}
+            className={styles.formTextarea}
+            placeholder="Discord: https://discord.gg/...\nTelegram: https://t.me/..."
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Контакт для модерации</label>
           <input
             type="text"
             value={formData.contact}
@@ -284,15 +330,20 @@ export default function StudioManager() {
 
       {/* Список студий */}
       <div className={styles.listSection}>
-        <h2 className={styles.listTitle}>Существующие студии ({studios.length})</h2>
+        <h2 className={styles.listTitle}>
+          Студии ({filteredStudios.length})
+          {!showInactive && " (активные коллаборации)"}
+        </h2>
         
         {loading ? (
           <div className={styles.loading}>Загрузка...</div>
-        ) : studios.length === 0 ? (
-          <div className={styles.empty}>Нет студий</div>
+        ) : filteredStudios.length === 0 ? (
+          <div className={styles.empty}>
+            {showInactive ? "Нет студий" : "Нет активных коллабораций"}
+          </div>
         ) : (
           <div className={styles.studioList}>
-            {studios.map((studio) => (
+            {filteredStudios.map((studio) => (
               <div key={studio.id} className={styles.studioCard}>
                 <div className={styles.studioHeader}>
                   <h3 className={styles.studioName}>
@@ -322,23 +373,37 @@ export default function StudioManager() {
                 )}
                 
                 <div className={styles.studioDetails}>
-                  {studio.logo && (
+                  {studio.headUsername && (
                     <div className={styles.detailItem}>
-                      <span className={styles.detailLabel}>Логотип:</span>
-                      <a href={studio.logo} target="_blank" rel="noopener noreferrer">
-                        {studio.logo}
+                      <span className={styles.detailLabel}>Глава:</span>
+                      @{studio.headUsername}
+                    </div>
+                  )}
+
+                  {studio.avatar && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Аватар:</span>
+                      <a href={studio.avatar} target="_blank" rel="noopener noreferrer">
+                        {studio.avatar}
+                      </a>
+                    </div>
+                  )}
+
+                  {studio.banner && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.detailLabel}>Баннер:</span>
+                      <a href={studio.banner} target="_blank" rel="noopener noreferrer">
+                        {studio.banner}
                       </a>
                     </div>
                   )}
                   
-                  {studio.website && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.detailLabel}>Сайт:</span>
-                      <a href={studio.website} target="_blank" rel="noopener noreferrer">
-                        {studio.website}
-                      </a>
-                    </div>
-                  )}
+                {studio.socials && (
+                  <div className={styles.detailItem}>
+                    <span className={styles.detailLabel}>Соцсети:</span>
+                    {studio.socials}
+                  </div>
+                )}
                   
                   {studio.contact && (
                     <div className={styles.detailItem}>

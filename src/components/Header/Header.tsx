@@ -65,7 +65,9 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<AnimeDetails[]>([]);
+  const [studioResults, setStudioResults] = useState<any[]>([]);
   const [animeCatalog, setAnimeCatalog] = useState<AnimeDetails[]>([]);
+  const [studioCatalog, setStudioCatalog] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${API_URL}/api/anime`)
@@ -73,6 +75,11 @@ export default function Header() {
       .then((data: AnimeDetails[]) =>
         setAnimeCatalog(data.filter((anime) => !isAnimeHidden(anime))),
       )
+      .catch(() => {});
+
+    fetch(`${API_URL}/api/studios`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setStudioCatalog(data.filter((s: any) => s.isCollaboration)))
       .catch(() => {});
   }, []);
   const [userResults, setUserResults] = useState<any[]>([]);
@@ -873,6 +880,7 @@ export default function Header() {
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setStudioResults([]);
       setUserResults([]);
       setSearchLoading(false);
       return;
@@ -889,6 +897,13 @@ export default function Header() {
       );
       setSearchResults(results);
 
+      const studioMatches = studioCatalog.filter(
+        (s: any) =>
+          s.isCollaboration &&
+          String(s.name || "").toLowerCase().includes(q),
+      );
+      setStudioResults(studioMatches);
+
       try {
         const res = await fetch(
           `${API_URL}/api/search?q=${encodeURIComponent(searchQuery.trim())}`,
@@ -903,7 +918,7 @@ export default function Header() {
       setSearchLoading(false);
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, animeCatalog, studioCatalog]);
 
   const switchTab = (tab: string) => {
     if (tab === settingsTab || settingsAnimating) return;
@@ -2998,12 +3013,13 @@ export default function Header() {
             {searchQuery.trim() &&
               !searchLoading &&
               searchResults.length === 0 &&
+              studioResults.length === 0 &&
               userResults.length === 0 && (
                 <div className={styles.searchHint}>Ничего не найдено</div>
               )}
             {searchResults.length > 0 && !searchLoading && (
               <>
-                {userResults.length > 0 && (
+                {(userResults.length > 0 || studioResults.length > 0) && (
                   <div className={styles.searchSectionLabel}>Аниме</div>
                 )}
                 <div className={styles.searchResultsGrid}>
@@ -3046,9 +3062,48 @@ export default function Header() {
                 </div>
               </>
             )}
+            {studioResults.length > 0 && !searchLoading && (
+              <>
+                {(searchResults.length > 0 || userResults.length > 0) && (
+                  <div className={styles.searchSectionLabel}>Студии</div>
+                )}
+                <div className={styles.searchUsersList}>
+                  {studioResults.map((s: any) => (
+                    <Link
+                      key={s.id}
+                      href={`/studio/${s.id}`}
+                      className={styles.searchUserRow}
+                      onClick={closeSearch}
+                    >
+                      <div className={styles.searchUserAvatar}>
+                        {s.avatar ? (
+                          <img
+                            src={s.avatar}
+                            alt={s.name}
+                            className={styles.searchUserAvatarImg}
+                          />
+                        ) : (
+                          <span className={styles.searchUserInitial}>
+                            {s.name.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <div className={styles.searchUserInfo}>
+                        <span className={styles.searchUserName}>
+                          {s.name}
+                        </span>
+                        <span className={styles.searchUserUsername}>
+                          Студия
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
             {userResults.length > 0 && !searchLoading && (
               <>
-                {searchResults.length > 0 && (
+                {(searchResults.length > 0 || studioResults.length > 0) && (
                   <div className={styles.searchSectionLabel}>Пользователи</div>
                 )}
                 <div className={styles.searchUsersList}>
@@ -3074,18 +3129,12 @@ export default function Header() {
                       </div>
                       <div className={styles.searchUserInfo}>
                         <span className={styles.searchUserName}>
-                          {u.displayName || u.username}
+                          {u.displayName}
                         </span>
-                        <span className={styles.searchUserHandle}>
+                        <span className={styles.searchUserUsername}>
                           @{u.username}
                         </span>
                       </div>
-                      <span
-                        className={styles.searchUserRole}
-                        style={{ color: u.role?.color || "#6b7280" }}
-                      >
-                        {u.role?.displayName}
-                      </span>
                     </Link>
                   ))}
                 </div>

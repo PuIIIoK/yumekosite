@@ -19,12 +19,14 @@ import {
   PanelLeft,
   LayoutDashboard,
   Handshake,
+  ShieldCheck,
 } from "lucide-react";
 import AnimeManager from "./AnimeManager";
 import UserManager from "./UserManager";
 import EpisodeManager from "./EpisodeManager";
 import BannerManager from "./BannerManager";
 import StudioManager from "./StudioManager";
+import ModerationManager from "./ModerationManager";
 import styles from "./admin.module.scss";
 
 const ADMIN_SECTIONS = [
@@ -57,6 +59,13 @@ const ADMIN_SECTIONS = [
     minPriority: 120,
   },
   {
+    id: "moderation",
+    title: "Модерирование",
+    icon: ShieldCheck,
+    color: "#f97316",
+    minPriority: 140,
+  },
+  {
     id: "users",
     title: "Пользователи",
     icon: Users,
@@ -80,6 +89,7 @@ function AdminContent({ section }: { section: string }) {
   if (section === "anime") return <AnimeManager />;
   if (section === "episodes") return <EpisodeManager />;
   if (section === "studios") return <StudioManager />;
+  if (section === "moderation") return <ModerationManager />;
   if (section === "users") return <UserManager />;
   const matched = ADMIN_SECTIONS.find((s) => s.id === section);
   if (!matched) return null;

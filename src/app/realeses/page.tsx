@@ -57,10 +57,11 @@ export default function CatalogPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [ar, vcr, epr] = await Promise.all([
+        const [ar, vcr, epr, str] = await Promise.all([
           fetch(`${API_URL}/api/anime`),
           fetch(`${API_URL}/api/voice-cast/studio-map`),
           fetch(`${API_URL}/api/episodes/studio-map`),
+          fetch(`${API_URL}/api/studios`),
         ]);
         if (ar.ok) {
           const data: AnimeDetails[] = await ar.json();
@@ -73,6 +74,21 @@ export default function CatalogPage() {
           const existing = merged[s] || [];
           merged[s] = [...new Set([...existing, ...ids])].sort((a, b) => a - b);
         }
+        
+        // Filter out inactive studios (keep YumekoStudio always as it's the site's own studio)
+        if (str.ok) {
+          const studios = await str.json();
+          const activeStudios = new Set(
+            studios.filter((s: any) => s.isCollaboration).map((s: any) => s.name),
+          );
+          activeStudios.add("YumekoStudio"); // Always show site's own studio
+          for (const studioName of Object.keys(merged)) {
+            if (!activeStudios.has(studioName)) {
+              delete merged[studioName];
+            }
+          }
+        }
+        
         setStudioMap(merged);
       } catch {}
       setLoading(false);

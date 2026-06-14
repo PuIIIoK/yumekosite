@@ -18,7 +18,11 @@ import {
   PauseCircle,
   XCircle,
   Mic,
+  Plus,
+  Pencil,
+  X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { getAccent, type AnimeDetails, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
@@ -69,7 +73,20 @@ export default function AnimePageContent({
   dbEpisodes = [],
 }: Props) {
   const auth = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("episodes");
+  const [collabModalOpen, setCollabModalOpen] = useState(false);
+  const [collabSubmitting, setCollabSubmitting] = useState(false);
+  const [collabError, setCollabError] = useState<string | null>(null);
+  const [collabForm, setCollabForm] = useState({
+    name: "",
+    description: "",
+    headUsername: "",
+    avatar: "",
+    banner: "",
+    socials: "",
+    contact: "",
+  });
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionRef = useRef<HTMLDivElement>(null);
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
@@ -137,6 +154,42 @@ export default function AnimePageContent({
         setActiveStatuses(data.statuses || []);
       }
     } catch {}
+  };
+
+  const submitCollab = async () => {
+    if (!auth.user) return;
+    if (!collabForm.name.trim() || !collabForm.contact.trim()) return;
+    setCollabSubmitting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/collaboration-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          animeId: anime.id,
+          studioName: collabForm.name,
+          description: collabForm.description,
+          avatar: collabForm.avatar,
+          banner: collabForm.banner,
+          socials: collabForm.socials,
+          contact: collabForm.contact,
+          headUsername: auth.user.username,
+        }),
+      });
+      if (res.ok) {
+        setCollabModalOpen(false);
+        setCollabForm({
+          name: "",
+          description: "",
+          headUsername: "",
+          avatar: "",
+          banner: "",
+          socials: "",
+          contact: "",
+        });
+      }
+    } finally {
+      setCollabSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -394,6 +447,28 @@ export default function AnimePageContent({
           </dl>
 
           <div className={styles.actions}>
+            {/* Edit button for admins */}
+            {auth.user && auth.user.role?.priority >= 80 && (
+              <Link
+                href={`/admin/create-anime?id=${anime.id}`}
+                className={styles.editBtn}
+                title="Редактировать аниме"
+              >
+                <Pencil size={16} />
+              </Link>
+            )}
+
+            {/* Collaboration request button */}
+            {auth.user && (
+              <button
+                className={styles.collabBtn}
+                onClick={() => setCollabModalOpen(true)}
+                title="Предложить студию озвучки"
+              >
+                <Plus size={16} />
+              </button>
+            )}
+
             <div className={styles.collectionWrap} ref={collectionRef}>
               <button
                 className={`${styles.collectionBtn} ${activeStatuses.some((s) => s !== "favorites") ? styles.collectionBtnActive : ""}`}
@@ -814,6 +889,95 @@ export default function AnimePageContent({
       )}
 
       {tab === "comments" && <Comments animeId={anime.id} accent={accent} />}
+
+      {/* Collaboration request modal */}
+      {collabModalOpen && (
+        <div className={styles.collabModalOverlay} onClick={() => setCollabModalOpen(false)}>
+          <div className={styles.collabModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.collabModalHeader}>
+              <h2>Предложить студию озвучки</h2>
+              <button className={styles.collabModalClose} onClick={() => setCollabModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); submitCollab(); }} className={styles.collabForm}>
+              <div className={styles.formGroup}>
+                <label>Название студии *</label>
+                <input
+                  type="text"
+                  value={collabForm.name}
+                  onChange={(e) => setCollabForm({ ...collabForm, name: e.target.value })}
+                  required
+                  placeholder="Название вашей студии"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Описание студии</label>
+                <textarea
+                  value={collabForm.description}
+                  onChange={(e) => setCollabForm({ ...collabForm, description: e.target.value })}
+                  placeholder="Расскажите о вашей студии..."
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Глава студии (@username) *</label>
+                <input
+                  type="text"
+                  value={collabForm.headUsername}
+                  onChange={(e) => setCollabForm({ ...collabForm, headUsername: e.target.value.replace("@", "") })}
+                  required
+                  placeholder="@username"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Аватар (URL)</label>
+                <input
+                  type="text"
+                  value={collabForm.avatar}
+                  onChange={(e) => setCollabForm({ ...collabForm, avatar: e.target.value })}
+                  placeholder="https://example.com/avatar.png"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Баннер (URL)</label>
+                <input
+                  type="text"
+                  value={collabForm.banner}
+                  onChange={(e) => setCollabForm({ ...collabForm, banner: e.target.value })}
+                  placeholder="https://example.com/banner.jpg"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Соцсети</label>
+                <textarea
+                  value={collabForm.socials}
+                  onChange={(e) => setCollabForm({ ...collabForm, socials: e.target.value })}
+                  placeholder="Discord: https://discord.gg/...&#10;Telegram: https://t.me/..."
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Контакт для модерации *</label>
+                <input
+                  type="text"
+                  value={collabForm.contact}
+                  onChange={(e) => setCollabForm({ ...collabForm, contact: e.target.value })}
+                  required
+                  placeholder="@username или email"
+                />
+              </div>
+              <div className={styles.collabFormActions}>
+                <button type="submit" disabled={collabSubmitting} className={styles.collabSubmitBtn}>
+                  {collabSubmitting ? "Отправка..." : "Отправить на модерацию"}
+                </button>
+                <button type="button" onClick={() => setCollabModalOpen(false)} className={styles.collabCancelBtn}>
+                  Отмена
+                </button>
+              </div>
+              {collabError && <div className={styles.collabError}>{collabError}</div>}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
