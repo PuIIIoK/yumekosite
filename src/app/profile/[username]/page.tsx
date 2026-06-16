@@ -17,6 +17,9 @@ import {
   X,
   Users,
   Bookmark,
+  Mic,
+  Play,
+  Volume2,
 } from "lucide-react";
 import { useAuth, type User, type Role } from "@/context/AuthContext";
 import { useAppearance, type CanvasStyle } from "@/context/AppearanceContext";
@@ -206,6 +209,7 @@ export default function ProfilePage() {
   const [animeCatalog, setAnimeCatalog] = useState<AnimeDetails[]>([]);
   const [friendsList, setFriendsList] = useState<any[]>([]);
   const [friendsListLoading, setFriendsListLoading] = useState(false);
+  const [userStudio, setUserStudio] = useState<{id: number; name: string} | null>(null);
 
   const FRIEND_ROLE_COLORS: Record<string, { c1: string; c2: string }> = {
     ADMIN: { c1: "#a78bfa", c2: "#f472b6" },
@@ -459,6 +463,17 @@ export default function ProfilePage() {
       .catch(() => {});
   }, [username, auth.user]);
 
+  const isOwner = auth.user?.username.toLowerCase() === username.toLowerCase();
+
+  useEffect(() => {
+    if (isOwner) {
+      fetch(`${API_URL}/api/studios/head/${username}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => setUserStudio(data))
+        .catch(() => setUserStudio(null));
+    }
+  }, [username, isOwner]);
+
   const handleFriendAction = async () => {
     if (!auth.user || friendLoading) return;
     setFriendLoading(true);
@@ -524,18 +539,6 @@ export default function ProfilePage() {
     );
   }
 
-  const isOwner = auth.user?.username.toLowerCase() === username.toLowerCase();
-  const [userStudio, setUserStudio] = useState<{id: number; name: string} | null>(null);
-  
-  useEffect(() => {
-    if (isOwner) {
-      fetch(`${API_URL}/api/studios/head/${username}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => setUserStudio(data))
-        .catch(() => setUserStudio(null));
-    }
-  }, [username, isOwner]);
-
   const nameWords = profileUser.displayName.split(/\s+/);
   const nameFirstLine = nameWords[0];
   const nameRest = nameWords.slice(1).join(" ");
@@ -545,6 +548,9 @@ export default function ProfilePage() {
     PRE_ADMIN: { c1: "#c084fc", c2: "#a78bfa", c3: "#7c3aed" },
     ST_MODERATOR: { c1: "#34d399", c2: "#2dd4bf", c3: "#06b6d4" },
     MODERATOR: { c1: "#38bdf8", c2: "#60a5fa", c3: "#818cf8" },
+    RELIZER: { c1: "#10b981", c2: "#34d399", c3: "#059669" },
+    ACTOR: { c1: "#f59e0b", c2: "#fbbf24", c3: "#d97706" },
+    SOUND_DIRECTOR: { c1: "#8b5cf6", c2: "#a855f7", c3: "#7c3aed" },
   };
 
   const roleName = profileUser.role.name;
@@ -656,6 +662,9 @@ export default function ProfilePage() {
                   {r.name === "MODERATOR" && (
                     <Shield size={11} strokeWidth={2.5} />
                   )}
+                  {r.name === "RELIZER" && <Play size={11} strokeWidth={2.5} />}
+                  {r.name === "ACTOR" && <Mic size={11} strokeWidth={2.5} />}
+                  {r.name === "SOUND_DIRECTOR" && <Volume2 size={11} strokeWidth={2.5} />}
                   {r.name === "USER" && <Star size={11} strokeWidth={2.5} />}
                   {r.displayName}
                 </span>

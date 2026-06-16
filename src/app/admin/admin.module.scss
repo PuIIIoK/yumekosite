@@ -2378,17 +2378,191 @@
 
 // ── Moderation Manager ──
 
+.moderationWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.moderationHero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+    gap: 16px;
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    background: rgba(18, 18, 22, 0.9);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.moderationHeroMain {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.moderationKicker {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 .adminTitle {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 900;
+    line-height: 1.05;
     color: var(--text-primary);
-    margin: 0 0 8px;
+    margin: 0;
+    letter-spacing: -0.04em;
 }
 
 .adminDescription {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.7;
+    max-width: 760px;
+}
+
+.moderationTabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.moderationTab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
     font-size: 13px;
-    color: var(--text-muted);
-    margin: 0 0 24px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 7px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary);
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.14);
+    }
+}
+
+.active {
+    border-color: rgba(168, 85, 247, 0.3);
+    background: rgba(168, 85, 247, 0.14);
+    color: #c084fc;
+}
+
+.moderationStats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.moderationStatCard {
+    min-height: 112px;
+    padding: 18px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.moderationStatLabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.moderationStatValue {
+    margin-top: 8px;
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 900;
+    color: var(--text-primary);
+}
+
+.moderationSection {
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    background: rgba(18, 18, 22, 0.9);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.moderationSectionHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.moderationSectionTitle {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.moderationSectionSubtitle {
+    margin: 8px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.moderationSectionPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .adminLoading {
@@ -2403,144 +2577,327 @@
 .emptyState {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
+    gap: 14px;
+    padding: 24px;
+    color: var(--text-secondary);
     font-size: 13px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+
+    strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    span {
+        display: block;
+        line-height: 1.6;
+    }
 }
 
-.moderationList {
-    display: flex;
-    flex-direction: column;
+.moderationGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
     gap: 16px;
 }
 
 .moderationCard {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    transition: border-color 0.15s;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.085);
+    border-radius: 22px;
+    background: rgba(20, 20, 24, 0.9);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.12);
+        transform: translateY(-4px);
+        border-color: rgba(168, 85, 247, 0.26);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.24);
     }
+}
+
+.moderationCardBanner {
+    position: relative;
+    min-height: 168px;
+    background: rgba(255, 255, 255, 0.03);
+    background-size: cover;
+    background-position: center;
+}
+
+.moderationCardOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 14, 0.6);
+}
+
+.moderationCardTopRow {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: 16px;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.moderationAvatarWrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 3px solid rgba(15, 15, 20, 0.96);
+    background: rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32);
+}
+
+.moderationAvatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.moderationAvatarFallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.moderationStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.moderationStatusPending {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+}
+
+.moderationCardBody {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
 .moderationHeader {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.moderationHeaderText {
+    min-width: 0;
 
     h3 {
         margin: 0;
-        font-size: 16px;
-        font-weight: 700;
         color: var(--text-primary);
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.2;
+        letter-spacing: -0.03em;
+    }
+
+    p {
+        margin: 6px 0 0;
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.5;
     }
 }
 
-.moderationAnime {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(168, 85, 247, 0.12);
-    color: #a855f7;
-    border: 1px solid rgba(168, 85, 247, 0.25);
+.moderationMetaBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.moderationAvatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 12px;
-    object-fit: cover;
-    margin-bottom: 16px;
-    border: 1px solid var(--border);
+.roleBadge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-bottom: 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(168, 85, 247, 0.22);
+    background: rgba(168, 85, 247, 0.12);
+    color: #c084fc;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .moderationDetails {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.moderationDetailRow,
+.moderationDetailRowWide {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 10px;
-    border: 1px solid var(--border);
+    gap: 4px;
+    min-width: 0;
+}
 
-    div {
-        font-size: 13px;
-        color: var(--text-secondary);
-        line-height: 1.5;
+.moderationDetailRowWide {
+    grid-column: 1 / -1;
+}
 
-        strong {
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-right: 6px;
-        }
-    }
+.moderationDetailLabel {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.moderationDetailValue {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+    word-break: break-word;
 }
 
 .moderationActions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
-.approveBtn {
+.approveBtn,
+.rejectBtn {
     flex: 1;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
-    border-radius: 12px;
-    background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 14px;
     font-size: 13px;
-    font-weight: 600;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-weight: 800;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    transition: all 0.15s;
+    transition:
+        transform 0.18s ease,
+        background 0.18s ease,
+        border-color 0.18s ease,
+        opacity 0.18s ease,
+        color 0.18s ease;
 
     &:hover:not(:disabled) {
-        background: rgba(16, 185, 129, 0.25);
-        border-color: rgba(16, 185, 129, 0.5);
+        transform: translateY(-1px);
     }
 
     &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
+    }
+}
+
+.approveBtn {
+    background: rgba(16, 185, 129, 0.12);
+    color: #86efac;
+
+    &:hover:not(:disabled) {
+        background: rgba(16, 185, 129, 0.18);
+        border-color: rgba(16, 185, 129, 0.22);
     }
 }
 
 .rejectBtn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border-radius: 12px;
     background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    font-size: 13px;
-    font-weight: 600;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    cursor: pointer;
-    transition: all 0.15s;
+    color: #fca5a5;
 
     &:hover:not(:disabled) {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.16);
+        border-color: rgba(239, 68, 68, 0.22);
+    }
+}
+
+@media (max-width: 1100px) {
+    .moderationHero {
+        grid-template-columns: 1fr;
     }
 
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+    .moderationHero,
+    .moderationSection {
+        border-radius: 18px;
+    }
+
+    .moderationHero {
+        padding: 18px;
+    }
+
+
+    .moderationSection {
+        padding: 18px;
+    }
+
+    .moderationSectionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .moderationGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .moderationDetails {
+        grid-template-columns: 1fr;
+    }
+
+    .moderationActions {
+        flex-direction: column;
+    }
+
+    .moderationHeader {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

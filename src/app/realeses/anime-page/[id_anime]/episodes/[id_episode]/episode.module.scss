@@ -493,9 +493,49 @@
 
 .studioTabs {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  max-width: 90%;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.studioTab {
+  flex-shrink: 0;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.studioTabActive {
+  composes: studioTab;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent);
 }
 
 .studioTab {

@@ -53,7 +53,7 @@ const ADMIN_SECTIONS = [
   },
   {
     id: "studios",
-    title: "Коллаборация",
+    title: "Студии",
     icon: Handshake,
     color: "#ef4444",
     minPriority: 120,

@@ -27,6 +27,7 @@ import { getAccent, type AnimeDetails, parseHiddenStudios, isAnimeHidden } from 
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 import Comments from "./Comments";
+import ImageUploadField from "@/components/ImageUploadField/ImageUploadField";
 
 type Tab = "episodes" | "related" | "comments";
 
@@ -920,33 +921,24 @@ export default function AnimePageContent({
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>Глава студии (@username) *</label>
-                <input
-                  type="text"
-                  value={collabForm.headUsername}
-                  onChange={(e) => setCollabForm({ ...collabForm, headUsername: e.target.value.replace("@", "") })}
-                  required
-                  placeholder="@username"
-                />
+                <label>Глава студии</label>
+                <div className={styles.headUsernameDisplay}>
+                  @{auth.user?.username}
+                  <span className={styles.headUsernameNote}>— ваш профиль привязан автоматически</span>
+                </div>
               </div>
-              <div className={styles.formGroup}>
-                <label>Аватар (URL)</label>
-                <input
-                  type="text"
-                  value={collabForm.avatar}
-                  onChange={(e) => setCollabForm({ ...collabForm, avatar: e.target.value })}
-                  placeholder="https://example.com/avatar.png"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Баннер (URL)</label>
-                <input
-                  type="text"
-                  value={collabForm.banner}
-                  onChange={(e) => setCollabForm({ ...collabForm, banner: e.target.value })}
-                  placeholder="https://example.com/banner.jpg"
-                />
-              </div>
+              <ImageUploadField
+                label="Аватар студии"
+                value={collabForm.avatar}
+                onChange={(url) => setCollabForm({ ...collabForm, avatar: url })}
+                placeholder="https://example.com/avatar.png"
+              />
+              <ImageUploadField
+                label="Баннер студии"
+                value={collabForm.banner}
+                onChange={(url) => setCollabForm({ ...collabForm, banner: url })}
+                placeholder="https://example.com/banner.jpg"
+              />
               <div className={styles.formGroup}>
                 <label>Соцсети</label>
                 <textarea

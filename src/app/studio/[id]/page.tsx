@@ -1,13 +1,13 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header/Header";
-import { API_URL } from "@/config/hosts";
-import { Globe, Mail, Users, Edit3 } from "lucide-react";
-import styles from "./studio.module.scss";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { Edit3, ExternalLink, Globe, Link2, ShieldCheck, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { API_URL } from "@/config/hosts";
+import styles from "./studio.module.scss";
 
 interface StudioData {
   id: number;
@@ -18,9 +18,50 @@ interface StudioData {
   banner: string | null;
   socials: string | null;
   website: string | null;
-  contact: string | null;
   isCollaboration: boolean;
 }
+
+interface SocialLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+const splitLines = (value: string | null | undefined) =>
+  value
+    ? value
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+    : [];
+
+const buildHref = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
+
+const parseSocialLinks = (value: string | null | undefined): SocialLink[] =>
+  splitLines(value).map((line, index) => {
+    const match = line.match(/^([^:]+):\s*(.+)$/);
+    const label = match?.[1]?.trim() || `Ссылка ${index + 1}`;
+    const url = (match?.[2] || line).trim();
+
+    return {
+      id: `${index}-${label}-${url}`,
+      label,
+      url,
+    };
+  });
+
+const displayHost = (value: string) => {
+  try {
+    return new URL(buildHref(value)).hostname.replace(/^www\./, "");
+  } catch {
+    return value;
+  }
+};
 
 export default function StudioPage() {
   const params = useParams();
@@ -31,57 +72,202 @@ export default function StudioPage() {
   const [notFound, setNotFound] = useState(false);
 
   const isHead = user?.username?.toLowerCase() === studio?.headUsername?.toLowerCase();
+  const socialLinks = useMemo(() => parseSocialLinks(studio?.socials), [studio?.socials]);
+  const websiteHref = studio?.website ? buildHref(studio.website) : "";
+  const headProfileHref = studio?.headUsername ? `/profile/${studio.headUsername}` : "";
 
   useEffect(() => {
     fetch(`${API_URL}/api/studios/${id}`)
-      .then((r) => { if (!r.ok) throw new Error("not found"); return r.json(); })
+      .then((response) => {
+        if (!response.ok) throw new Error("not found");
+        return response.json();
+      })
       .then((data: StudioData) => setStudio(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <><Header /><main className={styles.main}><div className={styles.container}><div className={styles.loading}>Загрузка...</div></div></main></>;
-  if (notFound || !studio) return <><Header /><main className={styles.main}><div className={styles.container}><div className={styles.loading}>Студия не найдена</div></div></main></>;
-
-  const socialLines = studio.socials ? studio.socials.split("\n").filter(Boolean) : [];
-
-  return (<>
-    <Header />
-    <main className={styles.main}>
-      <div className={styles.bannerWrap}>
-        <div className={styles.banner} style={studio.banner ? { backgroundImage: `url(${studio.banner})` } : undefined} />
-        <div className={styles.bannerOverlay} />
-      </div>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.avatarWrap}>
-            {studio.avatar ? <img src={studio.avatar} alt={studio.name} className={styles.avatar} /> : <div className={styles.avatarPlaceholder}>{studio.name.charAt(0)}</div>}
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div className={styles.loadingWrap}>
+            <div className={styles.loading}>Загрузка...</div>
           </div>
-          <div className={styles.headerInfo}>
-            <div className={styles.nameRow}>
-              <h1 className={styles.name}>{studio.name}</h1>
+        </main>
+      </>
+    );
+  }
+
+  if (notFound || !studio) {
+    return (
+      <>
+        <Header />
+        <main className={styles.main}>
+          <div className={styles.loadingWrap}>
+            <div className={styles.loading}>Студия не найдена</div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Header />
+      <main className={styles.main}>
+        <div className={styles.studioWrap}>
+          <div className={styles.metaBar}>
+            <div className={styles.metaLeft}>
+              <Link href="/">Главная</Link>
+              <span className={styles.metaDivider} />
+              <span>Студии</span>
+              <span className={styles.metaDivider} />
+              <span>{studio.name}</span>
+            </div>
+
+            <div className={styles.metaRight}>
+              <span className={styles.metaChip}>
+                <Users size={12} />
+                {socialLinks.length} links
+              </span>
+              <span className={styles.metaChip}>
+                {studio.isCollaboration ? "PUBLIC" : "HIDDEN"}
+              </span>
               {isHead && (
-                <Link href={`/studio/${studio.id}/edit`} className={styles.editBtn}>
-                  <Edit3 size={14} />
-                  Редактировать
+                <Link href={`/studio/${studio.id}/edit`} className={styles.metaChipLink}>
+                  <Edit3 size={12} />
+                  Edit
                 </Link>
               )}
             </div>
-            {studio.description && <p className={styles.desc}>{studio.description}</p>}
-            <div className={styles.meta}>
-              {studio.headUsername && <Link href={`/profile/${studio.headUsername}`} className={styles.metaLink}><Users size={14} /> @{studio.headUsername}</Link>}
-              {studio.website && <a href={studio.website} target="_blank" rel="noopener noreferrer" className={styles.metaLink}><Globe size={14} /> {studio.website.replace(/^https?:\/\//, "")}</a>}
-              {studio.contact && <span className={styles.metaItem}><Mail size={14} /> {studio.contact}</span>}
+          </div>
+
+          <section className={styles.heroPrivileged}>
+            <div className={styles.heroShimmer} />
+            <div className={styles.heroBorderGlow} />
+
+            <aside
+              className={styles.posterCard}
+              style={studio.banner ? { backgroundImage: `url(${studio.banner})` } : undefined}
+            >
+              <div className={styles.posterTop}>
+                <span className={styles.badgeMono}>{studio.isCollaboration ? "ACTIVE" : "SILENT"}</span>
+                <span className={styles.badgeMono}>{socialLinks.length} social</span>
+              </div>
+
+              <div className={styles.posterAvatarWrap}>
+                {studio.avatar ? (
+                  <img src={studio.avatar} alt={studio.name} className={styles.posterAvatar} />
+                ) : (
+                  <div className={styles.posterAvatarPlaceholder}>{studio.name.charAt(0)}</div>
+                )}
+              </div>
+            </aside>
+
+            <article className={styles.heroInfo}>
+              <div className={styles.heroHead}>
+                <div className={styles.heroLabel}>Studio profile</div>
+                {isHead && (
+                  <Link href={`/studio/${studio.id}/edit`} className={styles.editBtn}>
+                    <Edit3 size={14} />
+                    Редактировать
+                  </Link>
+                )}
+              </div>
+
+              <h1 className={styles.title}>{studio.name}</h1>
+              <p className={styles.subtitle}>
+                {studio.description || "Описание студии пока не заполнено."}
+              </p>
+
+              <div className={styles.badgeRow}>
+                {studio.headUsername && headProfileHref && (
+                  <Link href={headProfileHref} className={styles.badgeLink}>
+                    <Users size={13} />
+                    @{studio.headUsername}
+                  </Link>
+                )}
+
+                {studio.website && websiteHref && (
+                  <a
+                    href={websiteHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.badgeLink}
+                  >
+                    <Globe size={13} />
+                    {displayHost(studio.website)}
+                    <ExternalLink size={11} />
+                  </a>
+                )}
+
+                <span className={styles.badgeStatic}>
+                  {studio.isCollaboration ? "PUBLIC COLLAB" : "PRIVATE COLLAB"}
+                </span>
+              </div>
+
+              <div className={styles.statGrid}>
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>ID</span>
+                  <strong className={styles.statValue}>#{studio.id}</strong>
+                </div>
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>SOCIALS</span>
+                  <strong className={styles.statValue}>{socialLinks.length}</strong>
+                </div>
+                <div className={styles.statCard}>
+                  <span className={styles.statLabel}>STATUS</span>
+                  <strong className={styles.statValue}>{studio.isCollaboration ? "ON" : "OFF"}</strong>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section className={styles.panelCard}>
+            <div className={styles.panelHeader}>
+              <div>
+                <div className={styles.panelKicker}>Links</div>
+                <h2 className={styles.panelTitle}>Социальные сети студии</h2>
+              </div>
+              <span className={styles.panelHint}>каждая карточка ведёт на внешнюю ссылку</span>
             </div>
-          </div>
+
+            {socialLinks.length > 0 ? (
+              <div className={styles.socialGrid}>
+                {socialLinks.map((item) => {
+                  const href = buildHref(item.url);
+                  const host = displayHost(item.url);
+
+                  return (
+                    <a
+                      key={item.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialCard}
+                    >
+                      <div className={styles.socialIcon}>
+                        <Link2 size={15} />
+                      </div>
+                      <div className={styles.socialBody}>
+                        <div className={styles.socialTitle}>{item.label || host}</div>
+                        <div className={styles.socialUrl}>{host}</div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className={styles.emptyBlock}>
+                <ShieldCheck size={18} />
+                <span>Социальные сети не указаны.</span>
+              </div>
+            )}
+          </section>
         </div>
-        {socialLines.length > 0 && (
-          <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Социальные сети</h2>
-            <div className={styles.socials}>{socialLines.map((line: string, i: number) => <span key={i} className={styles.socialItem}>{line}</span>)}</div>
-          </div>
-        )}
-      </div>
-    </main>
-  </>);
+      </main>
+    </>
+  );
 }

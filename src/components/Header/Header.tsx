@@ -46,6 +46,7 @@ import { useStatus } from "@/context/StatusContext";
 import ProtectedImage from "@/components/ProtectedImage/ProtectedImage";
 import UserStatusIndicator from "@/components/UserStatus/UserStatusIndicator";
 import CropModal from "@/components/CropModal/CropModal";
+import NotificationsDropdown from "@/components/NotificationsDropdown/NotificationsDropdown";
 import styles from "./Header.module.scss";
 import { API_URL } from "@/config/hosts";
 
@@ -78,11 +79,48 @@ export default function Header() {
       .catch(() => {});
 
     fetch(`${API_URL}/api/studios`)
-      .then((r) => r.ok ? r.json() : [])
+      .then((r) => (r.ok ? r.json() : []))
       .then((data) => setStudioCatalog(data.filter((s: any) => s.isCollaboration)))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadUserStudio = async () => {
+      if (!auth.user?.username) {
+        setUserStudio(null);
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${API_URL}/api/studios/head/${auth.user.username.toLowerCase()}`,
+        );
+        if (!res.ok) {
+          if (!cancelled) setUserStudio(null);
+          return;
+        }
+
+        const data = await res.json();
+        if (!cancelled && data?.id && data?.name) {
+          setUserStudio({ id: data.id, name: data.name });
+        } else if (!cancelled) {
+          setUserStudio(null);
+        }
+      } catch {
+        if (!cancelled) setUserStudio(null);
+      }
+    };
+
+    loadUserStudio();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth.user?.username]);
   const [userResults, setUserResults] = useState<any[]>([]);
+  const [userStudio, setUserStudio] = useState<{ id: number; name: string } | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -1039,6 +1077,9 @@ export default function Header() {
             <Heart size={15} strokeWidth={2.5} />
             Поддержать
           </Link>
+          {auth.isAuthenticated && auth.user && (
+            <NotificationsDropdown />
+          )}
           <button
             className={styles.iconBtn}
             aria-label="Закладки"
@@ -1326,58 +1367,70 @@ export default function Header() {
 
                   <div className={styles.profileMenuDivider} />
 
-                  <div className={styles.profileMenuList}>
-                    <Link
-                      href={`/profile/${auth.user.username}`}
-                      className={styles.profileMenuItem}
-                      onClick={() => setProfileMenuOpen(false)}
-                      role="menuitem"
-                    >
-                      <User size={16} />
-                      <span>Мой профиль</span>
-                    </Link>
-                    <button
-                      className={styles.profileMenuItem}
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        setBookmarksOpen(true);
-                        fetchCollections();
-                      }}
-                      role="menuitem"
-                    >
-                      <Bookmark size={16} />
-                      <span>Мои закладки</span>
-                    </button>
-                    <button
-                      className={styles.profileMenuItem}
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        setFriendsOpen(true);
-                      }}
-                      role="menuitem"
-                    >
-                      <Users size={16} />
-                      <span>Мои друзья</span>
-                    </button>
-                    <button
-                      className={styles.profileMenuItem}
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        setSettingsOpen(true);
-                      }}
-                      role="menuitem"
-                    >
-                      <Settings size={16} />
-                      <span>Настройки</span>
-                    </button>
-                  </div>
+                    <div className={styles.profileMenuList}>
+                      <Link
+                        href={`/profile/${auth.user.username}`}
+                        className={styles.profileMenuItem}
+                        onClick={() => setProfileMenuOpen(false)}
+                        role="menuitem"
+                      >
+                        <User size={16} />
+                        <span>Мой профиль</span>
+                      </Link>
+                      <button
+                        className={styles.profileMenuItem}
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setBookmarksOpen(true);
+                          fetchCollections();
+                        }}
+                        role="menuitem"
+                      >
+                        <Bookmark size={16} />
+                        <span>Мои закладки</span>
+                      </button>
+                      <button
+                        className={styles.profileMenuItem}
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setFriendsOpen(true);
+                        }}
+                        role="menuitem"
+                      >
+                        <Users size={16} />
+                        <span>Мои друзья</span>
+                      </button>
+                      {userStudio && (
+                        <Link
+                          href={`/studio/${userStudio.id}`}
+                          className={styles.profileMenuItem}
+                          onClick={() => setProfileMenuOpen(false)}
+                          role="menuitem"
+                        >
+                          <Users size={16} />
+                          <span>Моя команда</span>
+                        </Link>
+                      )}
+                      <button
+                        className={styles.profileMenuItem}
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setSettingsOpen(true);
+                        }}
+                        role="menuitem"
+                      >
+                        <Settings size={16} />
+                        <span>Настройки</span>
+                      </button>
+                    </div>
 
-                  {Math.max(
-                    0,
-                    ...(
-                      auth.user?.roles ?? [auth.user?.role].filter(Boolean)
-                    ).map((r) => r?.priority ?? 0),
-                  ) >= 80 && (
+                    {Math.max(
+                      0,
+                      ...(
+                        auth.user?.roles ?? [auth.user?.role].filter(Boolean)
+                      ).map((r) => r?.priority ?? 0),
+                    ) >= 80 && (
+
                     <button
                       className={styles.profileMenuItem}
                       onClick={() => {
