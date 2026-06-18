@@ -60,7 +60,7 @@ interface VoiceCast {
 const emptyForm: EpisodeForm = {
   number: "",
   title: "",
-  studio: "YumekoStudio",
+  studio: "",
 };
 
 function HlsModal({
@@ -171,7 +171,7 @@ export default function EpisodeManager() {
           fetch(`${API_URL}/api/studios`),
         ]);
 
-        if (animeRes.ok) {
+          if (animeRes.ok) {
           const data = await animeRes.json();
           setAnimeList(data);
         }
@@ -181,12 +181,12 @@ export default function EpisodeManager() {
           const names = Array.isArray(studioData)
             ? studioData.map((s: { name?: string }) => s.name).filter((n): n is string => Boolean(n))
             : [];
-          setStudios(["YumekoStudio", ...new Set(names)]);
+          setStudios([...new Set(names)]);
         } else {
-          setStudios(["YumekoStudio"]);
+          setStudios([]);
         }
       } catch {
-        setStudios(["YumekoStudio"]);
+        setStudios([]);
       } finally {
         setLoading(false);
         setLoadingStudios(false);
@@ -311,6 +311,12 @@ export default function EpisodeManager() {
     }
   }, [episodes, selectedAnime]);
 
+  useEffect(() => {
+    if (selectedAnime && !form.studio && studios.length > 0) {
+      setForm((f) => ({ ...f, studio: studios[0] }));
+    }
+  }, [studios, selectedAnime, form.studio]);
+
   const filteredAnime = useMemo(() => {
     if (!animeSearch.trim()) return animeList;
     const q = animeSearch.trim().toLowerCase();
@@ -322,22 +328,22 @@ export default function EpisodeManager() {
   }, [animeList, animeSearch]);
 
   const episodeStudios = useMemo(() => {
-    return [...new Set(episodes.map((e) => e.studio || "YumekoStudio"))].sort();
+    return [...new Set(episodes.map((e) => e.studio).filter((s): s is string => Boolean(s)))].sort();
   }, [episodes]);
 
   useEffect(() => {
     if (episodeStudios.length > 0 && !vcStudio) setVcStudio(episodeStudios[0]);
-  }, [episodeStudios]);
+  }, [episodeStudios, vcStudio]);
 
   const vcByStudio = useMemo(() => {
-    const active = vcStudio || episodeStudios[0] || "YumekoStudio";
+    const active = vcStudio || episodeStudios[0] || "";
     return voiceCast.filter((vc) => vc.studio === active);
   }, [voiceCast, vcStudio, episodeStudios]);
 
   const filteredEpisodes = useMemo(() => {
     let list = episodes;
     if (filterStudio) {
-      list = list.filter((e) => (e.studio || "YumekoStudio") === filterStudio);
+      list = list.filter((e) => e.studio === filterStudio);
     }
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -356,6 +362,10 @@ export default function EpisodeManager() {
     setAnimeSearch("");
     setError(null);
     setSuccess(null);
+    setForm((prev) => ({
+      ...prev,
+      studio: prev.studio || studios[0] || "",
+    }));
   };
 
   const ACCEPTED_TYPES = [
@@ -382,6 +392,10 @@ export default function EpisodeManager() {
       setError("Укажите номер эпизода");
       return;
     }
+    if (!form.studio.trim()) {
+      setError("Выберите студию");
+      return;
+    }
     setUploading(true);
     setUploadPercent(0);
     setUploadPhase("uploading");
@@ -394,7 +408,7 @@ export default function EpisodeManager() {
     params.set("animeId", String(animeId));
     params.set("number", String(num));
     if (form.title.trim()) params.set("title", form.title.trim());
-    params.set("studio", form.studio);
+    params.set("studio", form.studio.trim());
     if (user?.id) params.set("grantXpUserId", String(user.id));
     params.set("filename", file.name);
 
@@ -418,7 +432,7 @@ export default function EpisodeManager() {
       setUploadPercent(0);
       setUploadPhase("uploading");
       if (xhr.status >= 200 && xhr.status < 300) {
-        setForm(emptyForm);
+        setForm({ ...emptyForm, studio: studios[0] || "" });
         setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
         setTimeout(() => setSuccess(null), 4000);
         await fetchEpisodes(animeId);
@@ -675,7 +689,15 @@ export default function EpisodeManager() {
                   value={form.studio}
                   onChange={(e) => setForm({ ...form, studio: e.target.value })}
                   className={styles.episodeFormSelect}
+                  disabled={loadingStudios || studios.length === 0}
                 >
+                  <option value="" disabled>
+                    {loadingStudios
+                      ? "Загрузка студий..."
+                      : studios.length === 0
+                        ? "Студии не найдены"
+                        : "Выберите студию"}
+                  </option>
                   {studios.map((studio) => (
                     <option key={studio} value={studio}>
                       {studio}
@@ -684,6 +706,13 @@ export default function EpisodeManager() {
                 </select>
               </div>
             </div>
+
+            {!loadingStudios && studios.length === 0 && (
+              <div className={styles.episodeError}>
+                <AlertTriangle size={13} />
+                Студии не найдены. Сначала добавьте студии на сайте.
+              </div>
+            )}
 
             {error && (
               <div className={styles.episodeError}>
