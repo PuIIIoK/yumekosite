@@ -489,12 +489,16 @@ export default function EpisodeManager() {
 
   const handleChangeStudio = async (epId: number, newStudio: string) => {
     if (!selectedAnime) return;
+    if (!user?.username) {
+      setError("Требуется авторизация");
+      return;
+    }
     setEditStudioSaving(true);
     try {
       const res = await fetch(`${API_URL}/api/episodes/${epId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studio: newStudio }),
+        body: JSON.stringify({ studio: newStudio, username: user.username }),
       });
       if (res.ok) {
         await fetchEpisodes(selectedAnime.id, true);
@@ -512,9 +516,13 @@ export default function EpisodeManager() {
 
   const handleDelete = async () => {
     if (!deleteTarget || !selectedAnime) return;
+    if (!user?.username) {
+      setError("Требуется авторизация");
+      return;
+    }
     setDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/episodes/${deleteTarget.id}`, {
+      const res = await fetch(`${API_URL}/api/episodes/${deleteTarget.id}?username=${encodeURIComponent(user.username)}`, {
         method: "DELETE",
       });
       if (res.ok) {
