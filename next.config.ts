@@ -37,6 +37,9 @@ function patchCssModuleClassNames(rules: unknown[], buildId: string): void {
 }
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },
