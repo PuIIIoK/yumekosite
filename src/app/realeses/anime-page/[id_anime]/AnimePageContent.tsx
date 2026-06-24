@@ -21,6 +21,7 @@ import {
   Plus,
   Pencil,
   X,
+  Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getAccent, type AnimeDetails, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
@@ -79,6 +80,8 @@ export default function AnimePageContent({
   const [collabModalOpen, setCollabModalOpen] = useState(false);
   const [collabSubmitting, setCollabSubmitting] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
+  const [collabSuccessOpen, setCollabSuccessOpen] = useState(false);
+  const [collabSuccessStudio, setCollabSuccessStudio] = useState("");
   const [collabForm, setCollabForm] = useState({
     name: "",
     description: "",
@@ -176,18 +179,21 @@ export default function AnimePageContent({
           headUsername: auth.user.username,
         }),
       });
-      if (res.ok) {
-        setCollabModalOpen(false);
-        setCollabForm({
-          name: "",
-          description: "",
-          headUsername: "",
-          avatar: "",
-          banner: "",
-          socials: "",
-          contact: "",
-        });
-      }
+       if (res.ok) {
+         setCollabModalOpen(false);
+         setCollabSuccessStudio(collabForm.name.trim());
+         setCollabSuccessOpen(true);
+         setTimeout(() => window.dispatchEvent(new Event("notifications:refresh")), 250);
+         setCollabForm({
+           name: "",
+           description: "",
+           headUsername: "",
+           avatar: "",
+           banner: "",
+           socials: "",
+           contact: "",
+         });
+       }
     } finally {
       setCollabSubmitting(false);
     }
@@ -894,7 +900,7 @@ export default function AnimePageContent({
       {/* Collaboration request modal */}
       {collabModalOpen && (
         <div className={styles.collabModalOverlay} onClick={() => setCollabModalOpen(false)}>
-          <div className={styles.collabModal} onClick={(e) => e.stopPropagation()}>
+          <div className={`${styles.collabModal} ${styles.collabModalTop}`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.collabModalHeader}>
               <h2>Предложить студию озвучки</h2>
               <button className={styles.collabModalClose} onClick={() => setCollabModalOpen(false)}>
@@ -967,6 +973,31 @@ export default function AnimePageContent({
               </div>
               {collabError && <div className={styles.collabError}>{collabError}</div>}
             </form>
+          </div>
+        </div>
+      )}
+
+      {collabSuccessOpen && (
+        <div className={styles.collabModalOverlay} onClick={() => setCollabSuccessOpen(false)}>
+          <div className={`${styles.collabModal} ${styles.collabSuccessModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.collabSuccessIcon}>
+              <Check size={18} />
+            </div>
+            <div className={styles.collabModalHeader}>
+              <h2>Запрос отправлен</h2>
+              <button className={styles.collabModalClose} onClick={() => setCollabSuccessOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.requestSentText}>
+              Студия <strong>«{collabSuccessStudio}»</strong> отправлена на модерацию.
+              Ожидайте решения.
+            </div>
+            <div className={styles.collabFormActions}>
+              <button type="button" className={styles.collabSubmitBtn} onClick={() => setCollabSuccessOpen(false)}>
+                Понятно
+              </button>
+            </div>
           </div>
         </div>
       )}

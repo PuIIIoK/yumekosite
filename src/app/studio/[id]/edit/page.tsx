@@ -59,6 +59,8 @@ export default function EditStudioPage() {
   const [newMemberUsername, setNewMemberUsername] = useState("");
   const [newMemberRole, setNewMemberRole] = useState("ACTOR");
   const [submittingRoles, setSubmittingRoles] = useState(false);
+  const [confirmRolesOpen, setConfirmRolesOpen] = useState(false);
+  const [sentRolesOpen, setSentRolesOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/studios/${id}`)
@@ -149,6 +151,7 @@ export default function EditStudioPage() {
     const localMembers = teamMembers.filter(m => m.status === "local");
     if (localMembers.length === 0) return;
 
+    setConfirmRolesOpen(false);
     setSubmittingRoles(true);
     try {
       const res = await fetch(`${API_URL}/api/studio-role-requests`, {
@@ -170,6 +173,8 @@ export default function EditStudioPage() {
           m.status === "local" ? { ...m, status: "pending" } : m
         ));
         setSuccess("Запросы на добавление ролей отправлены на модерацию");
+        setSentRolesOpen(true);
+        setTimeout(() => window.dispatchEvent(new Event("notifications:refresh")), 250);
       } else {
         const data = await res.json();
         setError(data.error || "Ошибка отправки");
@@ -196,6 +201,7 @@ export default function EditStudioPage() {
   }
 
   const hasLocalMembers = teamMembers.some(m => m.status === "local");
+  const localCount = teamMembers.filter((m) => m.status === "local").length;
 
   return (
     <div className={styles.container}>
@@ -344,7 +350,7 @@ export default function EditStudioPage() {
           {hasLocalMembers && (
             <button
               type="button"
-              onClick={submitRolesForModeration}
+              onClick={() => setConfirmRolesOpen(true)}
               disabled={submittingRoles}
               className={styles.submitRolesBtn}
             >
@@ -362,6 +368,54 @@ export default function EditStudioPage() {
           </button>
         </div>
       </form>
+
+      {confirmRolesOpen && (
+        <div className={styles.confirmOverlay} onClick={() => setConfirmRolesOpen(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Отправить роли на модерацию?</h3>
+            <p className={styles.confirmText}>
+              Будет отправлено {localCount} {localCount === 1 ? "заявка" : localCount < 5 ? "заявки" : "заявок"} на добавление в студию.
+              После отправки они станут доступны модераторам и будут ждать принятия.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmCancelBtn}
+                onClick={() => setConfirmRolesOpen(false)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className={styles.confirmBtn}
+                onClick={submitRolesForModeration}
+              >
+                Отправить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sentRolesOpen && (
+        <div className={styles.confirmOverlay} onClick={() => setSentRolesOpen(false)}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Запрос отправлен</h3>
+            <p className={styles.confirmText}>
+              Запрос на добавление ролей отправлен на модерацию. Ожидайте принятия.
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.confirmBtn}
+                onClick={() => setSentRolesOpen(false)}
+              >
+                Понятно
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

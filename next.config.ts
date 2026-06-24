@@ -58,7 +58,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "anilibria.top" },
       { protocol: "https", hostname: "shikimori.one" },
       { protocol: "https", hostname: "desu.shikimori.one" },
-      { protocol: "https", hostname: "media.myshows.me" },
+      { protocol: "https", hostname: "cdn.yumeko.ru" },
+      { protocol: "https", hostname: "storage.yandexcloud.net" },
     ],
   },
 };

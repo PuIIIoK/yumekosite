@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, X, Check, UserPlus, UserMinus, Users, Play } from "lucide-react";
+import { Bell, X, Check, UserPlus, Users, Play } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/config/hosts";
@@ -22,6 +22,35 @@ interface Notification {
   relatedStudioName?: string;
 }
 
+function parseResponsePayload(payload: string): { notifications?: Notification[]; hasMore?: boolean } | null {
+  const trimmed = payload.trim();
+  if (!trimmed) return null;
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {}
+
+  const bytes: number[] = [];
+  for (const line of payload.split("\n")) {
+    if (!line.trim()) continue;
+    const hexPart = line.substring(10, 58).trim();
+    for (const h of hexPart.split(/\s+/)) {
+      if (h.length === 2) bytes.push(parseInt(h, 16));
+    }
+  }
+
+  if (bytes.length === 0) return null;
+
+  const decoded = new TextDecoder().decode(new Uint8Array(bytes)).trim();
+  if (!decoded) return null;
+
+  try {
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
 export default function NotificationsDropdown() {
   const auth = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -32,38 +61,40 @@ export default function NotificationsDropdown() {
 
   const fetchNotifications = async (limit = 10, silent = false) => {
     if (!auth.user) return;
+    const username = auth.user.username.trim().toLowerCase();
     
     try {
-      const res = await fetch(`${API_URL}/api/notifications/${auth.user.username}?limit=${limit}`);
+       const res = await fetch(`${API_URL}/api/notifications/${username}?page=0&size=${limit}`);
       if (res.ok) {
-        const data = await res.json();
-        const nextNotifications: Notification[] = data.notifications || [];
+        const data = parseResponsePayload(await res.text()) ?? {};
 
-        if (silent) {
-          const unseen = nextNotifications.filter((n) => !seenNotificationIds.current.has(n.id));
-          if (unseen.length > 0) {
-            setNotifications((prev) => {
-              const merged = [...unseen, ...prev];
-              const deduped = merged.filter(
-                (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index,
-              );
-              return deduped.sort(
-                (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
-              );
-            });
-            for (const item of unseen) {
-              seenNotificationIds.current.add(item.id);
-            }
-          }
-        } else {
-          setNotifications(nextNotifications);
-          for (const item of nextNotifications) {
-            seenNotificationIds.current.add(item.id);
-          }
-        }
+         const nextNotifications: Notification[] = data.notifications || [];
 
-        setHasMore(data.hasMore || false);
-      }
+         if (silent) {
+           const unseen = nextNotifications.filter((n) => !seenNotificationIds.current.has(n.id));
+           if (unseen.length > 0) {
+             setNotifications((prev) => {
+               const merged = [...unseen, ...prev];
+               const deduped = merged.filter(
+                 (item, index, array) => array.findIndex((entry) => entry.id === item.id) === index,
+               );
+               return deduped.sort(
+                 (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
+               );
+             });
+             for (const item of unseen) {
+               seenNotificationIds.current.add(item.id);
+             }
+           }
+         } else {
+           setNotifications(nextNotifications);
+           for (const item of nextNotifications) {
+             seenNotificationIds.current.add(item.id);
+           }
+         }
+
+         setHasMore(data.hasMore || false);
+       }
     } catch (err) {
       console.error("Failed to fetch notifications", err);
     } finally {
@@ -104,8 +135,12 @@ export default function NotificationsDropdown() {
       notification.type === "collab_request_approved"
         ? "Студия одобрена"
         : notification.type === "collab_request_submitted"
-          ? "Новая заявка в студию"
-          : "Yumeko";
+          ? "Заявка на студию отправлена"
+          : notification.type === "STUDIO_SUBMITTED"
+            ? "Заявка на студию отправлена"
+            : notification.type === "STUDIO_ROLE_REQUEST"
+              ? "Запрос в студию"
+              : "Yumeko";
 
     new Notification(title, {
       body,
@@ -123,7 +158,7 @@ export default function NotificationsDropdown() {
     if (!auth.user) return;
 
     const pollAndNotify = async () => {
-      const username = auth.user?.username;
+      const username = auth.user?.username?.trim().toLowerCase();
       if (!username) return;
 
       if (typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -131,9 +166,9 @@ export default function NotificationsDropdown() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/api/notifications/${username}?limit=20`);
+        const res = await fetch(`${API_URL}/api/notifications/${username}?page=0&size=20`);
         if (!res.ok) return;
-        const data = await res.json();
+        const data = parseResponsePayload(await res.text()) ?? {};
         const nextNotifications: Notification[] = data.notifications || [];
 
         const latestKnownIds = new Set(seenNotificationIds.current);
@@ -187,10 +222,20 @@ export default function NotificationsDropdown() {
       await fetchNotifications(20, true);
     };
 
+    const refreshListener = () => {
+      setTimeout(() => {
+        fetchNotifications(20, true);
+      }, 250);
+    };
+
+    window.addEventListener("notifications:refresh", refreshListener as EventListener);
     pollNotifications();
     const timer = setInterval(pollNotifications, 15000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("notifications:refresh", refreshListener as EventListener);
+    };
   }, [auth.user?.username]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -207,6 +252,9 @@ export default function NotificationsDropdown() {
         return <Users size={16} />;
       case "collab_request_approved":
         return <Play size={16} />;
+      case "STUDIO_SUBMITTED":
+      case "STUDIO_ROLE_REQUEST":
+        return <Users size={16} />;
       default:
         return <Bell size={16} />;
     }

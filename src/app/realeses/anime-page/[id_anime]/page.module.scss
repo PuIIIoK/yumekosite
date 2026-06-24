@@ -1217,12 +1217,11 @@
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.82);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 18vh 24px 24px;
+  padding: 5vh 24px 24px;
   animation: fadeIn 0.2s ease;
 }
 
@@ -1231,7 +1230,7 @@
   to { opacity: 1; }
 }
 
-.collabModal {
+  .collabModal {
   background: rgba(20, 20, 26, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
@@ -1242,6 +1241,39 @@
   padding: 28px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.collabModalTop {
+  margin-top: 0;
+}
+
+.collabSuccessModal {
+  max-width: 460px;
+  border-color: rgba(34, 197, 94, 0.18);
+  padding-top: 24px;
+}
+
+.collabSuccessIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+  margin-bottom: 14px;
+}
+
+.requestSentText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  padding: 4px 0 2px;
+}
+
+.requestSentText strong {
+  color: var(--text-primary);
 }
 
 @keyframes slideUp {
