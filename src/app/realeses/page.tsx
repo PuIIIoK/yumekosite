@@ -717,7 +717,6 @@ export default function CatalogPage() {
                           <div className={styles.posterShade} />
                           <span className={styles.formatBadge}>{item.format || "TV"}</span>
                           <span className={styles.ratingBadge}>★ {item.rating}</span>
-                          <span className={styles.watchBadge}>Просмотрено</span>
                         </div>
 
                         <div className={styles.cardBody}>
