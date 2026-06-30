@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { AppearanceProvider } from "@/context/AppearanceContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { StatusProvider } from "@/context/StatusContext";
@@ -7,16 +6,6 @@ import ParticleCanvas from "@/components/ParticleCanvas/ParticleCanvas";
 import LevelUpModal from "@/components/LevelUpModal/LevelUpModal";
 import MobileNavBarContainer from "@/components/MobileNavBar/MobileNavBarContainer";
 import "./globals.scss";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -55,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ru">
       <body>
         <AppearanceProvider>
           <ParticleCanvas />
