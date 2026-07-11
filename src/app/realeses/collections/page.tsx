@@ -160,7 +160,9 @@ export default function CollectionsPage() {
       <Header />
       <main
         className={styles.main}
-        onTouchStart={handleTouchStart}
+        onTouchStart={(e) => {
+          console.log('TOUCH_START handled on CollectionsPage');
+        }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >

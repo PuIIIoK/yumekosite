@@ -56,6 +56,15 @@ function parseEpisodeCount(str: string): number {
   return m ? Math.min(parseInt(m[0]), 24) : 1;
 }
 
+// Append a cache-busting query param so a freshly updated episode cover is
+// re-fetched instead of served from the browser cache under the same URL.
+function bustCache(url: string | null, key: number): string | null {
+  if (!url) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}v=${key}`;
+}
+
+
 function parseDurationMinutes(str: string): number {
   const m = str.match(/\d+/);
   return m ? parseInt(m[0]) : 0;
@@ -94,6 +103,9 @@ export default function AnimePageContent({
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionRef = useRef<HTMLDivElement>(null);
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
+  // Stable per-mount key used to cache-bust episode covers, so freshly
+  // updated thumbnails are re-fetched on navigation/reload without flicker.
+  const [coverCacheKey] = useState(() => Date.now());
   const [epView, setEpView] = useState<"list" | "grid">("grid");
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
   const genreTags = anime.genres.split(",").map((g) => g.trim()).filter(Boolean);
@@ -321,7 +333,7 @@ export default function AnimePageContent({
         progress: Math.round(progress * 100),
         name: db.title,
         durationFormatted: db.duration ?? anime.duration,
-        preview: db.previewUrl,
+        preview: bustCache(db.previewUrl, coverCacheKey),
         dbId: db.id,
         hlsUrl: db.hlsUrl,
         studio: db.studio,

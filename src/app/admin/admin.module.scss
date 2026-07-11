@@ -757,7 +757,7 @@
     backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
-    padding-top: 15vh;
+    align-items: center;
     animation: overlayIn 0.2s ease;
 }
 
@@ -779,7 +779,6 @@
     width: 380px;
     max-width: 90vw;
     text-align: center;
-    align-self: flex-start;
     animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
@@ -1700,6 +1699,36 @@
     }
 }
 
+.episodeSettingsBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary, var(--text-primary));
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        color 0.15s,
+        background 0.15s,
+        border-color 0.15s,
+        transform 0.05s;
+
+    &:hover {
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, transparent);
+        border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+}
+
 .episodeDeleteBtn {
     display: flex;
     align-items: center;
@@ -2107,6 +2136,458 @@
     aspect-ratio: 16 / 9;
     background: #000;
     display: block;
+}
+
+// ── Episode Settings Modal ──
+
+.epSettingsModal {
+    width: 96vw;
+    max-width: 1440px;
+    max-height: 94vh;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+    animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.epSettingsBody {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+    gap: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.epPlayerWrap {
+    display: flex;
+    flex-direction: column;
+    background: #08080a;
+    min-width: 0;
+}
+
+.epSettingsVideo {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    display: block;
+    cursor: pointer;
+    max-height: 60vh;
+    object-fit: contain;
+}
+
+// timeline
+.epTimelineWrap {
+    // Fixed-height row so the timeline never shifts the controls below it.
+    display: flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 14px;
+}
+
+.epTimeline {
+    position: relative;
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    overflow: hidden;
+    // Scale vertically on hover — purely visual, doesn't reflow siblings.
+    transform: scaleY(1);
+    transform-origin: center;
+    transition: transform 0.12s ease;
+
+    &:hover {
+        transform: scaleY(1.3);
+    }
+}
+
+.epTimelineBuffered {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.18);
+    z-index: 1;
+}
+
+.epTimelineProgress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--accent);
+    z-index: 3;
+}
+
+.epTimelineMarkerOP {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(59, 130, 246, 0.55);
+    z-index: 2;
+    box-shadow:
+        inset 1px 0 0 #3b82f6,
+        inset -1px 0 0 #3b82f6;
+}
+
+.epTimelineMarkerED {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(245, 158, 11, 0.55);
+    z-index: 2;
+    box-shadow:
+        inset 1px 0 0 #f59e0b,
+        inset -1px 0 0 #f59e0b;
+}
+
+// player controls — compact, minimalist bar
+.epPlayerControls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 10px;
+}
+
+.epPlayerBtn,
+.epPlayerBtnPlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+        background 0.12s,
+        color 0.12s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+    }
+}
+
+.epPlayerBtn {
+    width: 30px;
+    height: 30px;
+}
+
+.epPlayerBtnPlay {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    color: #fff;
+
+    &:hover {
+        background: var(--accent);
+        color: #fff;
+        opacity: 0.88;
+    }
+}
+
+.epPlayerTime {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    margin-left: 6px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.epPlayerSpacer {
+    flex: 1;
+}
+
+.epPlayerSpeed {
+    height: 26px;
+    padding: 0 4px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: color 0.12s;
+
+    &:hover {
+        color: var(--text-primary);
+    }
+
+    option {
+        background: var(--bg-card, #1a1a1a);
+        color: var(--text-primary);
+    }
+}
+
+.epPlayerVolume {
+    width: 68px;
+    height: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+// right side settings
+.epSettingsSide {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px;
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: 78vh;
+}
+
+.epSettingsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.epSettingsSectionTitle {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.epTitleInput {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+        border-color: var(--accent);
+    }
+
+    &::placeholder {
+        color: var(--text-muted);
+    }
+}
+
+// cover
+.epCoverRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.epCoverPreview {
+    width: 96px;
+    height: 54px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.epCoverPlaceholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.epCoverActions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.epUploadCoverBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        color 0.15s;
+
+    &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+}
+
+.epCaptureBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        background 0.15s,
+        opacity 0.15s;
+
+    &:hover {
+        background: color-mix(in srgb, var(--accent) 20%, transparent);
+        border-color: var(--accent);
+    }
+}
+
+// markers
+.epMarkerRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.epMarkerField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+}
+
+.epMarkerInputRow {
+    display: flex;
+    gap: 4px;
+
+    input {
+        flex: 1;
+        min-width: 0;
+        padding: 7px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        outline: none;
+        transition: border-color 0.15s;
+
+        &:focus {
+            border-color: var(--accent);
+        }
+    }
+}
+
+.epMarkerBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition:
+        border-color 0.12s,
+        color 0.12s,
+        background 0.12s;
+
+    &:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.epSettingsFooter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.epSaveCoverBtn,
+.epSaveMarkersBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        color 0.15s,
+        background 0.15s,
+        opacity 0.15s;
+
+    &:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+@media (max-width: 860px) {
+    .epSettingsBody {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+
+    .epSettingsSide {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: none;
+    }
 }
 
 // ── Banner Manager ─────────────────────────────────────────────────────────

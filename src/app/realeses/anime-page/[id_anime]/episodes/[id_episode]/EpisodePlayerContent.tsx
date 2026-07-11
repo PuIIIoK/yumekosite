@@ -35,6 +35,14 @@ interface Episode {
   createdAt: string;
 }
 
+// Append a cache-busting query param so a freshly updated episode cover is
+// re-fetched instead of served from the browser cache under the same URL.
+function bustCache(url: string | null, key: number): string | null {
+  if (!url) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}v=${key}`;
+}
+
 interface Props {
   anime: AnimeDetails;
   episode: Episode;
@@ -53,6 +61,9 @@ export default function EpisodePlayerContent({
   const { user, refreshUser, mounted } = useAuth();
   const [currentEp, setCurrentEp] = useState<Episode>(initialEpisode);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Stable per-mount key used to cache-bust episode covers so freshly
+  // updated thumbnails are re-fetched on navigation/reload without flicker.
+  const [coverCacheKey] = useState(() => Date.now());
 
   // Модалка для гостей (показывается только один раз за сессию, если не была закрыта ранее)
   const [guestModal, setGuestModal] = useState(false);
@@ -302,7 +313,7 @@ export default function EpisodePlayerContent({
                     <div className={styles.navCardPreview}>
                       {prevEp.previewUrl ? (
                         <img
-                          src={prevEp.previewUrl}
+                          src={bustCache(prevEp.previewUrl, coverCacheKey)!}
                           alt=""
                           className={styles.navCardImg}
                         />
@@ -338,7 +349,7 @@ export default function EpisodePlayerContent({
                     <div className={styles.navCardPreview}>
                       {nextEp.previewUrl ? (
                         <img
-                          src={nextEp.previewUrl}
+                          src={bustCache(nextEp.previewUrl, coverCacheKey)!}
                           alt=""
                           className={styles.navCardImg}
                         />
