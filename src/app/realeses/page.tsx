@@ -37,6 +37,12 @@ type CustomSelectProps = {
   direction?: "up" | "down";
 };
 
+type StudioDto = {
+  name: string;
+  isCollaboration?: boolean;
+};
+
+
 const CATEGORY_TABS: { key: TypeFilter; label: string }[] = [
   { key: "all", label: "Все" },
   { key: "anime", label: "Аниме" },
@@ -46,7 +52,14 @@ const CATEGORY_TABS: { key: TypeFilter; label: string }[] = [
   { key: "hentai", label: "Хентай" },
 ];
 
+const NON_GENRE_LABELS = new Set(
+  ["Аниме", "Мультфильм", "Фильм", "Сериал", "Хентай", "ТВ", "OVA", "ONA", "Спешл"].map((item) =>
+    item.toLowerCase(),
+  ),
+);
+
 const SORT_OPTIONS: { value: SortFilter; label: string }[] = [
+
   { value: "year-desc", label: "Сначала новые" },
   { value: "year-asc", label: "Сначала старые" },
   { value: "title-asc", label: "По названию" },
@@ -135,10 +148,11 @@ function CustomSelect({ label, value, options, placeholder, onChange, direction 
 
 function splitValues(value?: string | null): string[] {
   return (value ?? "")
-    .split(",")
+    .split(/[,•]/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
+
 
 function parseYearValue(year?: string | null): number {
   const match = year?.match(/\d{4}/);
@@ -282,14 +296,22 @@ export default function CatalogPage() {
   }, []);
 
   const studios = useMemo(
-    () => uniqueSorted([...Object.keys(studioMap), ...anime.map((item) => item.studio ?? "")]),
-    [anime, studioMap],
+    () => uniqueSorted(Object.keys(studioMap)),
+    [studioMap],
   );
 
-  const genres = useMemo(
-    () => uniqueSorted(anime.flatMap((item) => splitValues(item.genres))),
-    [anime],
-  );
+  const genres = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const genreName of anime.flatMap((item) => splitValues(item.genres))) {
+      const key = genreName.trim().toLowerCase();
+      if (key && !NON_GENRE_LABELS.has(key) && !seen.has(key)) {
+        seen.set(key, genreName.trim());
+      }
+    }
+
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, "ru"));
+  }, [anime]);
+
 
   const years = useMemo(
     () =>
@@ -304,17 +326,8 @@ export default function CatalogPage() {
     [anime],
   );
 
-  const seasons = useMemo(
-    () => uniqueSorted(anime.map((item) => item.season ?? "")),
-    [anime],
-  );
-
-  const statuses = useMemo(
-    () => uniqueSorted(anime.map((item) => item.status ?? "")),
-    [anime],
-  );
-
   const filtered = useMemo(() => {
+
     const query = deferredSearch.trim().toLowerCase();
 
     const next = anime.filter((item) => {
@@ -384,16 +397,15 @@ export default function CatalogPage() {
   const heroStats = [
     { label: "Тайтлов", value: String(anime.length) },
     { label: "Студий", value: String(studios.length) },
-    { label: "Жанров", value: String(genres.length) },
   ];
+
 
   const yearOptions = years.map((item) => ({ value: item, label: item }));
   const genreOptions = genres.map((item) => ({ value: item, label: item }));
   const studioOptions = studios.map((item) => ({ value: item, label: item }));
   const formatOptions = formats.map((item) => ({ value: item, label: item }));
-  const seasonOptions = seasons.map((item) => ({ value: item, label: item }));
-  const statusOptions = statuses.map((item) => ({ value: item, label: item }));
   const sortOptions = SORT_OPTIONS.map((item) => ({ value: item.value, label: item.label }));
+
 
   const updateSearch = (value: string) => {
     setSearch(value);
@@ -425,17 +437,8 @@ export default function CatalogPage() {
     setPage(1);
   };
 
-  const updateSeason = (value: string) => {
-    setSeason(value);
-    setPage(1);
-  };
-
-  const updateStatus = (value: string) => {
-    setStatus(value);
-    setPage(1);
-  };
-
   const updateSort = (value: SortFilter) => {
+
     setSort(value);
     setPage(1);
   };
@@ -587,31 +590,8 @@ export default function CatalogPage() {
                       direction="up"
                     />
                   </div>
-
-                  <div className={styles.filterGroup}>
-                    <span className={styles.filterLabel}>Сезон</span>
-                    <CustomSelect
-                      label="Сезон"
-                      value={season}
-                      options={seasonOptions}
-                      placeholder="Любой сезон"
-                      onChange={updateSeason}
-                      direction="up"
-                    />
-                  </div>
-
-                  <div className={styles.filterGroup}>
-                    <span className={styles.filterLabel}>Статус</span>
-                    <CustomSelect
-                      label="Статус"
-                      value={status}
-                      options={statusOptions}
-                      placeholder="Любой статус"
-                      onChange={updateStatus}
-                      direction="up"
-                    />
-                  </div>
                 </div>
+
               )}
             </div>
           </aside>
