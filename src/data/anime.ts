@@ -74,14 +74,20 @@ export async function fetchAnimeCatalog(): Promise<AnimeDetails[]> {
 }
 
 export async function fetchAnimeById(id: string | number): Promise<AnimeDetails | undefined> {
+  const url = `${API_URL}/api/anime/${id}`;
   try {
-    const res = await fetch(`${API_URL}/api/anime/${id}`, { next: { revalidate: 60 } });
-    if (!res.ok) return undefined;
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) {
+      console.error(`[fetchAnimeById] ${url} → HTTP ${res.status} ${res.statusText}`);
+      return undefined;
+    }
     return await res.json();
-  } catch {
+  } catch (e) {
+    console.error(`[fetchAnimeById] Network error for ${url}:`, e);
     return undefined;
   }
 }
+
 
 export async function getNewEpisodes(): Promise<AnimePreview[]> {
   const catalog = await fetchAnimeCatalog();
