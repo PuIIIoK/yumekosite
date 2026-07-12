@@ -1,10 +1,7 @@
-import { notFound } from "next/navigation";
-import Header from "@/components/Header/Header";
-import { fetchAnimeById, getAccent, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
-import { API_URL } from "@/config/hosts";
-import EpisodePlayerContent from "./EpisodePlayerContent";
 import type { Metadata } from "next";
-import HiddenAnimePage from "@/app/realeses/anime-page/[id_anime]/HiddenAnimePage";
+import { fetchAnimeById, isAnimeHidden, parseHiddenStudios } from "@/data/anime";
+import { API_URL } from "@/config/hosts";
+import EpisodePageClient from "./EpisodePageClient";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +14,11 @@ type EpisodePageProps = {
 
 export async function generateMetadata({ params }: EpisodePageProps): Promise<Metadata> {
   const { id_anime, id_episode } = await params;
+  // Best-effort metadata. If the backend is unreachable from the server (e.g.
+  // Vercel edge cannot reach the self-hosted API), fall back to a generic
+  // title — the page itself still renders via client-side fetching.
   const anime = await fetchAnimeById(id_anime);
-  if (!anime || isAnimeHidden(anime)) return { title: "Релиз недоступен" };
+  if (!anime || isAnimeHidden(anime)) return { title: "Yumeko — эпизод" };
 
   const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
   let episodeTitle = "";
@@ -44,57 +44,5 @@ export async function generateMetadata({ params }: EpisodePageProps): Promise<Me
 
 export default async function EpisodePage({ params }: EpisodePageProps) {
   const { id_anime, id_episode } = await params;
-  const anime = await fetchAnimeById(id_anime);
-  if (!anime) notFound();
-
-  // Проверяем, скрыт ли релиз
-  if (isAnimeHidden(anime)) {
-    return <HiddenAnimePage />;
-  }
-
-  const hiddenStudios = parseHiddenStudios(anime.hiddenStudio);
-
-  let episodes: {
-    id: number;
-    animeId: number;
-    number: number;
-    title: string | null;
-    hlsUrl: string | null;
-    previewUrl: string | null;
-    introStart: number | null;
-    introEnd: number | null;
-    outroStart: number | null;
-    outroEnd: number | null;
-    studio: string;
-    status: string;
-    createdAt: string;
-  }[] = [];
-
-  try {
-    const res = await fetch(`${API_URL}/api/episodes/${id_anime}`, { cache: "no-store" });
-    if (res.ok) {
-      episodes = (await res.json()).filter(
-        (ep: { studio?: string; status?: string }) =>
-          ep.status === "ready" &&
-          !hiddenStudios.includes(ep.studio || "YumekoStudio"),
-      );
-    }
-  } catch {}
-
-  const currentEp = episodes.find((e) => String(e.id) === id_episode);
-  if (!currentEp) notFound();
-
-  const accent = getAccent(anime!.rating);
-
-  return (
-    <>
-      <Header />
-      <EpisodePlayerContent
-        anime={anime!}
-        episode={currentEp}
-        episodes={episodes}
-        accent={accent}
-      />
-    </>
-  );
+  return <EpisodePageClient idAnime={id_anime} idEpisode={id_episode} />;
 }
