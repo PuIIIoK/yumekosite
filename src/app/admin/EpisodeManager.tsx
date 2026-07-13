@@ -1186,50 +1186,88 @@ export default function EpisodeManager() {
     if (user?.id) params.set("grantXpUserId", String(user.id));
     params.set("filename", file.name);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${CONV_URL}/api/episodes/upload?${params.toString()}`);
+    // Отправка файла raw-потоком на указанный сервер. Возвращает результат
+    // без бросков исключений, чтобы можно было решить, нужен ли фолбэк.
+    const doUpload = (baseUrl: string) =>
+      new Promise<{
+        ok: boolean;
+        status: number;
+        responseText: string;
+        networkError: boolean;
+      }>((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${baseUrl}/api/episodes/upload?${params.toString()}`);
 
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        setUploadPercent(Math.round((e.loaded / e.total) * 100));
-      }
-    };
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setUploadPercent(Math.round((e.loaded / e.total) * 100));
+          }
+        };
 
-    // Файл 100% отправлен — показываем фазу обработки на сервере
-    xhr.upload.onloadend = () => {
-      setUploadPercent(100);
-      setUploadPhase("processing");
-    };
+        // Файл 100% отправлен — показываем фазу обработки на сервере
+        xhr.upload.onloadend = () => {
+          setUploadPercent(100);
+          setUploadPhase("processing");
+        };
 
-    xhr.onload = async () => {
-      setUploading(false);
+        xhr.onload = () =>
+          resolve({
+            ok: xhr.status >= 200 && xhr.status < 300,
+            status: xhr.status,
+            responseText: xhr.responseText,
+            networkError: false,
+          });
+
+        xhr.onerror = () =>
+          resolve({
+            ok: false,
+            status: 0,
+            responseText: "",
+            networkError: true,
+          });
+
+        xhr.send(file);
+      });
+
+    // Сначала пытаемся загрузить на выделенный сервер конвертации
+    // (conv.yumeko.ru). Фолбэк на основной API делаем ТОЛЬКО когда conv
+    // реально недоступен: сетевая ошибка или ответ шлюза 5xx (nginx отдаёт
+    // 502/503/504, пока backend перезапускается/передеплоивается). В такой
+    // ситуации nginx также может ответить редиректом, из-за чего XHR
+    // превращает POST → GET и Spring отвечает "405 GET not supported".
+    // На основном api.yumeko.ru тот же эндпоинт /api/episodes/upload тоже
+    // запускает HLS-конвертацию. Ответы 4xx (например 404 "Аниме не найдено"
+    // или 403) — это валидные бизнес-ошибки, их НЕ повторяем.
+    let res = await doUpload(CONV_URL);
+    if (res.networkError || res.status === 0 || res.status >= 500) {
       setUploadPercent(0);
       setUploadPhase("uploading");
-      if (xhr.status >= 200 && xhr.status < 300) {
-        // Keep the same studio that was used for this upload — don't reset it.
-        setForm({ ...emptyForm, studio: uploadStudio });
-        setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
-        setTimeout(() => setSuccess(null), 4000);
-        await fetchEpisodes(animeId);
-      } else {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          setError(data.error || "Ошибка загрузки");
-        } catch {
-          setError("Ошибка загрузки");
-        }
-      }
-    };
+      res = await doUpload(API_URL);
+    }
 
-    xhr.onerror = () => {
+
+    setUploading(false);
+    setUploadPercent(0);
+    setUploadPhase("uploading");
+
+    if (res.ok) {
+      // Keep the same studio that was used for this upload — don't reset it.
+      setForm({ ...emptyForm, studio: uploadStudio });
+      setSuccess(`Эпизод ${num} загружен, идёт конвертация`);
+      setTimeout(() => setSuccess(null), 4000);
+      await fetchEpisodes(animeId);
+    } else if (res.networkError) {
       setError("Сетевая ошибка");
-      setUploading(false);
-      setUploadPercent(0);
-      setUploadPhase("uploading");
-    };
-
-    xhr.send(file);
+    } else {
+      try {
+        const data = JSON.parse(res.responseText);
+        setError(data.error || "Ошибка загрузки");
+      } catch {
+        setError("Ошибка загрузки");
+      }
+    }
   };
+
 
   const handleUploadEpisode = async (
     e: React.ChangeEvent<HTMLInputElement>,
