@@ -1,36 +1,85 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useAppearance, type AccentColor } from "@/context/AppearanceContext";
 import Link from "next/link";
 import {
-  Play,
-  Heart,
   BookMarked,
-  ChevronRight,
   ChevronDown,
-  Clock,
-  List,
-  LayoutGrid,
   Eye,
   CalendarClock,
   CheckCircle2,
   PauseCircle,
   XCircle,
-  Mic,
   Plus,
   Pencil,
   X,
   Check,
+  Heart,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { getAccent, type AnimeDetails, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
+import { type AnimeDetails, parseHiddenStudios, isAnimeHidden } from "@/data/anime";
+
 import { API_URL } from "@/config/hosts";
 import styles from "./page.module.scss";
 import Comments from "./Comments";
 import ImageUploadField from "@/components/ImageUploadField/ImageUploadField";
 
-type Tab = "episodes" | "related" | "comments";
+// ── Palette derived from the site's accent color ──
+type Palette = ReturnType<typeof makePalette>;
+
+function makePalette(accent: AccentColor) {
+  const parts = accent.rgb.split(",").map((n) => Number(n.trim()));
+  const r = parts[0] ?? 232;
+  const g = parts[1] ?? 84;
+  const b = parts[2] ?? 122;
+
+  // Warm-neutral near-black base tinted toward the accent hue.
+  const dark: [number, number, number] = [10, 8, 12];
+
+  const chDark = (t: number): [number, number, number] => [
+    Math.round(r * t + dark[0] * (1 - t)),
+    Math.round(g * t + dark[1] * (1 - t)),
+    Math.round(b * t + dark[2] * (1 - t)),
+  ];
+  const mixDark = (t: number) => {
+    const [cr, cg, cb] = chDark(t);
+    return `rgb(${cr}, ${cg}, ${cb})`;
+  };
+  const mixLight = (t: number) =>
+    `rgb(${Math.round(r * (1 - t) + 255 * t)}, ${Math.round(
+      g * (1 - t) + 255 * t,
+    )}, ${Math.round(b * (1 - t) + 255 * t)})`;
+
+  const borderCh = chDark(0.26);
+
+  return {
+    pageRgb: `${dark[0]},${dark[1]},${dark[2]}`,
+    roseRgb: accent.rgb,
+    borderRgb: `${borderCh[0]},${borderCh[1]},${borderCh[2]}`,
+    page: mixDark(0.02),
+    card: mixDark(0.08),
+    surface: mixDark(0.13),
+    surface2: mixDark(0.19),
+    dropdownBg: mixDark(0.1),
+    border: mixDark(0.26),
+    roseMuted: mixDark(0.5),
+    rose: accent.value,
+    roseDim: accent.hover,
+    roseLight: mixLight(0.22),
+    roseText: mixLight(0.35),
+    genreText: mixLight(0.45),
+    tabHover: mixLight(0.42),
+    title: mixLight(0.93),
+    text: mixLight(0.88),
+    textSoft: mixLight(0.7),
+    textMuted: mixLight(0.48),
+  };
+}
+
+const TABS = ["Серии", "Актёры", "Связанное"] as const;
+
+type Tab = (typeof TABS)[number];
 
 export interface DbEpisode {
   id: number;
@@ -51,23 +100,12 @@ interface Props {
   dbEpisodes?: DbEpisode[];
 }
 
-function parseEpisodeCount(str: string): number {
-  const m = str.match(/\d+/);
-  return m ? Math.min(parseInt(m[0]), 24) : 1;
-}
-
 // Append a cache-busting query param so a freshly updated episode cover is
 // re-fetched instead of served from the browser cache under the same URL.
 function bustCache(url: string | null, key: number): string | null {
   if (!url) return url;
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}v=${key}`;
-}
-
-
-function parseDurationMinutes(str: string): number {
-  const m = str.match(/\d+/);
-  return m ? parseInt(m[0]) : 0;
 }
 
 const COLLECTION_ITEMS = [
@@ -78,14 +116,11 @@ const COLLECTION_ITEMS = [
   { key: "dropped", label: "Брошено", icon: XCircle },
 ] as const;
 
-export default function AnimePageContent({
-  anime,
-  accent,
-  dbEpisodes = [],
-}: Props) {
+export default function AnimePageContent({ anime, dbEpisodes = [] }: Props) {
   const auth = useAuth();
-  const router = useRouter();
-  const [tab, setTab] = useState<Tab>("episodes");
+  const { accent } = useAppearance();
+  const C: Palette = useMemo(() => makePalette(accent), [accent]);
+  const [tab, setTab] = useState<Tab>("Серии");
   const [collabModalOpen, setCollabModalOpen] = useState(false);
   const [collabSubmitting, setCollabSubmitting] = useState(false);
   const [collabError, setCollabError] = useState<string | null>(null);
@@ -103,11 +138,9 @@ export default function AnimePageContent({
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionRef = useRef<HTMLDivElement>(null);
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
-  // Stable per-mount key used to cache-bust episode covers, so freshly
-  // updated thumbnails are re-fetched on navigation/reload without flicker.
   const [coverCacheKey] = useState(() => Date.now());
-  const [epView, setEpView] = useState<"list" | "grid">("grid");
   const [selectedStudio, setSelectedStudio] = useState<string | null>(null);
+  const [hoveredEp, setHoveredEp] = useState<number | null>(null);
   const genreTags = anime.genres.split(",").map((g) => g.trim()).filter(Boolean);
   const [relatedItems, setRelatedItems] = useState<AnimeDetails[]>([]);
   const [voiceCast, setVoiceCast] = useState<
@@ -139,6 +172,19 @@ export default function AnimePageContent({
   useEffect(() => {
     fetchStatuses();
   }, [fetchStatuses]);
+
+  // Блокируем скролл страницы, пока открыта модалка предложить студию
+  useEffect(() => {
+    if (!collabModalOpen && !collabSuccessOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [collabModalOpen, collabSuccessOpen]);
+
 
   useEffect(() => {
     if (!collectionOpen) return;
@@ -191,21 +237,23 @@ export default function AnimePageContent({
           headUsername: auth.user.username,
         }),
       });
-       if (res.ok) {
-         setCollabModalOpen(false);
-         setCollabSuccessStudio(collabForm.name.trim());
-         setCollabSuccessOpen(true);
-         setTimeout(() => window.dispatchEvent(new Event("notifications:refresh")), 250);
-         setCollabForm({
-           name: "",
-           description: "",
-           headUsername: "",
-           avatar: "",
-           banner: "",
-           socials: "",
-           contact: "",
-         });
-       }
+      if (res.ok) {
+        setCollabModalOpen(false);
+        setCollabSuccessStudio(collabForm.name.trim());
+        setCollabSuccessOpen(true);
+        setTimeout(() => window.dispatchEvent(new Event("notifications:refresh")), 250);
+        setCollabForm({
+          name: "",
+          description: "",
+          headUsername: "",
+          avatar: "",
+          banner: "",
+          socials: "",
+          contact: "",
+        });
+      } else {
+        setCollabError("Не удалось отправить запрос. Попробуйте позже.");
+      }
     } finally {
       setCollabSubmitting(false);
     }
@@ -295,7 +343,6 @@ export default function AnimePageContent({
           });
           setWatchProgress(map);
 
-          // Find the most recently watched non-completed episode
           const inProgress = list.filter(
             (wp) => !wp.completed && wp.watchedSeconds > 0,
           );
@@ -351,575 +398,1134 @@ export default function AnimePageContent({
       order: index + 1,
       isCurrent: item.id === anime.id,
     }));
-  const relatedStartYear = relatedChronology[0]?.year ?? anime.year;
-  const relatedEndYear =
-    relatedChronology[relatedChronology.length - 1]?.year ?? anime.year;
-  const totalRelatedEpisodes = relatedChronology.reduce(
-    (sum, item) => sum + parseEpisodeCount(item.episodes),
-    0,
-  );
-  const totalRelatedMinutes = relatedChronology.reduce(
-    (sum, item) =>
-      sum +
-      parseEpisodeCount(item.episodes) * parseDurationMinutes(item.duration),
-    0,
-  );
-  const relatedHours = Math.floor(totalRelatedMinutes / 60);
-  const relatedMinutes = totalRelatedMinutes % 60;
 
-  const tabs: [Tab, string][] = [
-    ["episodes", "Эпизоды"],
-    ["related", "Связанное"],
-    ["comments", "Комментарии"],
-  ];
+  // Watch button target: last watched episode, otherwise first episode.
+  const watchTargetId = lastWatchedEpId ?? episodes[0]?.dbId ?? null;
+  const watchHref = watchTargetId
+    ? `/realeses/anime-page/${anime.id}/episodes/${watchTargetId}`
+    : undefined;
+
+  const isFavorite = activeStatuses.includes("favorites");
+  const currentCollection = COLLECTION_ITEMS.find((c) =>
+    activeStatuses.includes(c.key),
+  );
+
+  // Hero meta badges built from real data.
+  const heroBadges = [
+    anime.format,
+    anime.season ? `${anime.season}, ${anime.year}` : anime.year,
+    anime.studio,
+    anime.episodes,
+  ].filter(Boolean) as string[];
+
+  // ── Reusable meta rows for the sidebar status card ──
+  const metaRows: { label: string; value: string }[] = [
+    { label: "Рейтинг", value: anime.rating },
+    { label: "Статус", value: anime.status },
+    studioList.length > 0
+      ? { label: "Озвучка", value: studioList.join(", ") }
+      : null,
+    anime.episodes ? { label: "Эпизоды", value: anime.episodes } : null,
+    {
+      label: "Вышел",
+      value: anime.season ? `${anime.season}, ${anime.year}` : anime.year,
+    },
+    anime.format ? { label: "Тип", value: anime.format } : null,
+  ].filter(Boolean) as { label: string; value: string }[];
 
   return (
-    <div className={styles.page}>
-      {/* ── Breadcrumb ── */}
-      <nav className={styles.breadcrumb}>
-        <Link href="/">Главная</Link>
-        <ChevronRight size={13} />
-        <Link href="/releases">Релизы</Link>
-        <ChevronRight size={13} />
-        <span>{anime.title}</span>
-      </nav>
-
-      {/* ── Hero ── */}
-      <div className={styles.hero}>
-        {/* Poster */}
-        <div
-          className={styles.poster}
-          style={{ ["--accent-color" as string]: accent }}
+    <div style={{ fontFamily: '"Manrope", system-ui, sans-serif', color: C.text }}>
+      {/* ── TWO-COLUMN LAYOUT ── */}
+      <div
+        style={{
+          maxWidth: "1400px",
+          margin: "0 auto",
+          padding: "calc(var(--header-height, 90px) - 0.5rem) 2.5rem 5rem",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) 300px",
+          gap: "3.5rem",
+          alignItems: "start",
+        }}
+      >
+        {/* ── RIGHT SIDEBAR (placed in second grid column) ── */}
+        <aside
+          style={{
+            gridColumn: 2,
+            gridRow: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.75rem",
+            position: "sticky",
+            top: "calc(var(--header-height, 90px) + 1.5rem)",
+            alignSelf: "start",
+          }}
         >
-          {anime.poster && (
-            <img
-              src={anime.poster}
-              alt={anime.title}
-              className={styles.posterImg}
-              loading="lazy"
-            />
-          )}
-          <div className={styles.posterTop}>
-            <span className={styles.ratingTag}>{anime.rating}</span>
-          </div>
-          <div className={styles.posterGlow} />
-        </div>
 
-        {/* Info */}
-        <div className={styles.heroInfo}>
-          <h1 className={styles.title}>{anime.title}</h1>
-          <p className={styles.altTitle}>{anime.altTitle}</p>
 
-          <div className={styles.heroBadges}>
-            <span
-              className={`${styles.ageTag} ${styles[`age${anime.rating.replace("+", "")}`] ?? ""}`}
+
+          {/* Poster */}
+          <div
+            style={{
+              borderRadius: "14px",
+              overflow: "hidden",
+              boxShadow: `0 24px 64px rgba(${C.pageRgb}, 0.6), 0 0 0 1px ${C.border}`,
+              position: "relative",
+              maxWidth: "260px",
+              width: "100%",
+              margin: "0 auto",
+            }}
+          >
+
+            {anime.poster && (
+              <img
+                src={anime.poster}
+                alt={anime.title}
+                style={{
+                  width: "100%",
+                  aspectRatio: "2/3",
+
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            )}
+            <div
+              style={{
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+                background: C.rose,
+                borderRadius: "7px",
+                padding: "4px 10px",
+                fontSize: "13px",
+                fontWeight: 900,
+                color: "#fff",
+                letterSpacing: "-0.02em",
+              }}
             >
               {anime.rating}
-            </span>
-            <span
-              className={styles.statusBadge}
-              style={{ color: accent, borderColor: `${accent}40` }}
-            >
-              {anime.status}
-            </span>
-            <span className={styles.formatBadge}>{anime.format}</span>
+            </div>
           </div>
 
-          <dl className={styles.infoTable}>
-            <div className={styles.infoRow}>
-              <dt>Тип</dt>
-              <dd>{anime.format}</dd>
-            </div>
-            <div className={styles.infoRow}>
-              <dt>Сезон</dt>
-              <dd>
-                {anime.season}, {anime.year}г.
-              </dd>
-            </div>
-            <div className={styles.infoRow}>
-              <dt>Жанры</dt>
-              <dd>
-                {genreTags.map((g, i) => (
-                  <span key={g}>
-                    <span>{g}</span>
-                    {i < genreTags.length - 1 && (
-                      <span className={styles.sep}>, </span>
-                    )}
-                  </span>
-                ))}
-              </dd>
-            </div>
-            <div className={styles.infoRow}>
-              <dt>Студия</dt>
-              <dd>{anime.studio}</dd>
-            </div>
-            <div className={styles.infoRow}>
-              <dt>Длительность</dt>
-              <dd>{anime.duration} / эп.</dd>
-            </div>
-            {studioList.length > 0 && (
-              <div className={styles.infoRow}>
-                <dt>Озвучено</dt>
-                <dd>{studioList.join(", ")}</dd>
+          {/* Watch button */}
+          {watchHref ? (
+            <Link
+              href={watchHref}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                background: C.rose,
+                borderRadius: "8px",
+                padding: "9px 20px",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "13px",
+                boxShadow: `0 4px 20px rgba(${C.roseRgb}, 0.27)`,
+                transition: "background 0.2s, transform 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = C.roseLight;
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = C.rose;
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21" />
+              </svg>
+              {lastWatchedEpId ? "Продолжить" : "Смотреть"}
+            </Link>
+          ) : (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                background: C.surface,
+                borderRadius: "8px",
+                padding: "9px 20px",
+                color: C.textMuted,
+                fontWeight: 700,
+                fontSize: "13px",
+                border: `1px solid ${C.border}`,
+              }}
+            >
+              Скоро
+            </span>
+          )}
+
+          {/* Collection dropdown */}
+          <div ref={collectionRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => (auth.user ? setCollectionOpen((o) => !o) : undefined)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                width: "100%",
+                background: currentCollection ? C.surface : "transparent",
+                border: `1px solid ${currentCollection ? C.rose : C.border}`,
+                borderRadius: "8px",
+                padding: "8px 12px",
+                color: currentCollection ? C.rose : C.textMuted,
+                fontWeight: 700,
+                fontSize: "13px",
+                cursor: "pointer",
+                transition: "border-color 0.2s, color 0.2s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {currentCollection ? (
+                <currentCollection.icon size={15} />
+              ) : (
+                <BookMarked size={15} />
+              )}
+              {currentCollection ? currentCollection.label : "В коллекцию"}
+              <ChevronDown
+                size={13}
+                style={{
+                  transform: collectionOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s",
+                  opacity: 0.7,
+                }}
+              />
+            </button>
+
+            {collectionOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                  background: C.dropdownBg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  boxShadow: `0 12px 40px rgba(${C.pageRgb}, 0.6), 0 0 0 1px rgba(${C.borderRgb}, 0.27)`,
+                }}
+              >
+                {COLLECTION_ITEMS.map(({ key, label, icon: Icon }) => {
+                  const isActive = activeStatuses.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        toggleStatus(key);
+                        setCollectionOpen(false);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        background: isActive ? C.surface2 : "transparent",
+                        border: "none",
+                        borderBottom: `1px solid rgba(${C.borderRgb}, 0.27)`,
+                        padding: "11px 16px",
+                        color: isActive ? C.rose : C.textSoft,
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        cursor: "pointer",
+                        transition: "background 0.15s, color 0.15s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = C.surface;
+                          e.currentTarget.style.color = C.text;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = C.textSoft;
+                        }
+                      }}
+                    >
+                      <Icon
+                        size={15}
+                        style={{ flexShrink: 0, color: isActive ? C.rose : C.roseMuted }}
+                      />
+                      <span style={{ flex: 1 }}>{label}</span>
+                      {isActive && (
+                        <Check size={13} style={{ color: C.rose, flexShrink: 0 }} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
-          </dl>
+          </div>
 
-          <div className={styles.actions}>
-            {/* Edit button for admins */}
-            {auth.user && auth.user.role?.priority >= 80 && (
-              <Link
-                href={`/admin/create-anime?id=${anime.id}`}
-                className={styles.editBtn}
-                title="Редактировать аниме"
+          {/* Favourite */}
+          <button
+            onClick={() => (auth.user ? toggleStatus("favorites") : undefined)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              width: "100%",
+              background: isFavorite ? C.surface : "transparent",
+              border: `1px solid ${isFavorite ? C.rose : C.border}`,
+              borderRadius: "8px",
+              padding: "8px 14px",
+              color: isFavorite ? C.rose : C.textMuted,
+              fontWeight: 700,
+              fontSize: "13px",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!isFavorite) {
+                e.currentTarget.style.borderColor = C.rose;
+                e.currentTarget.style.color = C.rose;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isFavorite) {
+                e.currentTarget.style.borderColor = C.border;
+                e.currentTarget.style.color = C.textMuted;
+              }
+            }}
+          >
+            <Heart size={15} fill={isFavorite ? C.rose : "none"} />
+            {isFavorite ? "В избранном" : "В избранное"}
+          </button>
+
+          {/* Meta / status card */}
+          <div
+            style={{
+              background: "rgba(18, 16, 20, 0.55)",
+              border: "1px solid rgba(255, 255, 255, 0.06)",
+              borderRadius: "12px",
+              padding: "1rem 1.25rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.75rem",
+            }}
+          >
+
+            {metaRows.map((row) => (
+              <div
+                key={row.label}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: "1rem",
+                  fontSize: "13px",
+                }}
               >
-                <Pencil size={16} />
+                <span style={{ color: C.textMuted, flexShrink: 0 }}>{row.label}</span>
+                <span
+                  style={{
+                    color: C.text,
+                    fontWeight: 600,
+                    textAlign: "right",
+                }}
+              >
+                {row.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+
+        {/* ── RIGHT MAIN COLUMN ── */}
+        <div style={{ minWidth: 0 }}>
+          {/* Format / meta badges */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.5rem",
+              marginBottom: "1rem",
+            }}
+          >
+            {heroBadges.map((b) => (
+              <span
+                key={b}
+                style={{
+                  background: `rgba(${C.borderRgb}, 0.4)`,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "4px",
+                  padding: "2px 10px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  color: C.roseText,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {b}
+              </span>
+            ))}
+          </div>
+
+          {/* Title */}
+          <h1
+            style={{
+              fontFamily: '"Comfortaa", "Manrope", system-ui, sans-serif',
+              fontSize: "clamp(1.9rem, 3.6vw, 3rem)",
+              lineHeight: 1.15,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              margin: "0 0 0.4rem",
+              color: C.title,
+              textShadow: `0 2px 24px rgba(${C.pageRgb}, 0.8)`,
+            }}
+          >
+            {anime.title}
+          </h1>
+          {anime.altTitle && (
+            <p
+              style={{
+                fontFamily: '"Comfortaa", "Manrope", system-ui, sans-serif',
+                color: C.textMuted,
+                fontSize: "0.95rem",
+                fontWeight: 400,
+                margin: "0 0 1rem",
+              }}
+            >
+              {anime.altTitle}
+            </p>
+          )}
+
+          {/* Genres (moved from sidebar to top) */}
+          {genreTags.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.4rem",
+                margin: "0 0 1.25rem",
+              }}
+            >
+              {genreTags.map((g) => (
+                <span
+                  key={g}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    border: `1px solid ${C.border}`,
+                    fontSize: "12px",
+                    color: C.genreText,
+                    fontWeight: 600,
+                  }}
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
+
+
+          {/* Description */}
+          {anime.description && (
+            <p
+              style={{
+                fontSize: "0.9rem",
+                color: C.textSoft,
+                lineHeight: 1.75,
+                margin: "1rem 0 1.5rem",
+              }}
+            >
+              {anime.description}
+            </p>
+          )}
+
+          {/* Edit / suggest studio actions */}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              flexWrap: "wrap",
+              alignItems: "center",
+              marginBottom: "2rem",
+            }}
+          >
+            {/* Admin edit */}
+            {auth.user && (
+              <Link
+
+                href={`/realeses/anime-page/edit-anime?id=${anime.id}`}
+
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "transparent",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "8px",
+                  padding: "9px 16px",
+                  color: C.textMuted,
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = C.rose;
+                  e.currentTarget.style.color = C.rose;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = C.border;
+                  e.currentTarget.style.color = C.textMuted;
+                }}
+              >
+                <Pencil size={15} />
+                Редактировать
               </Link>
             )}
 
-            {/* Collaboration request button */}
+            {/* Suggest studio */}
             {auth.user && (
               <button
-                className={styles.collabBtn}
                 onClick={() => setCollabModalOpen(true)}
-                title="Предложить студию озвучки"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "transparent",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: "8px",
+                  padding: "9px 16px",
+                  color: C.textMuted,
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = C.rose;
+                  e.currentTarget.style.color = C.rose;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = C.border;
+                  e.currentTarget.style.color = C.textMuted;
+                }}
               >
-                <Plus size={16} />
+                <Plus size={15} />
+                Предложить студию
               </button>
             )}
+          </div>
 
-            <div className={styles.collectionWrap} ref={collectionRef}>
+          {/* TABS */}
+          <div
+            style={{
+              display: "flex",
+              borderBottom: `1px solid ${C.border}`,
+              marginBottom: "2rem",
+              overflowX: "auto",
+            }}
+          >
+            {TABS.map((t) => (
               <button
-                className={`${styles.collectionBtn} ${activeStatuses.some((s) => s !== "favorites") ? styles.collectionBtnActive : ""}`}
-                onClick={() =>
-                  auth.user ? setCollectionOpen(!collectionOpen) : undefined
-                }
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  borderBottom:
+                    tab === t ? `2px solid ${C.rose}` : "2px solid transparent",
+                  padding: "14px 26px",
+                  color: tab === t ? C.rose : C.textMuted,
+                  fontWeight: tab === t ? 700 : 600,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  whiteSpace: "nowrap",
+                  marginBottom: "-1px",
+                }}
+                onMouseEnter={(e) => {
+                  if (tab !== t) e.currentTarget.style.color = C.tabHover;
+                }}
+                onMouseLeave={(e) => {
+                  if (tab !== t) e.currentTarget.style.color = C.textMuted;
+                }}
               >
-                {(() => {
-                  const currentList = COLLECTION_ITEMS.find((c) =>
-                    activeStatuses.includes(c.key),
-                  );
-                  if (currentList) {
-                    const Icon = currentList.icon;
-                    return (
-                      <>
-                        <Icon size={15} /> {currentList.label}
-                      </>
-                    );
-                  }
-                  return (
-                    <>
-                      <BookMarked size={15} /> Добавить в список
-                    </>
-                  );
-                })()}
-                <ChevronDown
-                  size={14}
-                  className={collectionOpen ? styles.chevronOpen : ""}
-                />
+                {t}
               </button>
-              {collectionOpen && (
-                <div className={styles.collectionDropdown}>
-                  {COLLECTION_ITEMS.map((item) => {
-                    const active = activeStatuses.includes(item.key);
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.key}
-                        className={`${styles.dropdownItem} ${active ? styles.dropdownItemActive : ""}`}
-                        onClick={() => toggleStatus(item.key)}
-                      >
-                        <Icon size={15} /> {item.label}
-                        {active && (
-                          <CheckCircle2
-                            size={14}
-                            className={styles.dropdownCheck}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
+            ))}
+          </div>
+
+          {/* ── EPISODES ── */}
+
+        {tab === "Серии" && (
+          <div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "1.75rem",
+                flexWrap: "wrap",
+                gap: "0.75rem",
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: "1.1rem",
+                  fontWeight: 800,
+                  margin: 0,
+                  color: C.text,
+                  letterSpacing: "0.03em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {episodes.length} серий
+              </h2>
+              {studioList.length > 1 && (
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                  {studioList.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedStudio(s)}
+                      style={{
+                        background: s === activeStudio ? C.rose : C.card,
+                        border: `1px solid ${s === activeStudio ? C.rose : C.border}`,
+                        borderRadius: "6px",
+                        padding: "6px 16px",
+                        color: s === activeStudio ? "#fff" : C.textMuted,
+                        fontWeight: 700,
+                        fontSize: "13px",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (s !== activeStudio) {
+                          e.currentTarget.style.borderColor = C.rose;
+                          e.currentTarget.style.color = C.rose;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (s !== activeStudio) {
+                          e.currentTarget.style.borderColor = C.border;
+                          e.currentTarget.style.color = C.textMuted;
+                        }
+                      }}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
-            <button
-              className={`${styles.iconBtn} ${activeStatuses.includes("favorites") ? styles.iconBtnActive : ""}`}
-              aria-label="В избранное"
-              onClick={() =>
-                auth.user ? toggleStatus("favorites") : undefined
-              }
-            >
-              <Heart
-                size={16}
-                fill={
-                  activeStatuses.includes("favorites") ? "currentColor" : "none"
-                }
-              />
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* ── Description ── */}
-      <div className={styles.descBlock}>
-        <p className={styles.description}>{anime.description}</p>
-      </div>
-
-      {/* ── Tabs ── */}
-      <div className={styles.tabsRow}>
-        <div className={styles.tabs}>
-          {tabs.map(([key, label]) => (
-            <button
-              key={key}
-              className={tab === key ? styles.tabActive : styles.tab}
-              onClick={() => setTab(key)}
-              style={
-                tab === key ? { ["--tab-accent" as string]: accent } : undefined
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {tab === "episodes" && (
-          <div className={styles.viewToggle}>
-            <button
-              className={`${styles.viewBtn} ${epView === "list" ? styles.viewBtnActive : ""}`}
-              onClick={() => setEpView("list")}
-              aria-label="Список"
-            >
-              <List size={16} />
-            </button>
-            <button
-              className={`${styles.viewBtn} ${epView === "grid" ? styles.viewBtnActive : ""}`}
-              onClick={() => setEpView("grid")}
-              aria-label="Карточки"
-            >
-              <LayoutGrid size={16} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ── Studio tabs ── */}
-      {tab === "episodes" && studioList.length > 1 && (
-        <div className={styles.studioTabs}>
-          {studioList.map((s) => (
-            <button
-              key={s}
-              className={`${styles.studioTab} ${s === activeStudio ? styles.studioTabActive : ""}`}
-              onClick={() => setSelectedStudio(s)}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* ── Tab: Episodes ── */}
-      {tab === "episodes" && epView === "list" && (
-        <div className={styles.episodesList}>
-          {episodes.map((ep) => {
-            const epHref = ep.dbId
-              ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}`
-              : undefined;
-            const rowContent = (
-              <>
-                <span className={styles.epNumber}>{ep.num}</span>
-                <div className={styles.epRowInfo}>
-                  <span className={styles.epRowTitle}>
-                    {ep.name || `${ep.num} эпизод`}
-                  </span>
-                  <span className={styles.epRowDuration}>
-                    {ep.durationFormatted}
-                  </span>
-                </div>
-                <div className={styles.epRowRight}>
-                  {ep.watched && (
-                    <span className={styles.epRowWatched}>Просмотрено</span>
-                  )}
-                  {ep.current && (
-                    <span
-                      className={styles.epRowCurrentLabel}
-                      style={{ color: "var(--accent)" }}
-                    >
-                      Текущий
-                    </span>
-                  )}
-                  <Play size={16} className={styles.epRowPlay} />
-                </div>
-                {ep.progress > 0 && !ep.watched && (
-                  <div className={styles.epRowProgress}>
-                    <div
-                      className={styles.epRowProgressBar}
-                      style={{
-                        width: `${ep.progress}%`,
-                        background: "var(--accent)",
-                      }}
-                    />
-                  </div>
-                )}
-              </>
-            );
-            return epHref ? (
-              <Link
-                key={ep.dbId}
-                href={epHref}
-                className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-                style={
-                  ep.current
-                    ? { ["--ep-accent" as string]: "var(--accent)" }
-                    : undefined
-                }
-              >
-                {rowContent}
-              </Link>
+            {episodes.length === 0 ? (
+              <p style={{ color: C.textMuted, fontSize: "14px", padding: "2rem 0" }}>
+                Эпизоды скоро появятся.
+              </p>
             ) : (
               <div
-                key={ep.dbId}
-                className={`${styles.epRow} ${ep.current ? styles.epRowCurrent : ""}`}
-                style={
-                  ep.current
-                    ? { ["--ep-accent" as string]: "var(--accent)" }
-                    : undefined
-                }
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                  gap: "1.25rem",
+                }}
               >
-                {rowContent}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {tab === "episodes" && epView === "grid" && (
-        <div className={styles.episodesGrid}>
-          {episodes.map((ep) => {
-            const epHref = ep.dbId
-              ? `/realeses/anime-page/${anime.id}/episodes/${ep.dbId}`
-              : undefined;
-            const cardContent = (
-              <div className={styles.epCardThumb}>
-                {ep.preview && (
-                  <img
-                    src={ep.preview}
-                    alt={ep.name ?? `${ep.num} эпизод`}
-                    className={styles.epCardThumbImg}
-                    loading="lazy"
-                  />
-                )}
-                {ep.current && (
-                  <span
-                    className={styles.epCardDot}
-                    style={{ background: "var(--accent)" }}
-                  />
-                )}
-                {ep.watched && (
-                  <span className={styles.epCardWatched}>Просмотрено</span>
-                )}
-                {ep.current && (
-                  <span
-                    className={styles.epCardCurrentLabel}
-                    style={{ color: "var(--accent)" }}
-                  >
-                    Текущий
-                  </span>
-                )}
-                <div className={styles.epCardInfo}>
-                  {ep.name && (
-                    <span className={styles.epCardTitle}>{ep.name}</span>
-                  )}
-                  <span className={styles.epCardNum}>{ep.num} эпизод</span>
-                </div>
-                <span className={styles.epCardDuration}>
-                  {ep.durationFormatted}
-                </span>
-                {ep.progress > 0 && !ep.watched && (
-                  <div className={styles.epCardProgress}>
-                    <div
-                      className={styles.epCardProgressBar}
-                      style={{
-                        width: `${ep.progress}%`,
-                        background: "var(--accent)",
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            );
-            return epHref ? (
-              <Link
-                key={ep.dbId}
-                href={epHref}
-                className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-                style={
-                  ep.current
-                    ? { ["--ep-accent" as string]: "var(--accent)" }
-                    : undefined
-                }
-              >
-                {cardContent}
-              </Link>
-            ) : (
-              <div
-                key={ep.dbId}
-                className={`${styles.epCard} ${ep.current ? styles.epCardCurrent : ""} ${ep.watched ? styles.epCardWatchedState : ""}`}
-                style={
-                  ep.current
-                    ? { ["--ep-accent" as string]: "var(--accent)" }
-                    : undefined
-                }
-              >
-                {cardContent}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Voice Cast ── */}
-      {tab === "episodes" &&
-        visibleVoiceCast.length > 0 &&
-        (() => {
-          const castStudios = [...new Set(visibleVoiceCast.map((vc) => vc.studio))];
-          const showStudio =
-            activeStudio && castStudios.includes(activeStudio)
-              ? activeStudio
-              : castStudios[0];
-          const filtered = visibleVoiceCast.filter((vc) => vc.studio === showStudio);
-          if (filtered.length === 0) return null;
-          return (
-            <div className={styles.voiceCastSection}>
-              <h3 className={styles.voiceCastTitle}>
-                <Mic size={15} />
-                Озвучка — {showStudio}
-              </h3>
-              <div className={styles.voiceCastGrid}>
-                {filtered.map((vc) => {
+                {episodes.map((ep) => {
+                  const hovered = hoveredEp === ep.dbId;
                   const inner = (
                     <>
-                      {vc.actorUsername && vc.actorHasAvatar ? (
-                        <img
-                          src={`${API_URL}/api/media/${vc.actorUsername}/avatar`}
-                          alt=""
-                          className={styles.voiceCastAvatar}
-                          style={
-                            vc.actorRoleColor
-                              ? { borderColor: vc.actorRoleColor }
-                              : undefined
-                          }
-                        />
-                      ) : (
-                        <div className={styles.voiceCastAvatarEmpty} />
-                      )}
-                      <div className={styles.voiceCastInfo}>
-                        <div className={styles.voiceCastActorRow}>
-                          <span
-                            className={styles.voiceCastActor}
-                            style={
-                              vc.actorRoleColor
-                                ? { color: vc.actorRoleColor }
-                                : undefined
-                            }
+                      <div
+                        style={{
+                          position: "relative",
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          border: `1px solid ${ep.current ? C.rose : C.border}`,
+                          marginBottom: "0.65rem",
+                          aspectRatio: "16/9",
+                          background: C.card,
+                        }}
+                      >
+                        {ep.preview && (
+                          <img
+                            src={ep.preview}
+                            alt={ep.name ?? `${ep.num} эпизод`}
+                            loading="lazy"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                              transition: "transform 0.3s",
+                              transform: hovered ? "scale(1.04)" : "scale(1)",
+                            }}
+                          />
+                        )}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background: `linear-gradient(to bottom, transparent 50%, rgba(${C.pageRgb}, 0.6))`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: hovered ? 1 : 0,
+                            transition: "opacity 0.2s",
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: `rgba(${C.roseRgb}, 0.8)`,
+                              borderRadius: "50%",
+                              width: "44px",
+                              height: "44px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backdropFilter: "blur(4px)",
+                            }}
                           >
-                            {vc.actorDisplayName || vc.actorName}
-                          </span>
-                          {vc.actorUsername && (
-                            <span className={styles.voiceCastHandle}>
-                              @{vc.actorUsername}
-                            </span>
-                          )}
+                            <svg width="14" height="16" viewBox="0 0 14 16" fill="white">
+                              <polygon points="0,0 14,8 0,16" />
+                            </svg>
+                          </div>
                         </div>
-                        <span className={styles.voiceCastCharacter}>
-                          → {vc.characterName}
-                        </span>
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "6px",
+                            left: "6px",
+                            background: `rgba(${C.pageRgb}, 0.73)`,
+                            borderRadius: "5px",
+                            padding: "2px 8px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            color: C.roseText,
+                            backdropFilter: "blur(4px)",
+                          }}
+                        >
+                          {ep.num}
+                        </div>
+                        {ep.watched && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "6px",
+                              right: "6px",
+                              background: `rgba(${C.pageRgb}, 0.73)`,
+                              borderRadius: "5px",
+                              padding: "2px 8px",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: C.rose,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.04em",
+                              backdropFilter: "blur(4px)",
+                            }}
+                          >
+                            Просмотрено
+                          </div>
+                        )}
+                        {ep.current && !ep.watched && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "6px",
+                              right: "6px",
+                              background: C.rose,
+                              borderRadius: "5px",
+                              padding: "2px 8px",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              color: "#fff",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            Текущий
+                          </div>
+                        )}
+                        {ep.progress > 0 && !ep.watched && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: "3px",
+                              background: `rgba(${C.pageRgb}, 0.53)`,
+                            }}
+                          >
+                            <div
+                              style={{
+                                height: "100%",
+                                width: `${ep.progress}%`,
+                                background: C.rose,
+                                transition: "width 0.3s ease",
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
+
+                      <p
+                        style={{
+                          margin: "0 0 3px",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: C.text,
+                          lineHeight: 1.35,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {ep.name || `${ep.num} эпизод`}
+                      </p>
+                      <span style={{ fontSize: "11px", color: C.roseMuted, fontWeight: 600 }}>
+                        {ep.durationFormatted}
+                      </span>
                     </>
                   );
-                  return vc.actorUsername ? (
+
+                  const cardStyle: React.CSSProperties = {
+                    cursor: "pointer",
+                    transition: "transform 0.2s",
+                    display: "block",
+                    color: "inherit",
+                  };
+
+                  return ep.dbId ? (
                     <Link
-                      key={vc.id}
-                      href={`/profile/${vc.actorUsername}`}
-                      className={styles.voiceCastItem}
+                      key={ep.dbId}
+                      href={`/realeses/anime-page/${anime.id}/episodes/${ep.dbId}`}
+                      style={cardStyle}
+                      onMouseEnter={() => setHoveredEp(ep.dbId)}
+                      onMouseLeave={() => setHoveredEp(null)}
                     >
                       {inner}
                     </Link>
                   ) : (
-                    <div key={vc.id} className={styles.voiceCastItem}>
+                    <div key={ep.num} style={cardStyle}>
                       {inner}
                     </div>
                   );
                 })}
               </div>
-            </div>
-          );
-        })()}
-
-      {tab === "related" && (
-        <div className={styles.relatedTimeline}>
-          <div className={styles.relatedTimelineHeader}>
-            <h3 className={styles.relatedTimelineTitle}>{anime.title}</h3>
-            <p className={styles.relatedTimelineSubtitle}>{anime.altTitle}</p>
-            <p className={styles.relatedTimelineMeta}>
-              {relatedStartYear}
-              {relatedEndYear !== relatedStartYear
-                ? ` — ${relatedEndYear}`
-                : ""}
-              {` • ${relatedChronology.length} релизов • ${totalRelatedEpisodes} эпизодов • ${relatedHours} ч ${relatedMinutes} мин`}
-            </p>
+            )}
           </div>
+        )}
 
-          <div className={styles.relatedTimelineList}>
-            {relatedChronology.map((item) => {
-              const itemAccent = getAccent(item.rating);
+        {/* ── CAST ── */}
+        {tab === "Актёры" &&
+          (() => {
+            const castStudios = [...new Set(visibleVoiceCast.map((vc) => vc.studio))];
+            const showStudio =
+              activeStudio && castStudios.includes(activeStudio)
+                ? activeStudio
+                : castStudios[0];
+            const filtered = visibleVoiceCast.filter((vc) => vc.studio === showStudio);
+            return (
+              <div>
+                <h2
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    letterSpacing: "-0.01em",
+                    margin: "0 0 1.5rem",
+                    color: C.title,
+                  }}
+                >
+                  Голосовые актёры
+                  {showStudio ? ` — ${showStudio}` : ""}
+                </h2>
 
-              return (
+                {filtered.length === 0 ? (
+                  <p style={{ color: C.textMuted, fontSize: "14px" }}>
+                    Информация об актёрах пока не добавлена.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                      gap: "1rem",
+                    }}
+                  >
+                    {filtered.map((vc) => {
+                      const inner = (
+                        <>
+                          <div
+                            style={{
+                              width: "56px",
+                              height: "56px",
+                              borderRadius: "50%",
+                              overflow: "hidden",
+                              flexShrink: 0,
+                              border: `2px solid ${vc.actorRoleColor ?? C.border}`,
+                              background: C.surface,
+                            }}
+                          >
+                            {vc.actorUsername && vc.actorHasAvatar && (
+                              <img
+                                src={`${API_URL}/api/media/${vc.actorUsername}/avatar`}
+                                alt=""
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            )}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <p
+                              style={{
+                                margin: "0 0 2px",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                color: vc.actorRoleColor ?? C.text,
+                              }}
+                            >
+                              {vc.actorDisplayName || vc.actorName}
+                            </p>
+                            <p
+                              style={{
+                                margin: "0 0 2px",
+                                fontSize: "12px",
+                                color: C.roseText,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {vc.characterName}
+                            </p>
+                            <span style={{ fontSize: "11px", color: C.textMuted }}>
+                              {vc.actorUsername ? `@${vc.actorUsername}` : vc.studio}
+                            </span>
+                          </div>
+                        </>
+                      );
+                      const cardStyle: React.CSSProperties = {
+                        background: C.card,
+                        border: `1px solid ${C.border}`,
+                        borderRadius: "10px",
+                        padding: "1rem",
+                        display: "flex",
+                        gap: "1rem",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        textDecoration: "none",
+                        color: "inherit",
+                      };
+                      return vc.actorUsername ? (
+                        <Link
+                          key={vc.id}
+                          href={`/profile/${vc.actorUsername}`}
+                          style={cardStyle}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = `rgba(${C.roseRgb}, 0.27)`;
+                            e.currentTarget.style.background = C.surface;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = C.border;
+                            e.currentTarget.style.background = C.card;
+                          }}
+                        >
+                          {inner}
+                        </Link>
+                      ) : (
+                        <div key={vc.id} style={cardStyle}>
+                          {inner}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+        {/* ── CONNECTED ── */}
+        {tab === "Связанное" && (
+          <div>
+            <h2
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                fontSize: "1.75rem",
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                margin: "0 0 1.5rem",
+                color: C.title,
+              }}
+            >
+              Связанные релизы
+            </h2>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(165px, 1fr))",
+                gap: "1.25rem",
+              }}
+            >
+              {relatedChronology.map((item) => (
                 <Link
                   key={item.id}
                   href={`/realeses/anime-page/${item.id}`}
-                  className={`${styles.relatedTimelineRow} ${item.isCurrent ? styles.relatedTimelineRowCurrent : ""}`}
-                  style={
-                    item.isCurrent
-                      ? { ["--related-current-accent" as string]: itemAccent }
-                      : undefined
-                  }
+                  style={{
+                    cursor: "pointer",
+                    transition: "transform 0.2s",
+                    display: "block",
+                    color: "inherit",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
                 >
                   <div
-                    className={styles.relatedTimelinePoster}
-                    style={{ ["--related-accent" as string]: itemAccent }}
-                  />
-
-                  <div className={styles.relatedTimelineContent}>
-                    <p className={styles.relatedTimelineName}>{item.title}</p>
-                    <p className={styles.relatedTimelineAlt}>{item.altTitle}</p>
-                    <p className={styles.relatedTimelineItemMeta}>
-                      {item.year} • {item.season} • {item.format} •{" "}
-                      {item.episodes}
-                    </p>
+                    style={{
+                      borderRadius: "9px",
+                      overflow: "hidden",
+                      position: "relative",
+                      marginBottom: "0.65rem",
+                      border: `1px solid ${item.isCurrent ? C.rose : C.border}`,
+                      background: C.card,
+                    }}
+                  >
+                    {item.poster && (
+                      <img
+                        src={item.poster}
+                        alt={item.title}
+                        style={{
+                          width: "100%",
+                          aspectRatio: "5/7",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    )}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "6px",
+                        right: "6px",
+                        background: C.rose,
+                        borderRadius: "5px",
+                        padding: "2px 8px",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        color: "#fff",
+                      }}
+                    >
+                      {item.rating}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: `linear-gradient(to top, rgba(${C.pageRgb}, 0.8), transparent)`,
+                        padding: "8px 8px 6px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          color: C.rose,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {item.isCurrent ? "Текущий" : item.format}
+                      </span>
+                    </div>
                   </div>
-
-                  <span className={styles.relatedTimelineIndex}>
-                    #{item.order}
-                  </span>
+                  <p
+                    style={{
+                      margin: "0 0 3px",
+                      fontWeight: 700,
+                      fontSize: "12px",
+                      color: C.text,
+                      lineHeight: 1.35,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {item.title}
+                  </p>
+                  <p style={{ margin: 0, fontSize: "11px", color: C.textMuted }}>
+                    {item.year}
+                  </p>
                 </Link>
-              );
-            })}
+              ))}
+            </div>
           </div>
+        )}
+
         </div>
-      )}
+      </div>
 
-      {tab === "comments" && <Comments animeId={anime.id} accent={accent} />}
+      {/* ── COMMENTS (full width, below everything) ── */}
+      <div
+        style={{
+          maxWidth: "1400px",
+          margin: "0 auto",
+          padding: "0 2.5rem 5rem",
+        }}
+      >
+        <h2
+          style={{
+            fontFamily: '"Playfair Display", serif',
+            fontSize: "1.75rem",
+            fontWeight: 700,
+            letterSpacing: "-0.01em",
+            margin: "0 0 1.5rem",
+            color: C.title,
+          }}
+        >
+          Комментарии
+        </h2>
 
-      {/* Collaboration request modal */}
+        <Comments animeId={anime.id} accent={C.rose} />
+      </div>
+
+
+      {/* ── Collaboration request modal ── */}
+
       {collabModalOpen && (
-        <div className={styles.collabModalOverlay} onClick={() => setCollabModalOpen(false)}>
-          <div className={`${styles.collabModal} ${styles.collabModalTop}`} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.collabModalOverlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setCollabModalOpen(false);
+          }}
+        >
+          <div className={`${styles.collabModal} ${styles.collabModalTop}`}>
+
             <div className={styles.collabModalHeader}>
               <h2>Предложить студию озвучки</h2>
-              <button className={styles.collabModalClose} onClick={() => setCollabModalOpen(false)}>
+              <button
+                className={styles.collabModalClose}
+                onClick={() => setCollabModalOpen(false)}
+              >
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); submitCollab(); }} className={styles.collabForm}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submitCollab();
+              }}
+              className={styles.collabForm}
+            >
               <div className={styles.formGroup}>
                 <label>Название студии *</label>
                 <input
@@ -934,7 +1540,9 @@ export default function AnimePageContent({
                 <label>Описание студии</label>
                 <textarea
                   value={collabForm.description}
-                  onChange={(e) => setCollabForm({ ...collabForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setCollabForm({ ...collabForm, description: e.target.value })
+                  }
                   placeholder="Расскажите о вашей студии..."
                 />
               </div>
@@ -942,7 +1550,9 @@ export default function AnimePageContent({
                 <label>Глава студии</label>
                 <div className={styles.headUsernameDisplay}>
                   @{auth.user?.username}
-                  <span className={styles.headUsernameNote}>— ваш профиль привязан автоматически</span>
+                  <span className={styles.headUsernameNote}>
+                    — ваш профиль привязан автоматически
+                  </span>
                 </div>
               </div>
               <ImageUploadField
@@ -976,10 +1586,18 @@ export default function AnimePageContent({
                 />
               </div>
               <div className={styles.collabFormActions}>
-                <button type="submit" disabled={collabSubmitting} className={styles.collabSubmitBtn}>
+                <button
+                  type="submit"
+                  disabled={collabSubmitting}
+                  className={styles.collabSubmitBtn}
+                >
                   {collabSubmitting ? "Отправка..." : "Отправить на модерацию"}
                 </button>
-                <button type="button" onClick={() => setCollabModalOpen(false)} className={styles.collabCancelBtn}>
+                <button
+                  type="button"
+                  onClick={() => setCollabModalOpen(false)}
+                  className={styles.collabCancelBtn}
+                >
                   Отмена
                 </button>
               </div>
@@ -990,29 +1608,40 @@ export default function AnimePageContent({
       )}
 
       {collabSuccessOpen && (
-        <div className={styles.collabModalOverlay} onClick={() => setCollabSuccessOpen(false)}>
-          <div className={`${styles.collabModal} ${styles.collabSuccessModal}`} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.collabModalOverlay}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setCollabSuccessOpen(false);
+          }}
+        >
+          <div className={`${styles.collabModal} ${styles.collabSuccessModal}`}>
+
+            <button
+              className={styles.collabSuccessClose}
+              onClick={() => setCollabSuccessOpen(false)}
+              aria-label="Закрыть"
+            >
+              <X size={18} />
+            </button>
             <div className={styles.collabSuccessIcon}>
-              <Check size={18} />
+              <Check size={26} />
             </div>
-            <div className={styles.collabModalHeader}>
-              <h2>Запрос отправлен</h2>
-              <button className={styles.collabModalClose} onClick={() => setCollabSuccessOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className={styles.requestSentText}>
+            <h2 className={styles.collabSuccessTitle}>Запрос отправлен</h2>
+            <p className={styles.requestSentText}>
               Студия <strong>«{collabSuccessStudio}»</strong> отправлена на модерацию.
               Ожидайте решения.
-            </div>
-            <div className={styles.collabFormActions}>
-              <button type="button" className={styles.collabSubmitBtn} onClick={() => setCollabSuccessOpen(false)}>
-                Понятно
-              </button>
-            </div>
+            </p>
+            <button
+              type="button"
+              className={styles.collabSubmitBtn}
+              onClick={() => setCollabSuccessOpen(false)}
+            >
+              Понятно
+            </button>
           </div>
         </div>
       )}
+
     </div>
   );
 }

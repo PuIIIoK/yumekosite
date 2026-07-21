@@ -68,10 +68,19 @@ export default function StudioPage() {
   const id = (params?.id as string) ?? "";
   const { user } = useAuth();
   const [studio, setStudio] = useState<StudioData | null>(null);
+  const [members, setMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   const isHead = user?.username?.toLowerCase() === studio?.headUsername?.toLowerCase();
+  const isMember =
+    !!user?.username &&
+    members.some((m) => m.toLowerCase() === user.username!.toLowerCase());
+  const isPrivileged = !!user?.roles?.some((r) => (r.priority ?? 0) >= 90);
+  // Only the studio head, its members, or admins/moderators can edit.
+  // Studio-info changes from non-privileged users go to moderation.
+  const canEdit = isHead || isMember || isPrivileged;
+
   const socialLinks = useMemo(() => parseSocialLinks(studio?.socials), [studio?.socials]);
   const websiteHref = studio?.website ? buildHref(studio.website) : "";
   const headProfileHref = studio?.headUsername ? `/profile/${studio.headUsername}` : "";
@@ -85,7 +94,15 @@ export default function StudioPage() {
       .then((data: StudioData) => setStudio(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
+
+    fetch(`${API_URL}/api/studios/${id}/members`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: Array<{ username: string }>) =>
+        setMembers(data.map((m) => m.username)),
+      )
+      .catch(() => setMembers([]));
   }, [id]);
+
 
   if (loading) {
     return (
@@ -135,12 +152,13 @@ export default function StudioPage() {
               <span className={styles.metaChip}>
                 {studio.isCollaboration ? "PUBLIC" : "HIDDEN"}
               </span>
-              {isHead && (
+              {canEdit && (
                 <Link href={`/studio/${studio.id}/edit`} className={styles.metaChipLink}>
                   <Edit3 size={12} />
                   Edit
                 </Link>
               )}
+
             </div>
           </div>
 
@@ -169,12 +187,13 @@ export default function StudioPage() {
             <article className={styles.heroInfo}>
               <div className={styles.heroHead}>
                 <div className={styles.heroLabel}>Studio profile</div>
-                {isHead && (
+                {canEdit && (
                   <Link href={`/studio/${studio.id}/edit`} className={styles.editBtn}>
                     <Edit3 size={14} />
                     Редактировать
                   </Link>
                 )}
+
               </div>
 
               <h1 className={styles.title}>{studio.name}</h1>

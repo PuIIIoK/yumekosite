@@ -7,9 +7,11 @@ import {
   useCallback,
   type MouseEvent as ReactMouseEvent,
 } from "react";
+import Link from "next/link";
 import Hls from "hls.js";
 import { Client as StompClient, type IMessage } from "@stomp/stompjs";
 import { API_URL } from "@/config/hosts";
+
 
 // WS URL derives from API_URL (http→ws, https→wss)
 const WS_URL = API_URL.replace(/^http/, "ws");
@@ -76,7 +78,9 @@ interface EpisodeInfo {
   number: number;
   title: string | null;
   hlsUrl: string | null;
+  previewUrl?: string | null;
 }
+
 
 interface Markers {
   introStart: number | null;
@@ -97,7 +101,14 @@ interface Props {
   markers?: Markers;
   canEditMarkers?: boolean;
   onSaveMarkers?: (markers: Markers) => void;
+  /** Anime title shown unobtrusively in the top-left of the player. */
+  title?: string;
+  /** Link back to the anime page (wraps the top-left title). */
+  backHref?: string;
+  /** Fill the parent container instead of using a fixed 16:9 max-height box. */
+  fill?: boolean;
 }
+
 
 const VOLUME_KEY = "yumeko_player_volume";
 const MUTED_KEY = "yumeko_player_muted";
@@ -175,7 +186,11 @@ export default function VideoPlayer({
   markers,
   canEditMarkers = false,
   onSaveMarkers,
+  title,
+  backHref,
+  fill = false,
 }: Props) {
+
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -922,7 +937,8 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={`${styles.player} ${controlsVisible ? styles.playerShowControls : ""} ${isFullscreen ? styles.playerFullscreen : ""} ${isMobile ? styles.playerMobile : ""}`}
+      className={`${styles.player} ${controlsVisible ? styles.playerShowControls : ""} ${isFullscreen ? styles.playerFullscreen : ""} ${isMobile ? styles.playerMobile : ""} ${fill ? styles.playerFill : ""}`}
+
       style={{ ["--player-accent" as string]: accent }}
       onMouseMove={() => {
         if (!isMobile) showControls();
@@ -1135,17 +1151,34 @@ export default function VideoPlayer({
       {/* Gradient overlay */}
       <div className={styles.gradient} />
 
-      {/* Top bar */}
+      {/* Top bar — unobtrusive title in the top-left */}
       <div className={styles.topBar}>
-        {currentEpisodeId && sorted.length > 0 && (
-          <span className={styles.topTitle}>
-            Эпизод {sorted.find((e) => e.id === currentEpisodeId)?.number}
-            {sorted.find((e) => e.id === currentEpisodeId)?.title
-              ? ` — ${sorted.find((e) => e.id === currentEpisodeId)?.title}`
-              : ""}
-          </span>
+        {backHref ? (
+          <Link href={backHref} className={styles.topTitleLink}>
+            <ChevronLeft size={16} className={styles.topBackIcon} />
+            <span className={styles.topTitleGroup}>
+              {title && <span className={styles.topAnime}>{title}</span>}
+              {currentEpisodeId && sorted.length > 0 && (
+                <span className={styles.topEpisode}>
+                  Эпизод {sorted.find((e) => e.id === currentEpisodeId)?.number}
+                </span>
+              )}
+            </span>
+          </Link>
+        ) : (
+          (title || (currentEpisodeId && sorted.length > 0)) && (
+            <span className={styles.topTitleGroup}>
+              {title && <span className={styles.topAnime}>{title}</span>}
+              {currentEpisodeId && sorted.length > 0 && (
+                <span className={styles.topEpisode}>
+                  Эпизод {sorted.find((e) => e.id === currentEpisodeId)?.number}
+                </span>
+              )}
+            </span>
+          )
         )}
       </div>
+
 
       {/* Controls */}
       <div className={styles.controls}>
@@ -1296,7 +1329,7 @@ export default function VideoPlayer({
             {sorted.length > 1 && (
               <div className={styles.menuWrap}>
                 <button
-                  className={styles.controlBtn}
+                  className={`${styles.controlBtn} ${styles.episodesBtn}`}
                   onClick={() => {
                     setShowEpisodes(!showEpisodes);
                     setShowSettings(false);
@@ -1304,6 +1337,9 @@ export default function VideoPlayer({
                   title="Список серий"
                 >
                   <ListVideo size={20} />
+                  {!isMobile && (
+                    <span className={styles.episodesBtnLabel}>Эпизоды</span>
+                  )}
                 </button>
                 {showEpisodes && (
                   <>
@@ -1311,28 +1347,48 @@ export default function VideoPlayer({
                       className={styles.menuOverlay}
                       onClick={() => setShowEpisodes(false)}
                     />
-                    <div className={styles.menu}>
-                      <div className={styles.menuHeader}>Серии</div>
+                    <div className={`${styles.menu} ${styles.episodesMenu}`}>
+                      <div className={styles.menuHeader}>Эпизоды</div>
                       <div className={styles.menuScroll}>
                         {sorted.map((ep) => (
                           <button
                             key={ep.id}
-                            className={`${styles.menuItem} ${ep.id === currentEpisodeId ? styles.menuItemActive : ""}`}
+                            className={`${styles.episodeItem} ${ep.id === currentEpisodeId ? styles.episodeItemActive : ""}`}
                             onClick={() => {
                               if (ep.id !== currentEpisodeId)
                                 onEpisodeChange?.(ep);
                               setShowEpisodes(false);
                             }}
                           >
-                            <span className={styles.menuItemNum}>
-                              {ep.number}
+                            <span className={styles.episodeThumb}>
+                              {ep.previewUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={ep.previewUrl}
+                                  alt={`Эпизод ${ep.number}`}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span className={styles.episodeThumbFallback}>
+                                  {ep.number}
+                                </span>
+                              )}
+                              {ep.id === currentEpisodeId && (
+                                <span className={styles.episodeThumbPlaying}>
+                                  <Play size={16} fill="currentColor" stroke="none" />
+                                </span>
+                              )}
                             </span>
-                            <span className={styles.menuItemTitle}>
-                              {ep.title || `Эпизод ${ep.number}`}
+                            <span className={styles.episodeMeta}>
+                              <span className={styles.episodeNumber}>
+                                Эпизод {ep.number}
+                              </span>
+                              {ep.title && (
+                                <span className={styles.episodeTitle}>
+                                  {ep.title}
+                                </span>
+                              )}
                             </span>
-                            {ep.id === currentEpisodeId && (
-                              <Play size={12} className={styles.menuItemPlay} />
-                            )}
                           </button>
                         ))}
                       </div>

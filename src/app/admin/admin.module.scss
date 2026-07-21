@@ -3382,3 +3382,522 @@
         align-items: flex-start;
     }
 }
+
+// ── Studio mini cards (moderation) ──
+.studioMiniGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.studioMiniCard {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 0;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: 16px;
+    background: var(--bg-card, #16161c);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent, #8b5cf6);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.studioMiniBanner {
+    position: relative;
+    height: 110px;
+    background-color: rgba(255, 255, 255, 0.04);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 10px;
+}
+
+.studioMiniOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.55));
+}
+
+.studioMiniInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    margin-top: -26px;
+    position: relative;
+    z-index: 1;
+}
+
+.studioMiniAvatarWrap {
+    flex-shrink: 0;
+}
+
+.studioMiniAvatar,
+.studioMiniAvatarFallback {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid var(--bg-card, #16161c);
+    background: var(--accent, #8b5cf6);
+}
+
+.studioMiniAvatarFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.studioMiniText {
+    min-width: 0;
+
+    h3 {
+        margin: 0 0 2px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary, #fff);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+// ── Modal overlay + shared ──
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: modalFade 0.18s ease;
+}
+
+@keyframes modalFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modalCloseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.75);
+    }
+}
+
+// ── Studio detail modal ──
+.studioModal {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--bg-card, #16161c);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: 18px;
+    animation: modalPop 0.2s ease;
+
+    > .modalCloseBtn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 2;
+    }
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.96); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.studioModalBanner {
+    position: relative;
+    height: 170px;
+    background-color: rgba(255, 255, 255, 0.04);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+}
+
+.studioModalBannerOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.7));
+}
+
+.studioModalHeaderRow {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.studioModalAvatarWrap {
+    flex-shrink: 0;
+}
+
+.studioModalAvatar,
+.studioModalAvatarFallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 3px solid var(--bg-card, #16161c);
+    background: var(--accent, #8b5cf6);
+}
+
+.studioModalAvatarFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.studioModalTitle {
+    min-width: 0;
+
+    h3 {
+        margin: 0 0 3px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    p {
+        margin: 0;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.75);
+    }
+}
+
+.studioModalBody {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+// ── Anime edit diff modal ──
+.editModal {
+    max-width: 760px;
+}
+
+.editModalTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    background: rgba(139, 92, 246, 0.22);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    color: #c4b5fd;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.editDiffHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.editDiffTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.editDiffCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--accent, #8b5cf6);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.editDiffLegend {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 600;
+}
+
+.editDiffEmpty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 22px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+
+    svg { color: #4ade80; }
+
+}
+
+.editDiffList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.editDiffRow {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+
+    @media (max-width: 560px) {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+.editDiffLabel {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.5);
+    padding-top: 2px;
+}
+
+.editDiffValues {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.editDiffOld {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: #fca5a5;
+    font-size: 13px;
+    text-decoration: line-through;
+    text-decoration-color: rgba(252, 165, 165, 0.5);
+    word-break: break-word;
+}
+
+.editDiffArrow {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.editDiffNew {
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: #86efac;
+    font-size: 13px;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.editDiffPosters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.editDiffPosterCol {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    img {
+        width: 96px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
+
+.editDiffOldTag,
+.editDiffNewTag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.editDiffOldTag { color: #fca5a5; }
+.editDiffNewTag { color: #86efac; }
+
+// ── Reject reason modal ──
+
+.rejectModal {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: var(--bg-card, #16161c);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    border-radius: 16px;
+    padding: 20px;
+    animation: modalPop 0.2s ease;
+}
+
+.rejectModalHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ef4444;
+    margin-bottom: 8px;
+
+    h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary, #fff);
+        flex: 1;
+    }
+
+    .modalCloseBtn {
+        background: transparent;
+        color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+    }
+}
+
+.rejectModalHint {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    line-height: 1.5;
+}
+
+.rejectModalTextarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 90px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary, #fff);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+        border-color: var(--accent, #8b5cf6);
+    }
+}
+
+.rejectModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.rejectModalCancel {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    background: transparent;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.rejectModalConfirm {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #ef4444;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover:not(:disabled) {
+        background: #dc2626;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+

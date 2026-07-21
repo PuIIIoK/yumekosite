@@ -55,74 +55,6 @@
   border: 1px solid rgba(34, 197, 94, 0.15);
 }
 
-// ── Confirm modal ──
-.confirmOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-.confirmModal {
-  width: 100%;
-  max-width: 520px;
-  padding: 24px;
-  border-radius: 18px;
-  background: rgba(20, 20, 26, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-}
-
-.confirmTitle {
-  margin: 0 0 12px;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.confirmText {
-  margin: 0 0 20px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.confirmActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.confirmBtn,
-.confirmCancelBtn {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.confirmBtn {
-  background: rgba(34, 197, 94, 0.12);
-  color: #22c55e;
-  border-color: rgba(34, 197, 94, 0.2);
-}
-
-.confirmCancelBtn {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.confirmActions .confirmBtn:first-child {
-  margin-right: 0;
-}
-
 // ── States ──
 .loading {
   padding: 80px 0;
@@ -146,6 +78,9 @@
 }
 
 .formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   padding: 24px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
@@ -155,17 +90,14 @@
 .sectionTitle {
   font-size: 17px;
   font-weight: 700;
-  margin: 0 0 20px;
+  margin: 0 0 2px;
   color: var(--text-primary);
 }
 
 .formGroup {
-  margin-bottom: 18px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+  margin: 0;
 }
+
 
 .label {
   display: block;
@@ -220,107 +152,6 @@
   }
 }
 
-// ── Preview ──
-.preview {
-  margin-top: 10px;
-}
-
-.avatarPreview {
-  width: 80px;
-  height: 80px;
-  border-radius: 16px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-.bannerPreview {
-  width: 100%;
-  max-width: 400px;
-  height: 120px;
-  border-radius: 12px;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-}
-
-// ── Team ──
-.teamList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.teamMember {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.memberName {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--accent);
-  min-width: 100px;
-}
-
-.memberRole {
-  font-size: 13px;
-  color: var(--text-muted);
-  flex: 1;
-}
-
-.removeBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background: transparent;
-  color: rgba(239, 68, 68, 0.6);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-  }
-}
-
-.addMemberForm {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-
-  .input {
-    flex: 1;
-  }
-}
-
-.addBtn {
-  padding: 11px 16px;
-  border-radius: 10px;
-  background: rgba(96, 165, 250, 0.12);
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  color: #60a5fa;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(96, 165, 250, 0.2);
-    border-color: rgba(96, 165, 250, 0.4);
-  }
-}
-
 .select {
   padding: 11px 14px;
   border-radius: 10px;
@@ -337,55 +168,81 @@
   }
 
   option {
-    background: var(--bg);
+    background: #16161c;
     color: var(--text-primary);
   }
 }
 
-.submitRolesBtn {
-  margin-top: 16px;
-  padding: 12px 24px;
-  border-radius: 10px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  color: #22c55e;
+// ── Team ──
+.teamList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.teamMember {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.memberAvatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(139, 92, 246, 0.25));
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background: rgba(34, 197, 94, 0.2);
-    border-color: rgba(34, 197, 94, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.pendingBadge {
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(250, 204, 21, 0.12);
-  border: 1px solid rgba(250, 204, 21, 0.2);
-  color: #facc15;
+.memberHandle {
   font-size: 12px;
-  font-weight: 600;
-}
-
-.approvedBadge {
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .memberRole {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  white-space: nowrap;
+
   &.memberRole_ACTOR {
     color: #f59e0b;
   }
@@ -396,6 +253,260 @@
 
   &.memberRole_SOUND_DIRECTOR {
     color: #8b5cf6;
+  }
+
+  &.memberRole_ANIME_UPLOADER {
+    color: #60a5fa;
+  }
+}
+
+.pendingBadge {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.removeBtn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: transparent;
+  color: rgba(239, 68, 68, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+  }
+}
+
+.teamEmpty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+// ── Add member ──
+.addMemberBlock {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.addMemberTitle {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.addMemberControls {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.addMemberHint {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+// ── User search + dropdown ──
+.searchBox {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.searchInputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 11px 38px 11px 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: var(--accent);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+  }
+}
+
+.searchSpinner {
+  position: absolute;
+  right: 12px;
+  color: var(--text-muted);
+  animation: studioEditSpin 0.9s linear infinite;
+}
+
+@keyframes studioEditSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.searchClear {
+  position: absolute;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: var(--text-primary);
+  }
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 12px;
+  background: #16161c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.dropdownEmpty {
+  padding: 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.dropdownAvatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(139, 92, 246, 0.25));
+  font-size: 14px;
+  font-weight: 700;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.dropdownText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.dropdownName {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownHandle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.addBtn {
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: rgba(96, 165, 250, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(96, 165, 250, 0.24);
+    border-color: rgba(96, 165, 250, 0.45);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 }
 
@@ -449,7 +560,7 @@
     gap: 12px;
   }
 
-  .addMemberForm {
+  .addMemberControls {
     flex-direction: column;
   }
 

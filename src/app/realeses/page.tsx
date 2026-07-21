@@ -10,9 +10,9 @@ import {
   RotateCcw,
   Search,
   SlidersHorizontal,
-  Sparkles,
   X,
 } from "lucide-react";
+
 import Header from "@/components/Header/Header";
 import { type AnimeDetails, isAnimeHidden } from "@/data/anime";
 import { API_URL } from "@/config/hosts";
@@ -21,7 +21,7 @@ import styles from "./catalog.module.scss";
 const PER_PAGE = 24;
 
 type TypeFilter = "all" | "anime" | "films" | "cartoons" | "serials" | "hentai";
-type SortFilter = "year-desc" | "year-asc" | "title-asc";
+
 
 type SelectOption = {
   label: string;
@@ -58,7 +58,8 @@ const NON_GENRE_LABELS = new Set(
   ),
 );
 
-const SORT_OPTIONS: { value: SortFilter; label: string }[] = [
+const SORT_OPTIONS: { value: string; label: string }[] = [
+
 
   { value: "year-desc", label: "Сначала новые" },
   { value: "year-asc", label: "Сначала старые" },
@@ -188,22 +189,19 @@ function matchesType(anime: AnimeDetails, type: TypeFilter): boolean {
   return true;
 }
 
-function sortAnime(list: AnimeDetails[], sort: SortFilter): AnimeDetails[] {
+function sortAnime(list: AnimeDetails[]): AnimeDetails[] {
   return [...list].sort((left, right) => {
-    if (sort === "title-asc") {
-      return left.title.localeCompare(right.title, "ru");
-    }
-
     const leftYear = parseYearValue(left.year);
     const rightYear = parseYearValue(right.year);
 
     if (leftYear !== rightYear) {
-      return sort === "year-asc" ? leftYear - rightYear : rightYear - leftYear;
+      return rightYear - leftYear;
     }
 
     return left.title.localeCompare(right.title, "ru");
   });
 }
+
 
 export default function CatalogPage() {
   const [anime, setAnime] = useState<AnimeDetails[]>([]);
@@ -218,8 +216,8 @@ export default function CatalogPage() {
   const [format, setFormat] = useState("");
   const [season, setSeason] = useState("");
   const [status, setStatus] = useState("");
-  const [sort, setSort] = useState<SortFilter>("year-desc");
   const [page, setPage] = useState(1);
+
 
   const deferredSearch = useDeferredValue(search);
 
@@ -366,8 +364,9 @@ export default function CatalogPage() {
       return true;
     });
 
-    return sortAnime(next, sort);
-  }, [anime, deferredSearch, format, genre, season, sort, status, studio, studioMap, type, year]);
+    return sortAnime(next);
+  }, [anime, deferredSearch, format, genre, season, status, studio, studioMap, type, year]);
+
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const currentPage = Math.min(page, totalPages);
@@ -404,7 +403,7 @@ export default function CatalogPage() {
   const genreOptions = genres.map((item) => ({ value: item, label: item }));
   const studioOptions = studios.map((item) => ({ value: item, label: item }));
   const formatOptions = formats.map((item) => ({ value: item, label: item }));
-  const sortOptions = SORT_OPTIONS.map((item) => ({ value: item.value, label: item.label }));
+
 
 
   const updateSearch = (value: string) => {
@@ -437,12 +436,6 @@ export default function CatalogPage() {
     setPage(1);
   };
 
-  const updateSort = (value: SortFilter) => {
-
-    setSort(value);
-    setPage(1);
-  };
-
   const resetFilters = () => {
     setSearch("");
     setType("all");
@@ -452,9 +445,9 @@ export default function CatalogPage() {
     setFormat("");
     setSeason("");
     setStatus("");
-    setSort("year-desc");
     setPage(1);
   };
+
 
   const renderSkeletonGrid = () => (
     <div className={styles.grid}>
@@ -483,9 +476,10 @@ export default function CatalogPage() {
           <div className={styles.heroCopy}>
             <h1 className={styles.heroTitle}>Релизы</h1>
             <p className={styles.heroSub}>
-              Слева — гибкие фильтры по году, типу, жанру и студии. Справа — быстрый поиск,
-              сортировка и красивая карточная выдача.
+              Слева — гибкие фильтры по году, типу, жанру и студии. Справа — быстрый поиск
+              и красивая карточная выдача.
             </p>
+
           </div>
 
           <div className={styles.heroStats}>
@@ -618,24 +612,12 @@ export default function CatalogPage() {
                     </button>
                   )}
                 </div>
-
-                <div className={styles.sortBox}>
-                  <span className={styles.sortLabel}>Сортировка</span>
-                  <CustomSelect
-                    label="Сортировка"
-                    value={sort}
-                    options={sortOptions}
-                    placeholder="Выбрать сортировку"
-                    onChange={(value) => updateSort(value as SortFilter)}
-                    direction="up"
-                  />
-                </div>
               </div>
 
               <div className={styles.resultsBar}>
                 <div className={styles.resultPill}>
-                  <Sparkles size={14} />
                   {loading
+
                     ? "Загружаем каталог..."
                     : deferredSearch !== search
                       ? "Обновляем выдачу..."

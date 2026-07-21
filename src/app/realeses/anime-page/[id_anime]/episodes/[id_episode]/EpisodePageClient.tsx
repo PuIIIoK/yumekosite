@@ -127,15 +127,14 @@ export default function EpisodePageClient({
     );
   }
 
+  // NOTE: No <Header /> here — the player page is a focused, immersive view.
   return (
-    <>
-      <Header />
-      <EpisodePlayerContent
-        anime={anime}
-        episode={currentEp}
-        episodes={episodes}
-        accent={getAccent(anime.rating)}
-      />
-    </>
+    <EpisodePlayerContent
+      anime={anime}
+      episode={currentEp}
+      episodes={episodes}
+      accent={getAccent(anime.rating)}
+    />
   );
+
 }

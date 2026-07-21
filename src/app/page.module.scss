@@ -131,36 +131,69 @@
 }
 
 .banner {
+    --accent-color: var(--accent);
     position: relative;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+    border-radius: 24px;
     overflow: hidden;
-    border: 2px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     background-size: cover;
-    background-position: center;
+    background-position: center 22%;
+    isolation: isolate;
+    box-shadow:
+        0 22px 64px rgba(6, 5, 8, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03);
     transition:
         border-color 0.35s ease,
         background-image 0.35s ease;
-    height: 400px;
+    height: 440px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+
+    // Soft top sheen highlight
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            transparent 22%
+        );
+    }
 }
 
+// Cinematic accent-tinted veil (matches anime page hero)
 .bannerOverlay {
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(
-            to right,
-            rgba(10, 10, 14, 0.95) 0%,
-            rgba(10, 10, 14, 0.75) 50%,
-            rgba(10, 10, 14, 0.3) 100%
-        ),
-        linear-gradient(to top, rgba(10, 10, 14, 0.9) 0%, transparent 50%);
     z-index: 1;
     pointer-events: none;
+    background:
+        radial-gradient(
+            ellipse 90% 85% at 18% 78%,
+            color-mix(in srgb, var(--accent-color) 13%, transparent) 0%,
+            transparent 58%
+        ),
+        radial-gradient(
+            ellipse 60% 50% at 88% 12%,
+            color-mix(in srgb, var(--accent-color) 7%, transparent) 0%,
+            transparent 55%
+        ),
+
+        linear-gradient(
+            to right,
+            rgba(9, 7, 11, 0.94) 0%,
+            rgba(9, 7, 11, 0.66) 46%,
+            rgba(9, 7, 11, 0.1) 100%
+        ),
+        linear-gradient(to top, rgba(8, 6, 10, 0.96) 0%, transparent 62%);
 }
+
+
 
 .bannerSlide {
     position: relative;
@@ -185,31 +218,40 @@
 }
 
 .bannerTitle {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1.2;
+    font-family: "Comfortaa", "Manrope", system-ui, sans-serif;
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 700;
+    line-height: 1.14;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
+    text-shadow: 0 2px 24px rgba(6, 5, 8, 0.8);
+    max-width: 640px;
 }
 
 .bannerMeta {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: var(--text-secondary);
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
     font-weight: 500;
+    letter-spacing: 0.02em;
 
     span + span::before {
         content: "•";
-        margin-right: 6px;
-        color: var(--text-muted);
+        margin-right: 8px;
+        color: rgba(255, 255, 255, 0.25);
     }
 }
+
 
 .bannerGenres {
     font-size: 13px;
     color: var(--text-muted);
+    margin-top: 2px;
 }
+
 
 .bannerText {
     font-size: 14px;
@@ -234,20 +276,22 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 22px;
-    border-radius: 10px;
+    padding: 11px 26px;
+    border-radius: 12px;
     border: none;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+    background: var(--accent);
+    color: #fff;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background var(--tr-fast);
+    transition: background 0.18s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.16);
+        background: var(--accent-hover);
     }
 }
+
+
 
 .bannerIconBtn {
     display: inline-flex;
@@ -523,12 +567,18 @@
     align-items: center;
     justify-content: space-between;
     gap: 40px;
-    background: #111114;
-    border-radius: 16px;
-    padding: 40px 48px;
+    background: linear-gradient(
+        140deg,
+        color-mix(in srgb, var(--accent) 8%, #101014) 0%,
+        #0f0f12 55%
+    );
+    border-radius: 20px;
+    padding: 44px 48px;
     border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 16px 48px rgba(6, 5, 8, 0.35);
     overflow: hidden;
 }
+
 
 // Purple ambient glow — top left
 .supportGlow1 {

@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import AnimeEditor from "@/components/AnimeEditor/AnimeEditor";
 
-export default function CreateAnimePage() {
+export default function EditAnimePage() {
   return (
     <Suspense>
       <AnimeEditor />

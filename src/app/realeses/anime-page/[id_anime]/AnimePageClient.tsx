@@ -150,22 +150,20 @@ export default function AnimePageClient({ id }: { id: string }) {
     <>
       <Header />
       <main
-        className={styles.main}
-        style={
-          {
-            "--poster-glow-a": glow[0],
-            "--poster-glow-b": glow[1],
-          } as React.CSSProperties
-        }
+        style={{
+          paddingTop: "var(--header-height)",
+          background: "transparent",
+          minHeight: "100vh",
+        }}
       >
-        <div className={styles.container}>
-          <AnimePageContent
-            anime={anime}
-            accent={getAccent(anime.rating)}
-            dbEpisodes={dbEpisodes}
-          />
-        </div>
+        <AnimePageContent
+          anime={anime}
+          accent={getAccent(anime.rating)}
+          dbEpisodes={dbEpisodes}
+        />
       </main>
     </>
   );
 }
+
+

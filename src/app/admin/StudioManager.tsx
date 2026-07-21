@@ -16,7 +16,9 @@ import {
   X,
 } from "lucide-react";
 import { API_URL } from "@/config/hosts";
+import ImageUploadField from "@/components/ImageUploadField/ImageUploadField";
 import styles from "./studioManager.module.scss";
+
 
 interface Studio {
   id: number;
@@ -427,32 +429,25 @@ export default function StudioManager() {
 
               <div className={styles.formGrid}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Аватар (URL)</label>
-                  <input
-                    type="text"
+                  <ImageUploadField
+                    label="Аватар студии"
                     value={formData.avatar}
-                    onChange={(e) =>
-                      setFormData({ ...formData, avatar: e.target.value })
-                    }
-                    className={styles.formInput}
+                    onChange={(url) => setFormData({ ...formData, avatar: url })}
                     placeholder="https://example.com/avatar.png"
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Баннер (URL)</label>
-                  <input
-                    type="text"
+                  <ImageUploadField
+                    label="Баннер студии"
                     value={formData.banner}
-                    onChange={(e) =>
-                      setFormData({ ...formData, banner: e.target.value })
-                    }
-                    className={styles.formInput}
+                    onChange={(url) => setFormData({ ...formData, banner: url })}
                     placeholder="https://example.com/banner.jpg"
                   />
                 </div>
 
                 <div className={styles.formGroup}>
+
                   <label className={styles.formLabel}>Соцсети</label>
                   <div className={styles.socialLinksEditor}>
                     {socialRows.map((row, index) => (

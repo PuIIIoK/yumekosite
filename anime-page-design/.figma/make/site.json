@@ -1,0 +1,10 @@
+{
+  "description": "Displays centralized anime pages with a stylish dark pink theme featuring banners, cover art, episodes, comments, related titles, and cast details.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

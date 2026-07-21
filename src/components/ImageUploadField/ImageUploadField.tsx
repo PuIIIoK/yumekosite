@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, Link, Clipboard, X } from "lucide-react";
+import { Upload, Link, Clipboard, X, Loader2 } from "lucide-react";
+import { API_URL } from "@/config/hosts";
 import styles from "./ImageUploadField.module.scss";
 
 interface ImageUploadFieldProps {
@@ -10,6 +11,8 @@ interface ImageUploadFieldProps {
   onChange: (url: string) => void;
   placeholder?: string;
   accept?: string;
+  /** Endpoint that accepts a multipart "file" field and returns { url }. */
+  uploadEndpoint?: string;
 }
 
 export default function ImageUploadField({
@@ -18,16 +21,26 @@ export default function ImageUploadField({
   onChange,
   placeholder = "https://example.com/image.png",
   accept = "image/*",
+  uploadEndpoint = `${API_URL}/api/collaboration-requests/upload-image`,
 }: ImageUploadFieldProps) {
   const [uploadMethod, setUploadMethod] = useState<"url" | "file" | "clipboard">("url");
   const [tempUrl, setTempUrl] = useState(value);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [clipboardStatus, setClipboardStatus] = useState<"idle" | "checking" | "success" | "error">("idle");
+  const pasteZoneRef = useRef<HTMLDivElement>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Sync tempUrl with value when value changes externally
   useEffect(() => {
     setTempUrl(value);
   }, [value]);
+
+  // Focus the paste zone when switching to clipboard mode
+  useEffect(() => {
+    if (uploadMethod === "clipboard") {
+      pasteZoneRef.current?.focus();
+    }
+  }, [uploadMethod]);
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
@@ -35,54 +48,97 @@ export default function ImageUploadField({
     onChange(url);
   };
 
+  // Upload a file/blob to S3 and store only the returned URL.
+  const uploadImage = async (file: File | Blob) => {
+    setUploading(true);
+    setPasteError(null);
+
+    // Optimistic local preview while the upload is in flight.
+    const localPreview = URL.createObjectURL(file);
+    setTempUrl(localPreview);
+
+    try {
+      const formData = new FormData();
+      const named =
+        file instanceof File
+          ? file
+          : new File([file], "pasted-image", { type: file.type || "image/png" });
+      formData.append("file", named);
+
+      const res = await fetch(uploadEndpoint, { method: "POST", body: formData });
+      if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+      const data = await res.json();
+      if (!data.url) throw new Error("No url in response");
+
+      setTempUrl(data.url);
+      onChange(data.url);
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+      setTempUrl(value);
+      onChange(value);
+      setPasteError("Не удалось загрузить изображение");
+      setTimeout(() => setPasteError(null), 3000);
+    } finally {
+      URL.revokeObjectURL(localPreview);
+      setUploading(false);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      setTempUrl(result);
-      onChange(result);
-    };
-    reader.readAsDataURL(file);
+    uploadImage(file);
+    // Allow selecting the same file again later.
+    e.target.value = "";
   };
 
-  const checkClipboard = async () => {
-    setClipboardStatus("checking");
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      for (const item of clipboardItems) {
-        for (const type of item.types) {
-          if (type.startsWith("image/")) {
-            const blob = await item.getType(type);
-            const url = URL.createObjectURL(blob);
-            setTempUrl(url);
-            onChange(url);
-            setClipboardStatus("success");
-            setTimeout(() => setClipboardStatus("idle"), 2000);
-            return;
-          }
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const data = e.clipboardData;
+    if (!data) return;
+
+    // Prefer an image file (screenshot / Win+V / copied file)
+    for (const file of Array.from(data.files)) {
+      if (file.type.startsWith("image/")) {
+        uploadImage(file);
+        return;
+      }
+    }
+    for (const item of Array.from(data.items)) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          uploadImage(file);
+          return;
         }
       }
-      setClipboardStatus("error");
-      setTimeout(() => setClipboardStatus("idle"), 2000);
-    } catch (error) {
-      console.error("Failed to read clipboard:", error);
-      setClipboardStatus("error");
-      setTimeout(() => setClipboardStatus("idle"), 2000);
     }
+
+    // Fall back to a pasted image URL string
+    const text = data.getData("text");
+    if (text && /^https?:\/\//i.test(text.trim())) {
+      const url = text.trim();
+      setTempUrl(url);
+      onChange(url);
+      return;
+    }
+
+    setPasteError("В буфере нет изображения");
+    setTimeout(() => setPasteError(null), 3000);
   };
 
   const clearImage = () => {
     setTempUrl("");
     onChange("");
+    if (uploadMethod === "clipboard") {
+      pasteZoneRef.current?.focus();
+    }
   };
 
   return (
     <div className={styles.imageUploadField}>
       <label>{label}</label>
-      
+
       {/* Method selector */}
       <div className={styles.methodSelector}>
         <button
@@ -96,7 +152,10 @@ export default function ImageUploadField({
         <button
           type="button"
           className={`${styles.methodBtn} ${uploadMethod === "file" ? styles.methodBtnActive : ""}`}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            setUploadMethod("file");
+            fileInputRef.current?.click();
+          }}
         >
           <Upload size={14} />
           Файл
@@ -104,17 +163,10 @@ export default function ImageUploadField({
         <button
           type="button"
           className={`${styles.methodBtn} ${uploadMethod === "clipboard" ? styles.methodBtnActive : ""}`}
-          onClick={checkClipboard}
-          disabled={clipboardStatus === "checking"}
+          onClick={() => setUploadMethod("clipboard")}
         >
           <Clipboard size={14} />
-          {clipboardStatus === "checking" 
-            ? "Проверка..." 
-            : clipboardStatus === "success"
-              ? "✅ Вставлено!"
-              : clipboardStatus === "error"
-                ? "❌ Ошибка"
-                : "Буфер"}
+          Вставить
         </button>
         <input
           ref={fileInputRef}
@@ -136,20 +188,44 @@ export default function ImageUploadField({
         />
       )}
 
+      {/* Paste zone */}
+      {uploadMethod === "clipboard" && !tempUrl && (
+        <div
+          ref={pasteZoneRef}
+          className={`${styles.pasteZone} ${pasteError ? styles.pasteZoneError : ""}`}
+          tabIndex={0}
+          role="button"
+          onPaste={handlePaste}
+          onClick={() => pasteZoneRef.current?.focus()}
+        >
+          <Clipboard size={22} />
+          <span className={styles.pasteZoneTitle}>
+            {pasteError ?? "Нажмите сюда и вставьте картинку"}
+          </span>
+          <span className={styles.pasteZoneHint}>
+            Ctrl+V — вставить из буфера. Win+V — открыть журнал буфера, выбрать картинку, затем Ctrl+V сюда.
+          </span>
+        </div>
+      )}
+
       {/* Preview */}
-      {(tempUrl || uploadMethod !== "url") && (
+      {tempUrl && (
         <div className={styles.previewContainer}>
-          {tempUrl && (
-            <img
-              src={tempUrl}
-              alt="Preview"
-              className={styles.previewImage}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+          <img
+            src={tempUrl}
+            alt="Preview"
+            className={styles.previewImage}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+          {uploading && (
+            <div className={styles.uploadingOverlay}>
+              <Loader2 size={22} className={styles.spinner} />
+              <span>Загрузка...</span>
+            </div>
           )}
-          {tempUrl && (
+          {!uploading && (
             <button
               type="button"
               className={styles.clearBtn}
@@ -159,20 +235,15 @@ export default function ImageUploadField({
               <X size={16} />
             </button>
           )}
-          {!tempUrl && uploadMethod !== "url" && (
-            <div className={styles.placeholder}>
-              {uploadMethod === "file" && "Выберите файл изображения"}
-              {uploadMethod === "clipboard" && 
-                (clipboardStatus === "idle" 
-                  ? "Вставьте изображение из буфера обмена" 
-                  : clipboardStatus === "checking"
-                    ? "Проверка буфера..."
-                    : clipboardStatus === "success"
-                      ? "Изображение вставлено!"
-                      : "Не удалось вставить изображение")
-              }
-            </div>
-          )}
+        </div>
+      )}
+
+      {/* File placeholder */}
+      {uploadMethod === "file" && !tempUrl && (
+        <div className={styles.previewContainer}>
+          <div className={styles.placeholder}>
+            {uploading ? "Загрузка..." : "Выберите файл изображения"}
+          </div>
         </div>
       )}
     </div>

@@ -511,11 +511,9 @@
 
 .card,
 .skeletonCard {
-    border-radius: 12px;
+    border-radius: 14px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: #151528;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    background: transparent;
 }
 
 .card {
@@ -523,17 +521,18 @@
     flex-direction: column;
     text-decoration: none;
     color: inherit;
-    transition:
-        transform 0.24s ease,
-        box-shadow 0.24s ease;
+    transition: transform 0.24s ease;
     animation: fadeUp 0.45s ease both;
 
     &:hover {
-        transform: scale(1.03);
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+        transform: translateY(-4px);
+
+        .poster {
+            border-color: rgba(255, 255, 255, 0.16);
+        }
 
         .posterImg {
-            transform: scale(1.04);
+            transform: scale(1.05);
         }
 
         .posterShade {
@@ -544,25 +543,27 @@
 
 .poster {
     position: relative;
-    aspect-ratio: 0.74;
+    aspect-ratio: 0.7;
     overflow: hidden;
-    background: #1a1a2c;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    transition: border-color 0.24s ease;
 }
 
 .posterImg {
     object-fit: cover;
-    transition: transform 0.45s ease;
+    transition: transform 0.5s ease;
 }
 
 .posterShade {
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(180deg, rgba(10, 10, 14, 0.02), rgba(10, 10, 14, 0.3) 55%, rgba(10, 10, 14, 0.65)),
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 30%);
-    opacity: 0.84;
+    background: linear-gradient(180deg, transparent 55%, rgba(8, 8, 12, 0.72));
+    opacity: 0.7;
     transition: opacity 0.3s ease;
 }
+
 
 .formatBadge,
 .ratingBadge,

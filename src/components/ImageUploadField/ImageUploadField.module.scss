@@ -57,7 +57,62 @@
   }
 }
 
+.pasteZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 140px;
+  padding: 20px 16px;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  text-align: center;
+  cursor: text;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--hover-bg);
+  }
+
+  svg {
+    opacity: 0.6;
+  }
+}
+
+.pasteZoneTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pasteZoneHint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: 340px;
+}
+
+.pasteZoneError {
+  border-color: #ef4444;
+
+  .pasteZoneTitle {
+    color: #ef4444;
+  }
+}
+
 .previewContainer {
+
   position: relative;
   width: 100%;
   aspect-ratio: 16/9;
@@ -85,7 +140,32 @@
   padding: 16px;
 }
 
+.uploadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.spinner {
+  animation: imageUploadSpin 0.9s linear infinite;
+}
+
+@keyframes imageUploadSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .clearBtn {
+
   position: absolute;
   top: 8px;
   right: 8px;
