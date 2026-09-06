@@ -11,7 +11,7 @@ function normalizeApiUrl(url: string): string {
 
 const rawApiUrl =
   process.env.NEXT_PUBLIC_API_URL ||
-  (isDev ? "http://localhost:8081" : "https://api2.yumeko.ru");
+  (isDev ? "http://localhost:8081" : "https://api.yumeko.ru");
 
 export const API_URL = normalizeApiUrl(rawApiUrl);
 
